@@ -1,0 +1,111 @@
+{
+  "users": [
+    {
+      "name": "ceosir",
+      "email": "ceosir@Axinortech.com",
+      "role": "superuser",
+      "position": "CEO",
+      "manager": null
+    },
+    {
+      "name": "Siva",
+      "email": "siva@Axinortech.com",
+      "role": "manager",
+      "position": "FDE",
+      "manager": "Karthik"
+    },
+    {
+      "name": "Rinu",
+      "email": "rinu@Axinortech.com",
+      "role": "employee",
+      "position": "FDE",
+      "manager": "Karthik"
+    },
+    {
+      "name": "USER",
+      "email": "USER@Axinortech.com",
+      "role": "employee",
+      "position": "Intern",
+      "manager": "Siva"
+    },
+    {
+      "name": "Anjali",
+      "email": "anjali@Axinortech.com",
+      "role": "employee",
+      "position": "Intern",
+      "manager": "Siva"
+    }
+  ],
+  "projects": [
+    {
+      "name": "Synthite",
+      "description": "Spice portfolio analytics and reporting.",
+      "created_by_email": "ceosir@Axinortech.com"
+    },
+    {
+      "name": "Mane Kancor",
+      "description": "Performance tracking and request workflows.",
+      "created_by_email": "karthik@Axinortech.com"
+    },
+    {
+      "name": "Kitchen Treasures",
+      "description": "Client dashboard and invoice workflows.",
+      "created_by_email": "siva@Axinortech.com"
+    }
+  ],
+  "tasks": [
+    {
+      "project": "Synthite",
+      "title": "Weekly Sales Summary",
+      "description": "Prepare and validate weekly numbers.",
+      "status": "in_progress",
+      "created_by_email": "karthik@Axinortech.com",
+      "assignees": ["rinu@Axinortech.com", "USER@Axinortech.com"]
+    },
+    {
+      "project": "Mane Kancor",
+      "title": "Data Cleanup",
+      "description": "Normalize and clean uploaded records.",
+      "status": "todo",
+      "created_by_email": "siva@Axinortech.com",
+      "assignees": ["anjali@Axinortech.com"]
+    },
+    {
+      "project": "Kitchen Treasures",
+      "title": "Invoice Drafting",
+      "description": "Draft and review invoice line items.",
+      "status": "done",
+      "created_by_email": "ceosir@Axinortech.com",
+      "assignees": ["rinu@Axinortech.com", "anjali@Axinortech.com"]
+    }
+  ],
+  "time_entries": [
+    {
+      "user_email": "rinu@Axinortech.com",
+      "project": "Synthite",
+      "task_title": "Weekly Sales Summary",
+      "start_datetime": "2026-01-26T09:00:00Z",
+      "end_datetime": "2026-01-26T11:00:00Z",
+      "description": "Worked on weekly summary data.",
+      "billable": true
+    },
+    {
+      "user_email": "USER@Axinortech.com",
+      "project": "Synthite",
+      "task_title": "Weekly Sales Summary",
+      "start_datetime": "2026-01-27T10:00:00Z",
+      "end_datetime": "2026-01-27T12:00:00Z",
+      "description": "Validated numbers against source files.",
+      "billable": true
+    },
+    {
+      "user_email": "anjali@Axinortech.com",
+      "project": "Mane Kancor",
+      "task_title": "Data Cleanup",
+      "start_datetime": "2026-01-28T09:30:00Z",
+      "end_datetime": "2026-01-28T11:00:00Z",
+      "description": "Cleaned duplicate rows and fixed tags.",
+      "billable": false
+    }
+  ]
+}

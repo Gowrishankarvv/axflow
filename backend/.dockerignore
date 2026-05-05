@@ -1,0 +1,9 @@
+.git
+.DS_Store
+venv
+__pycache__
+*.pyc
+*.pyo
+logs
+staticfiles
+media

@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=Manrope:wght@200..800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-sans bg-white;
+    color: #525252;
+    /* gray-1 */
+  }
+
+  h1 {
+    @apply font-extrabold tracking-tight;
+    font-size: 32px;
+    line-height: 110%;
+    color: #0E141C;
+    /* dark-current */
+  }
+
+  h2 {
+    @apply font-extrabold tracking-tight;
+    font-size: 24px;
+    line-height: 110%;
+    color: #0E141C;
+    /* dark-current */
+  }
+
+  h3 {
+    @apply font-extrabold tracking-tight;
+    font-size: 20px;
+    line-height: 110%;
+    color: #0E141C;
+    /* dark-current */
+  }
+
+  h4 {
+    @apply font-medium;
+    font-size: 16px;
+    line-height: 110%;
+    color: #0E141C;
+    /* dark-current */
+  }
+
+  /* Axinortech Brand Utils */
+  .brand-logo-space {
+    /* X unit based on 'A' */
+    padding: 1.5rem;
+  }
+}

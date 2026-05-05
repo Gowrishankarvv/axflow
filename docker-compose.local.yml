@@ -1,0 +1,54 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    # To use production database, set DATABASE_URL in your environment or in ./backend/.env
+    # Example: DATABASE_URL: "postgresql://user:password@host:port/database"
+    # For SSL connections, you may also need: DB_CONN_MAX_AGE: "60", DB_CONNECT_TIMEOUT: "10"
+    environment:
+      DEBUG: "1"
+      SECURE_SSL_REDIRECT: "0"
+      SLACK_VERIFY_SIGNATURE: "0"
+      ALLOWED_HOSTS: localhost,127.0.0.1,192.168.165.43,backend,.ngrok-free.dev
+      ALLOWED_EMAIL_DOMAINS: Axinortech.com
+      PORT: 8000
+      CORS_ALLOWED_ORIGINS: "http://localhost:5173,http://127.0.0.1:5173"
+    env_file:
+      - ./backend/.env
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; req=urllib.request.Request('http://localhost:8000/health/', headers={'X-Forwarded-Proto':'https'}); urllib.request.urlopen(req, timeout=3).read()",
+        ]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    volumes:
+      - ./backend:/app
+    # Entrypoint now handles migrations
+    command: /app/entrypoint.sh
+
+  # Frontend uses vite proxy for /api requests (configured in vite.config.ts)
+  # Set VITE_API_URL to empty string to use the proxy, or set to http://localhost:8000 for direct calls
+  frontend:
+    working_dir: /app
+    image: node:20
+    environment:
+      VITE_API_URL: ""
+    env_file:
+      - ./frontend/.env
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "5173:5173"
+    command: bash -c "npm install && npm run dev -- --host --port 5173"
+    depends_on:
+      backend:
+        condition: service_healthy

@@ -1,0 +1,19 @@
+from django.urls import include, path
+
+urlpatterns = [
+    path("", include("apps.core.api.auth.urls")),
+    path("", include("apps.core.api.users.urls")),
+    path("", include("apps.core.api.projects.urls")),
+    path("", include("apps.core.api.time_entries.urls")),
+    path("", include("apps.core.api.tasks.urls")),
+    path("", include("apps.core.api.clock.urls")),
+    path("", include("apps.core.api.tags.urls")),
+    path("", include("apps.core.api.clients.urls")),
+    path("", include("apps.core.api.requests.urls")),
+    path("", include("apps.core.api.invoices.urls")),
+    path("", include("apps.core.api.reports.urls")),
+    path("", include("apps.core.api.org.urls")),
+    path("", include("apps.core.api.app_init.urls")),
+    path("", include("apps.core.api.dashboard.urls")),
+    path("", include("apps.core.api.timers.urls")),
+]
