@@ -1,0 +1,100 @@
+# Production compose file for axflow on a single Hostinger VPS.
+#
+# Architecture:
+#   Internet → nginx-proxy-manager (existing, on newtravel-backend_default network)
+#            → axflow-frontend (in-container nginx serves React + reverse-proxies /api/* to backend)
+#            → axflow-backend (Django + gunicorn)
+#            → axflow-db (Postgres 15)
+#
+# Usage on the server:
+#   cp .env.prod.example .env
+#   # edit .env with real secrets
+#   docker compose -f docker-compose.prod.yml up -d --build
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: axflow-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - axflow_pgdata:/var/lib/postgresql/data
+    networks:
+      - axflow_internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: axflow-backend
+    restart: unless-stopped
+    environment:
+      DJANGO_ENV: production
+      DEBUG: "0"
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+      ALLOWED_EMAIL_DOMAINS: ${ALLOWED_EMAIL_DOMAINS}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      DB_CONN_MAX_AGE: "60"
+      DB_CONNECT_TIMEOUT: "10"
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      PORT: "8000"
+      # Postgres in-container doesn't run SSL; override the prod default of sslmode=require.
+      DB_SSL_MODE: disable
+      # Slack (optional)
+      SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN:-}
+      SLACK_SIGNING_SECRET: ${SLACK_SIGNING_SECRET:-}
+      SLACK_VERIFY_SIGNATURE: ${SLACK_VERIFY_SIGNATURE:-1}
+    volumes:
+      - axflow_media:/app/resources/media
+      - axflow_static:/app/resources/staticfiles
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - axflow_internal
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; req=urllib.request.Request('http://localhost:8000/health/', headers={'X-Forwarded-Proto':'https'}); urllib.request.urlopen(req, timeout=3).read()"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ""
+    container_name: axflow-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - axflow_internal
+      - npm_network
+
+volumes:
+  axflow_pgdata:
+  axflow_media:
+  axflow_static:
+
+networks:
+  # Private network for axflow's own services
+  axflow_internal:
+    driver: bridge
+  # External network shared with nginx-proxy-manager so NPM can reach the frontend
+  npm_network:
+    external: true
+    name: newtravel-backend_default
