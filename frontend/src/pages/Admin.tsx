@@ -244,17 +244,62 @@ export default function Admin() {
                   onChange={e => setForm({ ...form, position: e.target.value })}
                 >
                   <option value="">Select Position</option>
-                  <option value="Senior ML Engineer">Senior ML Engineer</option>
-                  <option value="Solution Architect">Solution Architect</option>
-                  <option value="Senior Data Scientist">Senior Data Scientist</option>
-                  <option value="Junior Data Scientist">Junior Data Scientist</option>
-                  <option value="Associate Data Scientist">Associate Data Scientist</option>
-                  <option value="Delivery Lead">Delivery Lead</option>
-                  <option value="Junior Power BI Developer">Junior Power BI Developer</option>
-                  <option value="Junior Full-Stack Engineer">Junior Full-Stack Engineer</option>
-                  <option value="ML Engineer">ML Engineer</option>
-                  <option value="Founder's Office">Founder's Office</option>
-                  <option value="Founder's Office - GTM & Partnerships">Founder's Office - GTM & Partnerships</option>
+
+                  <optgroup label="Development">
+                    <option value="Flutter Intern">Flutter Intern</option>
+                    <option value="Flutter Junior Dev">Flutter Junior Dev</option>
+                    <option value="Flutter Senior Dev">Flutter Senior Dev</option>
+                    <option value="Django Intern">Django Intern</option>
+                    <option value="Django Junior Dev">Django Junior Dev</option>
+                    <option value="Django Senior Dev">Django Senior Dev</option>
+                    <option value="React Intern">React Intern</option>
+                    <option value="React Junior Dev">React Junior Dev</option>
+                    <option value="React Senior Dev">React Senior Dev</option>
+                  </optgroup>
+
+                  <optgroup label="Design">
+                    <option value="UI/UX Intern">UI/UX Intern</option>
+                    <option value="UI/UX Junior Dev">UI/UX Junior Dev</option>
+                    <option value="UI/UX Senior Dev">UI/UX Senior Dev</option>
+                    <option value="Graphics Designer Intern">Graphics Designer Intern</option>
+                    <option value="Graphics Designer Junior">Graphics Designer Junior</option>
+                    <option value="Graphics Designer Senior">Graphics Designer Senior</option>
+                    <option value="Video Editor Intern">Video Editor Intern</option>
+                    <option value="Video Editor Junior">Video Editor Junior</option>
+                    <option value="Video Editor Senior">Video Editor Senior</option>
+                  </optgroup>
+
+                  <optgroup label="Management & Strategy">
+                    <option value="Project Manager Intern">Project Manager Intern</option>
+                    <option value="Project Manager Junior">Project Manager Junior</option>
+                    <option value="Project Manager Senior">Project Manager Senior</option>
+                    <option value="Product Researcher Intern">Product Researcher Intern</option>
+                    <option value="Product Researcher Junior">Product Researcher Junior</option>
+                    <option value="Product Researcher Senior">Product Researcher Senior</option>
+                    <option value="Business Developer Intern">Business Developer Intern</option>
+                    <option value="Business Developer Junior">Business Developer Junior</option>
+                    <option value="Business Developer Senior">Business Developer Senior</option>
+                  </optgroup>
+
+                  <optgroup label="Operations & HR">
+                    <option value="HR Intern">HR Intern</option>
+                    <option value="HR Junior">HR Junior</option>
+                    <option value="HR Senior">HR Senior</option>
+                  </optgroup>
+
+                  <optgroup label="Executive">
+                    <option value="CEO">CEO</option>
+                    <option value="CFO">CFO</option>
+                    <option value="COO">COO</option>
+                    <option value="CMO">CMO</option>
+                    <option value="Executive">Executive</option>
+                  </optgroup>
+
+                  <optgroup label="General">
+                    <option value="Intern">Intern</option>
+                    <option value="Junior">Junior</option>
+                    <option value="Senior">Senior</option>
+                  </optgroup>
                 </select>
               </div>
 
