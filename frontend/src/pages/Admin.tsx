@@ -244,7 +244,7 @@ export default function Admin() {
                   onChange={e => setForm({ ...form, position: e.target.value })}
                 >
                   <option value="">Select Position</option>
-
+                  
                   <optgroup label="Development">
                     <option value="Flutter Intern">Flutter Intern</option>
                     <option value="Flutter Junior Dev">Flutter Junior Dev</option>
@@ -256,7 +256,7 @@ export default function Admin() {
                     <option value="React Junior Dev">React Junior Dev</option>
                     <option value="React Senior Dev">React Senior Dev</option>
                   </optgroup>
-
+                  
                   <optgroup label="Design">
                     <option value="UI/UX Intern">UI/UX Intern</option>
                     <option value="UI/UX Junior Dev">UI/UX Junior Dev</option>
@@ -268,7 +268,7 @@ export default function Admin() {
                     <option value="Video Editor Junior">Video Editor Junior</option>
                     <option value="Video Editor Senior">Video Editor Senior</option>
                   </optgroup>
-
+                  
                   <optgroup label="Management & Strategy">
                     <option value="Project Manager Intern">Project Manager Intern</option>
                     <option value="Project Manager Junior">Project Manager Junior</option>
@@ -280,13 +280,13 @@ export default function Admin() {
                     <option value="Business Developer Junior">Business Developer Junior</option>
                     <option value="Business Developer Senior">Business Developer Senior</option>
                   </optgroup>
-
+                  
                   <optgroup label="Operations & HR">
                     <option value="HR Intern">HR Intern</option>
                     <option value="HR Junior">HR Junior</option>
                     <option value="HR Senior">HR Senior</option>
                   </optgroup>
-
+                  
                   <optgroup label="Executive">
                     <option value="CEO">CEO</option>
                     <option value="CFO">CFO</option>
@@ -294,7 +294,7 @@ export default function Admin() {
                     <option value="CMO">CMO</option>
                     <option value="Executive">Executive</option>
                   </optgroup>
-
+                  
                   <optgroup label="General">
                     <option value="Intern">Intern</option>
                     <option value="Junior">Junior</option>
