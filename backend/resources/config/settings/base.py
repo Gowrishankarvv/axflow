@@ -85,7 +85,7 @@ if os.environ.get("DB_PORT"):
 db.setdefault("OPTIONS", {})
 db["OPTIONS"]["connect_timeout"] = int(os.environ.get("DB_CONNECT_TIMEOUT", "5"))
 if not DEBUG:
-    db["OPTIONS"]["sslmode"] = "require"
+    db["OPTIONS"]["sslmode"] = os.environ.get("DB_SSL_MODE", "require")
 DATABASES = {"default": db}
 
 STATIC_URL = "/static/"
