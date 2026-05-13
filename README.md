@@ -108,3 +108,7 @@ docker compose -f docker-compose.local.yml exec backend python manage.py migrate
 ## Contributing
 
 See `CONTRIBUTING.md`.
+
+##command to create super user.
+
+python manage.py create_superuser --email ameen@Axinortech.com --password 'YourPasswordHere'
