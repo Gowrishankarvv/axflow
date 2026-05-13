@@ -1,3 +1,5 @@
+import secrets
+
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
@@ -49,10 +51,19 @@ class UserSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({"password": e.messages})
             user.set_password(password)
             user.must_set_password = False
+            # No generated password to surface — the caller already knows it.
+            generated = None
         else:
-            user.set_password("12345678")
+            # No password supplied → mint a one-shot temp the caller can show
+            # the admin once (e.g., in the "Create Login" success banner). User
+            # is forced through /set-password/ on first login.
+            generated = secrets.token_urlsafe(9)
+            user.set_password(generated)
             user.must_set_password = True
         user.save()
+        # Transient attribute the ViewSet can read after .save() to include in
+        # the response. NOT persisted anywhere.
+        user._generated_password = generated  # type: ignore[attr-defined]
         if user.manager_id:
             try:
                 mgr = User.objects.get(id=user.manager_id)

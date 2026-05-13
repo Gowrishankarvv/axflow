@@ -16,7 +16,8 @@ const Invoices = React.lazy(() => import('./pages/Invoices'))
 const Requests = React.lazy(() => import('./pages/Requests'))
 const Leave = React.lazy(() => import('./pages/Leave'))
 const OfferLetter = React.lazy(() => import('./pages/OfferLetter'))
-import { fetchMe, logout } from './lib/api'
+const Notifications = React.lazy(() => import('./pages/Notifications'))
+import api, { fetchMe, logout } from './lib/api'
 import { useAppData } from './lib/AppDataContext'
 import { useLoading } from './lib/LoadingContext'
 import LoadingClock from './components/LoadingClock'
@@ -38,7 +39,8 @@ import {
   FileTextIcon as InvoiceIcon,
   BriefcaseIcon,
   CalendarIcon as LeaveCalendarIcon,
-  MailIcon as OfferMailIcon
+  MailIcon as OfferMailIcon,
+  BellIcon as NotificationsIcon
 } from 'lucide-react'
 
 export default function App() {
@@ -46,10 +48,36 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [unreadNotifs, setUnreadNotifs] = useState(0)
   const navigate = useNavigate()
   const location = useLocation()
   const globalLoading = useLoading()
   const { ready } = useAppData()
+
+  // Poll the unread-notification count every 30s while authed.
+  useEffect(() => {
+    if (!me) return
+    let cancelled = false
+    async function tick() {
+      try {
+        const { data } = await api.get('/notifications/unread_count/')
+        if (!cancelled) setUnreadNotifs((data as any)?.count || 0)
+      } catch { /* network blip — just keep last value */ }
+    }
+    tick()
+    const id = setInterval(tick, 30_000)
+    return () => { cancelled = true; clearInterval(id) }
+  }, [me])
+
+  // Force a refresh when navigating away from /notifications/ (user likely
+  // marked things read on the page).
+  useEffect(() => {
+    if (!me) return
+    if (location.pathname === '/notifications') return
+    api.get('/notifications/unread_count/')
+      .then(r => setUnreadNotifs((r.data as any)?.count || 0))
+      .catch(() => {})
+  }, [location.pathname, me])
 
   async function loadMe() {
     const token = localStorage.getItem('access')
@@ -120,6 +148,7 @@ export default function App() {
             isCollapsed={sidebarCollapsed}
             onClose={() => setSidebarOpen(false)}
             onToggleCollapse={toggleSidebar}
+            unreadNotifs={unreadNotifs}
           />
 
           {/* Mobile menu button */}
@@ -158,6 +187,7 @@ export default function App() {
                 <Route path="/clients" element={<Clients me={me} />} />
                 <Route path="/org-tree" element={<OrgTree />} />
                 <Route path="/leave" element={<Leave />} />
+                <Route path="/notifications" element={<Notifications />} />
                 {me?.role === 'superuser' && <Route path="/offer-letter" element={<OfferLetter />} />}
                 {me?.role === 'superuser' && <Route path="/admin" element={<Admin />} />}
                 <Route path="/" element={<Dashboard />} />
@@ -187,14 +217,16 @@ function Sidebar({
   isOpen,
   isCollapsed,
   onClose,
-  onToggleCollapse
+  onToggleCollapse,
+  unreadNotifs
 }: {
   me: any,
   onLogout: () => void,
   isOpen: boolean,
   isCollapsed: boolean,
   onClose: () => void,
-  onToggleCollapse: () => void
+  onToggleCollapse: () => void,
+  unreadNotifs: number
 }) {
   const location = useLocation()
 
@@ -206,6 +238,7 @@ function Sidebar({
     { to: '/projects', label: 'Projects', icon: FolderIcon, show: me?.role !== 'client' },
     { to: '/requests', label: 'Requests', icon: InboxIcon, show: me?.role !== 'client' },
     { to: '/leave', label: 'Leave', icon: LeaveCalendarIcon, show: me?.role !== 'client' },
+    { to: '/notifications', label: 'Notifications', icon: NotificationsIcon, show: true, badge: unreadNotifs },
     { to: '/team-time', label: 'Reports', icon: ChartBarIcon, show: me?.role !== 'client' },
     { to: '/clients', label: 'Clients', icon: BriefcaseIcon, show: me?.role === 'manager' || me?.role === 'superuser' },
     { to: '/invoices', label: 'Invoices', icon: InvoiceIcon, show: me?.role === 'superuser' },
@@ -215,7 +248,7 @@ function Sidebar({
 
     // Client
     { to: '/', label: 'Dashboard', icon: HomeIcon, show: me?.role === 'client' },
-    // { to: '/projects', label: 'My Projects', icon: FolderIcon, show: me?.role === 'client' },
+    { to: '/projects', label: 'My Projects', icon: FolderIcon, show: me?.role === 'client' },
     { to: '/requests', label: 'Requests', icon: InboxIcon, show: me?.role === 'client' },
     { to: '/invoices', label: 'Invoices', icon: InvoiceIcon, show: me?.role === 'client' },
   ]
@@ -361,6 +394,7 @@ function Sidebar({
               isActive={location.pathname === item.to}
               isCollapsed={isCollapsed}
               delay={index * 50}
+              badge={(item as any).badge}
             >
               {item.label}
             </NavItem>
@@ -421,15 +455,19 @@ function NavItem({
   icon: Icon,
   isActive,
   isCollapsed,
-  delay = 0
+  delay = 0,
+  badge
 }: {
   to: string,
   children: React.ReactNode,
   icon: any,
   isActive: boolean,
   isCollapsed: boolean,
-  delay?: number
+  delay?: number,
+  badge?: number
 }) {
+  const hasBadge = typeof badge === 'number' && badge > 0
+  const badgeText = hasBadge ? (badge! > 99 ? '99+' : String(badge)) : ''
   return (
     <Link
       to={to}
@@ -456,17 +494,29 @@ function NavItem({
         ${isActive ? 'text-white' : 'text-gray-2 group-hover:text-[#0E141C]'}
       `} />
 
+      {/* Collapsed: dot in the corner of the icon when there's a badge */}
+      {isCollapsed && hasBadge && (
+        <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center z-20">
+          {badgeText}
+        </span>
+      )}
+
       {!isCollapsed && (
         <>
           <span className="truncate relative z-10">{children}</span>
 
-          {/* Active indicator */}
-          {isActive && (
-            <div className="ml-auto flex items-center gap-2 relative z-10">
+          <div className="ml-auto flex items-center gap-2 relative z-10">
+            {/* Unread badge */}
+            {hasBadge && (
+              <span className={`min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-bold flex items-center justify-center ${isActive ? 'bg-white text-[#0066FF]' : 'bg-red-500 text-white'}`}>
+                {badgeText}
+              </span>
+            )}
+            {/* Active indicator */}
+            {isActive && (
               <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-              {/* <div className="w-1 h-1 bg-white/60 rounded-full animate-pulse delay-300" /> */}
-            </div>
-          )}
+            )}
+          </div>
         </>
       )}
 
