@@ -17,4 +17,5 @@ urlpatterns = [
     path("", include("apps.core.api.dashboard.urls")),
     path("", include("apps.core.api.timers.urls")),
     path("", include("apps.core.api.leaves.urls")),
+    path("", include("apps.core.api.offer_letters.urls")),
 ]
