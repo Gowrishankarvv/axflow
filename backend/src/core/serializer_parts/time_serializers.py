@@ -183,15 +183,34 @@ class ActiveTimeEntrySerializer(serializers.ModelSerializer):
 
 class ClockSessionSerializer(serializers.ModelSerializer):
     user_name = serializers.SerializerMethodField()
+    lunch_duration_seconds = serializers.SerializerMethodField()
+    worked_duration_seconds = serializers.SerializerMethodField()
 
     class Meta:
         model = ClockSession
-        fields = ["id", "user", "user_name", "clock_in_time", "clock_out_time", "duration", "date", "created_at", "updated_at"]
-        read_only_fields = ["duration", "date", "created_at", "updated_at"]
+        fields = [
+            "id", "user", "user_name",
+            "clock_in_time", "clock_out_time", "duration", "date",
+            "lunch_start_time", "lunch_end_time",
+            "lunch_duration_seconds", "worked_duration_seconds",
+            "created_at", "updated_at",
+        ]
+        read_only_fields = [
+            "duration", "date", "created_at", "updated_at",
+            "lunch_duration_seconds", "worked_duration_seconds",
+        ]
 
     def get_user_name(self, obj):
         u = obj.user
         return (u.first_name or u.username) if u else None
+
+    def get_lunch_duration_seconds(self, obj):
+        ld = obj.lunch_duration
+        return int(ld.total_seconds()) if ld else 0
+
+    def get_worked_duration_seconds(self, obj):
+        wd = obj.worked_duration
+        return int(wd.total_seconds()) if wd else None
 
     def validate(self, attrs):
         clock_in = attrs.get("clock_in_time") or getattr(self.instance, "clock_in_time", None)

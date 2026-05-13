@@ -3,7 +3,7 @@ import api, { getCached } from '../lib/api'
 import { useAppData } from '../lib/AppDataContext'
 import { formatDecimalHours } from '../lib/formatUtils'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import { ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon, Clock as ClockIcon, Calendar as CalendarIcon, TrendingUp as TrendingUpIcon, Tag as TaskIcon, Download as DownloadIcon, Play as PlayIcon, Square as SquareIcon } from 'lucide-react'
+import { ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon, Clock as ClockIcon, Calendar as CalendarIcon, TrendingUp as TrendingUpIcon, Tag as TaskIcon, Download as DownloadIcon, Play as PlayIcon, Square as SquareIcon, Coffee as CoffeeIcon } from 'lucide-react'
 
 export default function Dashboard() {
   const { data: appData, ready: appReady } = useAppData()
@@ -119,13 +119,17 @@ export default function Dashboard() {
     return result
   }
 
-  function buildTotalsFromChart(chart: { date: string, hours: number }[], rangeEnd: string) {
-    const endDate = normalizeDateInput(rangeEnd)
-    if (!endDate) return { today: 0, week: 0, month: 0 }
-    const todayKey = ymd(endDate)
-    // Current week: Monday to Sunday (not last 7 days)
-    const weekStart = new Date(endDate)
-    weekStart.setDate(endDate.getDate() - endDate.getDay())
+  function buildTotalsFromChart(chart: { date: string, hours: number }[], _rangeEnd: string) {
+    // "Today" and "This Week" are anchored on the *actual* current date, not the
+    // chart's rangeEnd (which is the last day of the selected month). The Month
+    // total is the sum of every chart entry, so it tracks whatever range the
+    // chart covers.
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const todayKey = ymd(today)
+    // Week runs Sunday (getDay() === 0) through today.
+    const weekStart = new Date(today)
+    weekStart.setDate(today.getDate() - today.getDay())
     weekStart.setHours(0, 0, 0, 0)
     const totals = { today: 0, week: 0, month: 0 }
     chart.forEach((entry) => {
@@ -135,8 +139,7 @@ export default function Dashboard() {
       if (entryKey === todayKey) {
         totals.today += entry.hours || 0
       }
-      // Include entries from week start (Monday) to today
-      if (entryDate >= weekStart && entryDate <= endDate) {
+      if (entryDate >= weekStart && entryDate <= today) {
         totals.week += entry.hours || 0
       }
       totals.month += entry.hours || 0
@@ -149,17 +152,20 @@ export default function Dashboard() {
   }
 
   async function fetchReportSummaryData(start: string, end: string, userParam: string | null) {
+    // Dashboard cards/chart show "hours worked" from clock-in/out sessions
+    // (gross duration minus lunch break), not project-logged TimeEntry hours.
+    // Same response shape as /reports/summary/, so chart + totals just work.
     const params = new URLSearchParams({ start_date: start, end_date: end })
     if (userParam) params.set('user_id', userParam)
     try {
-      const res = await getCached(`/reports/summary/?${params.toString()}`)
+      const res = await getCached(`/clock-sessions/worked_summary/?${params.toString()}`)
       const chart = buildChartRange(res.data || [], start, end)
       return {
         chart,
         totals: buildTotalsFromChart(chart, end)
       }
     } catch (error) {
-      console.error('Failed to load report summary data:', error)
+      console.error('Failed to load worked summary data:', error)
       return null
     }
   }
@@ -418,6 +424,24 @@ export default function Dashboard() {
     }
   }
 
+  async function handleStartLunch() {
+    try {
+      const res = await api.post('/clock-sessions/start_lunch/')
+      setActiveSession(res.data)
+    } catch (error) {
+      console.error('Start lunch failed:', error)
+    }
+  }
+
+  async function handleEndLunch() {
+    try {
+      const res = await api.post('/clock-sessions/end_lunch/')
+      setActiveSession(res.data)
+    } catch (error) {
+      console.error('End lunch failed:', error)
+    }
+  }
+
   useEffect(() => { load(filterUser || undefined) }, [selectedDate, range, filterUser])
 
   useEffect(() => {
@@ -456,7 +480,16 @@ export default function Dashboard() {
       const interval = setInterval(() => {
         const now = new Date()
         const start = new Date(activeSession.clock_in_time)
-        setElapsedTime(Math.floor((now.getTime() - start.getTime()) / 1000))
+        // Subtract lunch break time so the visible timer pauses during lunch.
+        const lunchStart = activeSession.lunch_start_time ? new Date(activeSession.lunch_start_time) : null
+        const lunchEnd = activeSession.lunch_end_time ? new Date(activeSession.lunch_end_time) : null
+        let lunchMs = 0
+        if (lunchStart && lunchEnd) {
+          lunchMs = lunchEnd.getTime() - lunchStart.getTime()
+        } else if (lunchStart && !lunchEnd) {
+          lunchMs = now.getTime() - lunchStart.getTime()
+        }
+        setElapsedTime(Math.max(0, Math.floor((now.getTime() - start.getTime() - lunchMs) / 1000)))
         // Auto clock out at 9PM (21:00)
         if (now.getHours() === 21 && now.getMinutes() === 0) {
           handleClockOut()
@@ -906,16 +939,47 @@ export default function Dashboard() {
                   <div className="text-sm text-gray-600 mb-2">
                     Clocked in at: {new Date(activeSession.clock_in_time).toLocaleString("en-US", { day: "numeric", month: "long", })}
                   </div>
-                  <div className="text-4xl font-bold text-blue-600 mb-6 font-mono">
+                  <div className={`text-4xl font-bold mb-2 font-mono ${activeSession.lunch_start_time && !activeSession.lunch_end_time ? 'text-amber-500' : 'text-blue-600'}`}>
                     {Math.floor(elapsedTime / 3600).toString().padStart(2, '0')}:{Math.floor((elapsedTime % 3600) / 60).toString().padStart(2, '0')}:{(elapsedTime % 60).toString().padStart(2, '0')}
                   </div>
-                  <button
-                    onClick={handleClockOut}
-                    className="inline-flex items-center px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 transform hover:scale-105 font-medium"
-                  >
-                    <SquareIcon className="w-5 h-5 mr-2" />
-                    Clock Out
-                  </button>
+                  {activeSession.lunch_start_time && !activeSession.lunch_end_time && (
+                    <div className="text-xs uppercase tracking-wide text-amber-600 font-semibold mb-4">
+                      On lunch break — timer paused
+                    </div>
+                  )}
+                  {activeSession.lunch_start_time && activeSession.lunch_end_time && (
+                    <div className="text-xs text-gray-500 mb-4">
+                      Lunch: {Math.floor((activeSession.lunch_duration_seconds || 0) / 60)} min taken
+                    </div>
+                  )}
+                  <div className="flex items-center justify-center gap-3 flex-wrap mt-4">
+                    {/* Lunch break controls: hidden once break has been taken */}
+                    {!activeSession.lunch_start_time && (
+                      <button
+                        onClick={handleStartLunch}
+                        className="inline-flex items-center px-5 py-3 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-all duration-200 transform hover:scale-105 font-medium"
+                      >
+                        <CoffeeIcon className="w-5 h-5 mr-2" />
+                        Start Lunch
+                      </button>
+                    )}
+                    {activeSession.lunch_start_time && !activeSession.lunch_end_time && (
+                      <button
+                        onClick={handleEndLunch}
+                        className="inline-flex items-center px-5 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-all duration-200 transform hover:scale-105 font-medium"
+                      >
+                        <CoffeeIcon className="w-5 h-5 mr-2" />
+                        End Lunch
+                      </button>
+                    )}
+                    <button
+                      onClick={handleClockOut}
+                      className="inline-flex items-center px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 transform hover:scale-105 font-medium"
+                    >
+                      <SquareIcon className="w-5 h-5 mr-2" />
+                      Clock Out
+                    </button>
+                  </div>
                 </div>
               </div>
             ) : (
