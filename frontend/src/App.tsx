@@ -17,6 +17,12 @@ const Requests = React.lazy(() => import('./pages/Requests'))
 const Leave = React.lazy(() => import('./pages/Leave'))
 const OfferLetter = React.lazy(() => import('./pages/OfferLetter'))
 const Notifications = React.lazy(() => import('./pages/Notifications'))
+const Finance = React.lazy(() => import('./pages/Finance'))
+
+// Mirror of backend/src/core/permissions.py:EXECUTIVE_POSITIONS — keep in sync.
+const EXECUTIVE_POSITIONS = ['CEO', 'CFO', 'COO', 'CMO', 'Executive']
+const isExecutive = (me: any) =>
+  !!me && (me.role === 'superuser' || EXECUTIVE_POSITIONS.includes(me?.position))
 import api, { fetchMe, logout } from './lib/api'
 import { useAppData } from './lib/AppDataContext'
 import { useLoading } from './lib/LoadingContext'
@@ -40,7 +46,8 @@ import {
   BriefcaseIcon,
   CalendarIcon as LeaveCalendarIcon,
   MailIcon as OfferMailIcon,
-  BellIcon as NotificationsIcon
+  BellIcon as NotificationsIcon,
+  WalletIcon as FinanceIcon
 } from 'lucide-react'
 
 export default function App() {
@@ -188,6 +195,7 @@ export default function App() {
                 <Route path="/org-tree" element={<OrgTree />} />
                 <Route path="/leave" element={<Leave />} />
                 <Route path="/notifications" element={<Notifications />} />
+                {isExecutive(me) && <Route path="/finance" element={<Finance />} />}
                 {me?.role === 'superuser' && <Route path="/offer-letter" element={<OfferLetter />} />}
                 {me?.role === 'superuser' && <Route path="/admin" element={<Admin />} />}
                 <Route path="/" element={<Dashboard />} />
@@ -242,6 +250,7 @@ function Sidebar({
     { to: '/team-time', label: 'Reports', icon: ChartBarIcon, show: me?.role !== 'client' },
     { to: '/clients', label: 'Clients', icon: BriefcaseIcon, show: me?.role === 'manager' || me?.role === 'superuser' },
     { to: '/invoices', label: 'Invoices', icon: InvoiceIcon, show: me?.role === 'superuser' },
+    { to: '/finance', label: 'Finance', icon: FinanceIcon, show: isExecutive(me) },
     { to: '/offer-letter', label: 'Offer Letter', icon: OfferMailIcon, show: me?.role === 'superuser' },
     { to: '/org-tree', label: 'Organization', icon: BuildingIcon, show: me?.role !== 'client' },
     { to: '/admin', label: 'User Management', icon: UserPlusIcon, show: me?.role === 'superuser' },

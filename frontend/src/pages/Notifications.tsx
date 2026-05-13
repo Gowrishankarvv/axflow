@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../lib/api'
-import { Bell, CheckCheck, FileText, Circle, Calendar } from 'lucide-react'
+import { Bell, CheckCheck, FileText, Circle, Calendar, CheckCircle2, XCircle } from 'lucide-react'
 
 type Notification = {
     id: number
@@ -152,6 +152,13 @@ function NotificationRow({ n, onClick }: { n: Notification, onClick: () => void 
 
 function iconForKind(kind: string, isRead: boolean) {
     const cls = isRead ? 'text-gray-500' : 'text-blue-600'
+    // Approve / reject get their own colour so the requester sees the outcome at a glance.
+    if (kind === 'leave_approved') {
+        return <CheckCircle2 className={`w-4 h-4 ${isRead ? 'text-emerald-400' : 'text-emerald-600'}`} />
+    }
+    if (kind === 'leave_rejected') {
+        return <XCircle className={`w-4 h-4 ${isRead ? 'text-rose-400' : 'text-rose-600'}`} />
+    }
     switch (kind) {
         case 'request_submitted':
             return <FileText className={`w-4 h-4 ${cls}`} />
