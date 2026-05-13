@@ -1,4 +1,4 @@
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
 from django.core.cache import cache
 from django.conf import settings
@@ -179,3 +179,72 @@ def notify_on_new_leave_request(sender, instance, created, **kwargs):
         )
         for u in recipients
     ])
+
+
+# --- Leave approve / reject → notify the requester --------------------------
+# We need to know the *previous* status to detect the transition. pre_save
+# stashes the old value on the instance; post_save inspects it and decides
+# whether to fan out a notification.
+
+@receiver(pre_save, sender=LeaveRequest)
+def _capture_old_leave_status(sender, instance, **kwargs):
+    if instance.pk:
+        try:
+            old = LeaveRequest.objects.only("status").get(pk=instance.pk)
+            instance._old_status = old.status
+        except LeaveRequest.DoesNotExist:
+            instance._old_status = None
+    else:
+        instance._old_status = None
+
+
+@receiver(post_save, sender=LeaveRequest)
+def notify_on_leave_decision(sender, instance, created, **kwargs):
+    """When a leave transitions pending → approved / rejected, drop an
+    in-app notification into the requester's inbox."""
+    if created:
+        return  # the "new leave submitted" handler covers this case
+    old_status = getattr(instance, "_old_status", None)
+    if old_status == instance.status:
+        return  # not a status change
+    if instance.status not in ("approved", "rejected"):
+        return  # we only notify on these two transitions
+    if not instance.user_id:
+        return  # nobody to notify
+
+    days = instance.total_days
+    day_word = "day" if days == 1 else "days"
+    decided_by_name = (
+        (instance.decided_by.first_name or instance.decided_by.username)
+        if instance.decided_by else "your manager"
+    )
+
+    if instance.status == "approved":
+        kind = "leave_approved"
+        title = "Leave request approved"
+        bits = [
+            f"Your {days}-{day_word} leave ({instance.start_date} → {instance.end_date}) was approved by {decided_by_name}.",
+        ]
+        if instance.leave_type:
+            bits.append(f"Type: {instance.leave_type.capitalize()}.")
+        if instance.is_salary_cut:
+            bits.append("Marked as salary-cut.")
+        message = " ".join(bits)
+    else:  # rejected
+        kind = "leave_rejected"
+        title = "Leave request rejected"
+        message = (
+            f"Your {days}-{day_word} leave ({instance.start_date} → {instance.end_date}) "
+            f"was rejected by {decided_by_name}."
+        )
+        if instance.rejection_reason:
+            message += f' Reason: "{instance.rejection_reason}"'
+
+    Notification.objects.create(
+        user=instance.user,
+        actor=instance.decided_by,
+        kind=kind,
+        title=title,
+        message=message,
+        link="/leave",
+    )

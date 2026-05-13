@@ -16,6 +16,8 @@ class Notification(models.Model):
     KIND_CHOICES = [
         ("request_submitted", "Data Request Submitted"),
         ("leave_submitted", "Leave Request Submitted"),
+        ("leave_approved", "Leave Request Approved"),
+        ("leave_rejected", "Leave Request Rejected"),
         # Add more event kinds here as features grow:
         # ("offer_sent",      "Offer Letter Sent"),
         # ("task_assigned",   "Task Assigned"),
