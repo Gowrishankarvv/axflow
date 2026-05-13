@@ -1,26 +1,63 @@
 
 import React, { useEffect, useState } from 'react'
 import api, { getCached } from '../lib/api'
-import { FileText, CheckCircle, XCircle, Clock, IndianRupee, Download, Filter } from 'lucide-react'
+import { FileText, CheckCircle, XCircle, Clock, IndianRupee, Download, Calendar, AlertTriangle } from 'lucide-react'
 import { useAppData } from '../lib/AppDataContext'
 
 
+type Leave = {
+    id: number
+    user: number
+    user_name: string
+    start_date: string
+    end_date: string
+    reason: string
+    status: 'pending' | 'approved' | 'rejected' | 'cancelled'
+    leave_type: '' | 'casual' | 'medical' | 'emergency'
+    is_salary_cut: boolean | null
+    rejection_reason: string
+    total_days: number
+    created_at: string
+}
+
 export default function Requests() {
     const { data, currentProjectId } = useAppData()
+    const me = data?.me
+    const isManagerOrSuper = me?.role === 'manager' || me?.role === 'superuser'
+
+    const [activeTab, setActiveTab] = useState<'data' | 'leave'>('data')
     const [requests, setRequests] = useState<any[]>([])
+    const [leaves, setLeaves] = useState<Leave[]>([])
     const [loading, setLoading] = useState(true)
     const [statusFilter, setStatusFilter] = useState('all')
 
-    // Modal State
+    // Data-request modal state
     const [selectedRequest, setSelectedRequest] = useState<any | null>(null)
     const [estimateForm, setEstimateForm] = useState({ cost: '', notes: '' })
     const [showModal, setShowModal] = useState(false)
 
+    // Leave approval/rejection modal state
+    const [reviewingLeave, setReviewingLeave] = useState<Leave | null>(null)
+    const [leaveAction, setLeaveAction] = useState<'approve' | 'reject' | null>(null)
+    const [approveForm, setApproveForm] = useState<{ leave_type: 'casual' | 'medical' | 'emergency', is_salary_cut: boolean, approval_note: string }>({
+        leave_type: 'casual', is_salary_cut: false, approval_note: ''
+    })
+    const [rejectReason, setRejectReason] = useState('')
+    const [monthUsage, setMonthUsage] = useState<{ approved_days_in_month: number, remaining_free: number } | null>(null)
+
     async function load() {
         setLoading(true)
         try {
-            const res = await api.get('/requests/')
-            setRequests((res.data as any).results || res.data || [])
+            const tasks: Promise<any>[] = [api.get('/requests/').then(r => {
+                setRequests((r.data as any).results || r.data || [])
+            })]
+            if (isManagerOrSuper) {
+                tasks.push(api.get('/leaves/').then(r => {
+                    const payload: any = r.data
+                    setLeaves(payload.results || payload || [])
+                }))
+            }
+            await Promise.all(tasks)
         } catch (e) {
             console.error(e)
         } finally {
@@ -28,7 +65,7 @@ export default function Requests() {
         }
     }
 
-    useEffect(() => { load() }, [])
+    useEffect(() => { load() }, [isManagerOrSuper])
 
     const filteredRequests = requests.filter(r => {
         if (currentProjectId && r.project !== currentProjectId) return false
@@ -36,19 +73,18 @@ export default function Requests() {
         return r.status === statusFilter
     })
 
+    const pendingLeaves = leaves.filter(l => l.status === 'pending')
+    const decidedLeaves = leaves.filter(l => l.status !== 'pending')
+
     function openReview(req: any) {
         setSelectedRequest(req)
-        setEstimateForm({
-            cost: req.estimated_cost || '',
-            notes: req.estimation_notes || ''
-        })
+        setEstimateForm({ cost: req.estimated_cost || '', notes: req.estimation_notes || '' })
         setShowModal(true)
     }
 
     async function submitEstimate(e: React.FormEvent) {
         e.preventDefault()
         if (!selectedRequest) return
-
         try {
             await api.post(`/requests/${selectedRequest.id}/estimate/`, {
                 estimated_cost: parseFloat(estimateForm.cost),
@@ -72,35 +108,181 @@ export default function Requests() {
             link.click()
             document.body.removeChild(link)
         } catch (e) {
-            console.error("Download failed", e)
             alert('Download failed')
+        }
+    }
+
+    async function openLeaveReview(leave: Leave, action: 'approve' | 'reject') {
+        setReviewingLeave(leave)
+        setLeaveAction(action)
+        setRejectReason('')
+        setMonthUsage(null)
+        if (action === 'approve') {
+            // Fetch current-month usage to suggest a salary-cut default
+            const month = new Date(leave.start_date)
+            try {
+                const res = await getCached('/leaves/month_usage/', {
+                    params: { user_id: leave.user, year: month.getFullYear(), month: month.getMonth() + 1 }
+                })
+                const usage = res.data as any
+                setMonthUsage(usage)
+                // Default: salary cut = true if user has already used their 1 free day this month
+                setApproveForm({
+                    leave_type: 'casual',
+                    is_salary_cut: usage.approved_days_in_month >= 1,
+                    approval_note: ''
+                })
+            } catch {
+                setApproveForm({ leave_type: 'casual', is_salary_cut: false, approval_note: '' })
+            }
+        }
+    }
+
+    async function submitApprove(e: React.FormEvent) {
+        e.preventDefault()
+        if (!reviewingLeave) return
+        try {
+            await api.post(`/leaves/${reviewingLeave.id}/approve/`, approveForm)
+            setReviewingLeave(null)
+            setLeaveAction(null)
+            await load()
+        } catch (err: any) {
+            alert(err?.response?.data?.detail || 'Failed to approve')
+        }
+    }
+
+    async function submitReject(e: React.FormEvent) {
+        e.preventDefault()
+        if (!reviewingLeave) return
+        if (!rejectReason.trim()) { alert('Please enter a rejection reason.'); return }
+        try {
+            await api.post(`/leaves/${reviewingLeave.id}/reject/`, { rejection_reason: rejectReason })
+            setReviewingLeave(null)
+            setLeaveAction(null)
+            await load()
+        } catch (err: any) {
+            alert(err?.response?.data?.detail || 'Failed to reject')
         }
     }
 
     return (
         <div className="p-6 space-y-6 bg-white min-h-screen">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-3">
                 <div>
-                    <h1 className="text-h3 font-extrabold text-[#0E141C]">Client Requests</h1>
-                    <p className="text-gray-1">Review and estimate incoming work requests</p>
-                </div>
-                <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-none p-1">
-                    {['all', 'pending_review', 'pending_approval', 'approved', 'in_progress', 'completed'].map(s => (
-                        <button
-                            key={s}
-                            onClick={() => setStatusFilter(s)}
-                            className={`px-3 py-1.5 rounded-none text-sm font-bold transition-colors ${statusFilter === s
-                                ? 'bg-blue-50 text-[#0066FF] border-b-2 border-[#0066FF]'
-                                : 'text-gray-1 hover:text-[#0E141C] hover:bg-gray-3'
-                                }`}
-                        >
-                            {s.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}
-                        </button>
-                    ))}
+                    <h1 className="text-h3 font-extrabold text-[#0E141C]">Requests</h1>
+                    <p className="text-gray-1">Review incoming requests from clients and employees.</p>
                 </div>
             </div>
 
-            <div className="bg-white rounded-none border border-gray-200 shadow-sm overflow-hidden">
+            {/* Tab bar — only shown to managers/superusers (others only see data requests anyway) */}
+            <div className="flex gap-1 border-b border-gray-200">
+                <TabButton active={activeTab === 'data'} onClick={() => setActiveTab('data')}>
+                    Data Requests
+                </TabButton>
+                {isManagerOrSuper && (
+                    <TabButton active={activeTab === 'leave'} onClick={() => setActiveTab('leave')}>
+                        <span className="flex items-center gap-2">
+                            Leave Requests
+                            {pendingLeaves.length > 0 && (
+                                <span className="bg-red-600 text-white text-xs px-1.5 py-0.5 rounded-full">{pendingLeaves.length}</span>
+                            )}
+                        </span>
+                    </TabButton>
+                )}
+            </div>
+
+            {activeTab === 'data' && (
+                <DataRequestsView
+                    loading={loading}
+                    statusFilter={statusFilter}
+                    setStatusFilter={setStatusFilter}
+                    filteredRequests={filteredRequests}
+                    openReview={openReview}
+                    downloadAll={downloadAll}
+                />
+            )}
+
+            {activeTab === 'leave' && isManagerOrSuper && (
+                <LeaveRequestsView
+                    loading={loading}
+                    pending={pendingLeaves}
+                    decided={decidedLeaves}
+                    onApprove={(l) => openLeaveReview(l, 'approve')}
+                    onReject={(l) => openLeaveReview(l, 'reject')}
+                />
+            )}
+
+            {/* Data request modal */}
+            {showModal && selectedRequest && (
+                <DataRequestModal
+                    selectedRequest={selectedRequest}
+                    estimateForm={estimateForm}
+                    setEstimateForm={setEstimateForm}
+                    onClose={() => setShowModal(false)}
+                    onSubmit={submitEstimate}
+                />
+            )}
+
+            {/* Leave approve modal */}
+            {reviewingLeave && leaveAction === 'approve' && (
+                <ApproveLeaveModal
+                    leave={reviewingLeave}
+                    form={approveForm}
+                    setForm={setApproveForm}
+                    monthUsage={monthUsage}
+                    onClose={() => { setReviewingLeave(null); setLeaveAction(null) }}
+                    onSubmit={submitApprove}
+                />
+            )}
+
+            {/* Leave reject modal */}
+            {reviewingLeave && leaveAction === 'reject' && (
+                <RejectLeaveModal
+                    leave={reviewingLeave}
+                    reason={rejectReason}
+                    setReason={setRejectReason}
+                    onClose={() => { setReviewingLeave(null); setLeaveAction(null) }}
+                    onSubmit={submitReject}
+                />
+            )}
+        </div>
+    )
+}
+
+function TabButton({ active, onClick, children }: { active: boolean, onClick: () => void, children: React.ReactNode }) {
+    return (
+        <button
+            onClick={onClick}
+            className={`px-4 py-2 text-sm font-bold transition-colors border-b-2 -mb-px ${active ? 'border-[#0066FF] text-[#0066FF]' : 'border-transparent text-gray-1 hover:text-[#0E141C]'}`}
+        >
+            {children}
+        </button>
+    )
+}
+
+// ---------------- Data Requests View (the original UI, extracted) ----------------
+
+function DataRequestsView({
+    loading, statusFilter, setStatusFilter, filteredRequests, openReview, downloadAll
+}: any) {
+    return (
+        <>
+            <div className="flex items-center gap-2 bg-white border border-gray-200 p-1">
+                {['all', 'pending_review', 'pending_approval', 'approved', 'in_progress', 'completed'].map((s: string) => (
+                    <button
+                        key={s}
+                        onClick={() => setStatusFilter(s)}
+                        className={`px-3 py-1.5 text-sm font-bold transition-colors ${statusFilter === s
+                            ? 'bg-blue-50 text-[#0066FF] border-b-2 border-[#0066FF]'
+                            : 'text-gray-1 hover:text-[#0E141C] hover:bg-gray-3'
+                            }`}
+                    >
+                        {s.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                    </button>
+                ))}
+            </div>
+
+            <div className="bg-white border border-gray-200 shadow-sm overflow-hidden">
                 {loading ? (
                     <div className="p-12 text-center text-gray-1">Loading requests...</div>
                 ) : filteredRequests.length === 0 ? (
@@ -122,7 +304,7 @@ export default function Requests() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
-                                {filteredRequests.map(r => (
+                                {filteredRequests.map((r: any) => (
                                     <tr key={r.id} className="hover:bg-gray-50 transition">
                                         <td className="px-6 py-4 text-gray-1">#{r.id}</td>
                                         <td className="px-6 py-4">
@@ -178,92 +360,317 @@ export default function Requests() {
                     </div>
                 )}
             </div>
+        </>
+    )
+}
 
-            {showModal && selectedRequest && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg shadow-2xl w-full max-w-lg overflow-hidden animate-slideUp">
-                        <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-3">
-                            <h3 className="font-bold text-[#0E141C]">Review Request #{selectedRequest.id}</h3>
-                            <button onClick={() => setShowModal(false)} className="text-gray-2 hover:text-[#0E141C]">
-                                <XCircle className="w-6 h-6" />
-                            </button>
-                        </div>
+// ---------------- Leave Requests View ----------------
 
-                        <div className="p-6 space-y-4">
-                            <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                                <h4 className="font-bold text-[#0066FF] mb-1">{selectedRequest.title}</h4>
-                                <p className="text-sm text-blue-900">{selectedRequest.description}</p>
-                                {selectedRequest.file_url && (
-                                    <a href={selectedRequest.file_url} target="_blank" className="inline-block mt-3 text-sm font-bold text-[#0066FF] hover:underline">
-                                        Download Attached File
-                                    </a>
+function LeaveRequestsView({ loading, pending, decided, onApprove, onReject }: {
+    loading: boolean,
+    pending: Leave[],
+    decided: Leave[],
+    onApprove: (l: Leave) => void,
+    onReject: (l: Leave) => void,
+}) {
+    if (loading) {
+        return <div className="p-12 text-center text-gray-1">Loading leave requests...</div>
+    }
+    return (
+        <div className="space-y-6">
+            <section>
+                <h2 className="text-sm font-bold text-[#0E141C] uppercase tracking-wide mb-3 flex items-center gap-2">
+                    Pending Approval
+                    {pending.length > 0 && (
+                        <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-0.5 rounded-full">{pending.length}</span>
+                    )}
+                </h2>
+                {pending.length === 0 ? (
+                    <div className="p-8 text-center border border-dashed border-gray-200 rounded-xl text-gray-1">
+                        No pending leave requests. 🎉
+                    </div>
+                ) : (
+                    <div className="space-y-3">
+                        {pending.map(l => (
+                            <LeaveCard
+                                key={l.id}
+                                leave={l}
+                                actions={(
+                                    <>
+                                        <button
+                                            onClick={() => onApprove(l)}
+                                            className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm font-bold hover:bg-green-700"
+                                        >
+                                            Approve
+                                        </button>
+                                        <button
+                                            onClick={() => onReject(l)}
+                                            className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700"
+                                        >
+                                            Reject
+                                        </button>
+                                    </>
                                 )}
-                            </div>
+                            />
+                        ))}
+                    </div>
+                )}
+            </section>
 
-                            <div className="grid grid-cols-3 gap-4">
-                                <div className="bg-gray-50 p-3 rounded-lg border border-gray-200 text-center">
-                                    <div className="text-xs text-gray-500 font-bold uppercase">Outlets</div>
-                                    <div className="text-lg font-extrabold text-[#0E141C]">{selectedRequest.analysis_outlet_count || '-'}</div>
-                                </div>
-                                <div className="bg-gray-50 p-3 rounded-lg border border-gray-200 text-center">
-                                    <div className="text-xs text-gray-500 font-bold uppercase">Images</div>
-                                    <div className="text-lg font-extrabold text-[#0E141C]">{selectedRequest.analysis_image_count || '-'}</div>
-                                </div>
-                                <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 text-center">
-                                    <div className="text-xs text-blue-600 font-bold uppercase">Auto Estimate</div>
-                                    <div className="text-lg font-extrabold text-[#0066FF]">₹{selectedRequest.auto_estimated_cost_inr || '0.00'}</div>
-                                </div>
-                            </div>
+            <section>
+                <h2 className="text-sm font-bold text-[#0E141C] uppercase tracking-wide mb-3">Recent decisions</h2>
+                {decided.length === 0 ? (
+                    <div className="p-6 text-center text-gray-1 border border-dashed border-gray-200 rounded-xl">No decisions yet.</div>
+                ) : (
+                    <div className="space-y-2">
+                        {decided.slice(0, 20).map(l => (
+                            <LeaveCard key={l.id} leave={l} />
+                        ))}
+                    </div>
+                )}
+            </section>
+        </div>
+    )
+}
 
-                            <form onSubmit={submitEstimate} className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-bold text-[#0E141C] mb-1">Estimated Cost (₹)</label>
-                                    <div className="relative">
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-2 font-bold">₹</span>
-                                        <input
-                                            type="number"
-                                            step="0.01"
-                                            className="w-full pl-9 px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#0066FF] focus:border-[#0066FF] font-mono"
-                                            placeholder="0.00"
-                                            value={estimateForm.cost}
-                                            onChange={e => setEstimateForm({ ...estimateForm, cost: e.target.value })}
-                                            required
-                                        />
-                                    </div>
-                                </div>
+function LeaveCard({ leave, actions }: { leave: Leave, actions?: React.ReactNode }) {
+    return (
+        <div className="bg-white border border-gray-200 rounded-xl p-4">
+            <div className="flex items-start justify-between flex-wrap gap-3">
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-bold text-[#0E141C]">{leave.user_name}</span>
+                        <span className="text-sm text-gray-1">·</span>
+                        <span className="text-sm text-gray-1">{leave.start_date} → {leave.end_date}</span>
+                        <span className="text-xs text-gray-2">({leave.total_days} day{leave.total_days === 1 ? '' : 's'})</span>
+                        <LeaveStatusBadge status={leave.status} />
+                        {leave.status === 'approved' && leave.leave_type && (
+                            <span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full capitalize">{leave.leave_type}</span>
+                        )}
+                        {leave.status === 'approved' && leave.is_salary_cut && (
+                            <span className="text-xs bg-red-50 text-red-700 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                <IndianRupee className="w-3 h-3" /> Salary cut
+                            </span>
+                        )}
+                    </div>
+                    <p className="text-sm text-gray-700 mt-2 whitespace-pre-wrap">{leave.reason}</p>
+                    {leave.status === 'rejected' && leave.rejection_reason && (
+                        <div className="mt-2 text-sm bg-red-50 border border-red-200 text-red-800 rounded-lg px-3 py-2">
+                            <span className="font-semibold">Rejected:</span> {leave.rejection_reason}
+                        </div>
+                    )}
+                </div>
+                {actions && <div className="flex gap-2 items-start">{actions}</div>}
+            </div>
+        </div>
+    )
+}
 
-                                <div>
-                                    <label className="block text-sm font-bold text-[#0E141C] mb-1">Estimation Notes / Terms</label>
-                                    <textarea
-                                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#0066FF] focus:border-[#0066FF]"
-                                        rows={4}
-                                        placeholder="Explain the scope and cost breakdown..."
-                                        value={estimateForm.notes}
-                                        onChange={e => setEstimateForm({ ...estimateForm, notes: e.target.value })}
-                                        required
-                                    />
-                                </div>
+function LeaveStatusBadge({ status }: { status: string }) {
+    const variants: Record<string, { className: string, icon: any, label: string }> = {
+        pending: { className: 'bg-yellow-50 text-yellow-700', icon: Clock, label: 'Pending' },
+        approved: { className: 'bg-green-50 text-green-700', icon: CheckCircle, label: 'Approved' },
+        rejected: { className: 'bg-red-50 text-red-700', icon: XCircle, label: 'Rejected' },
+        cancelled: { className: 'bg-gray-100 text-gray-600', icon: XCircle, label: 'Cancelled' },
+    }
+    const v = variants[status] || variants.pending
+    const I = v.icon
+    return (
+        <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${v.className}`}>
+            <I className="w-3 h-3" /> {v.label}
+        </span>
+    )
+}
 
-                                <div className="pt-2 flex gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowModal(false)}
-                                        className="flex-1 px-4 py-2.5 bg-gray-3 text-[#0E141C] rounded-lg font-bold hover:bg-gray-200 transition-colors"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="flex-1 px-4 py-2.5 bg-[#0066FF] text-white rounded-lg font-bold hover:bg-[#0066FF]/90 transition-colors shadow-lg shadow-blue-200/50"
-                                    >
-                                        Submit Estimate
-                                    </button>
-                                </div>
-                            </form>
+// ---------------- Modals ----------------
+
+function DataRequestModal({ selectedRequest, estimateForm, setEstimateForm, onClose, onSubmit }: any) {
+    return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-2xl w-full max-w-lg overflow-hidden animate-slideUp">
+                <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-3">
+                    <h3 className="font-bold text-[#0E141C]">Review Request #{selectedRequest.id}</h3>
+                    <button onClick={onClose} className="text-gray-2 hover:text-[#0E141C]">
+                        <XCircle className="w-6 h-6" />
+                    </button>
+                </div>
+                <div className="p-6 space-y-4">
+                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                        <h4 className="font-bold text-[#0066FF] mb-1">{selectedRequest.title}</h4>
+                        <p className="text-sm text-blue-900">{selectedRequest.description}</p>
+                        {selectedRequest.file_url && (
+                            <a href={selectedRequest.file_url} target="_blank" className="inline-block mt-3 text-sm font-bold text-[#0066FF] hover:underline">
+                                Download Attached File
+                            </a>
+                        )}
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                        <div className="bg-gray-50 p-3 rounded-lg border border-gray-200 text-center">
+                            <div className="text-xs text-gray-500 font-bold uppercase">Outlets</div>
+                            <div className="text-lg font-extrabold text-[#0E141C]">{selectedRequest.analysis_outlet_count || '-'}</div>
+                        </div>
+                        <div className="bg-gray-50 p-3 rounded-lg border border-gray-200 text-center">
+                            <div className="text-xs text-gray-500 font-bold uppercase">Images</div>
+                            <div className="text-lg font-extrabold text-[#0E141C]">{selectedRequest.analysis_image_count || '-'}</div>
+                        </div>
+                        <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 text-center">
+                            <div className="text-xs text-blue-600 font-bold uppercase">Auto Estimate</div>
+                            <div className="text-lg font-extrabold text-[#0066FF]">₹{selectedRequest.auto_estimated_cost_inr || '0.00'}</div>
                         </div>
                     </div>
+                    <form onSubmit={onSubmit} className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-bold text-[#0E141C] mb-1">Estimated Cost (₹)</label>
+                            <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-2 font-bold">₹</span>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    className="w-full pl-9 px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#0066FF] focus:border-[#0066FF] font-mono"
+                                    placeholder="0.00"
+                                    value={estimateForm.cost}
+                                    onChange={e => setEstimateForm({ ...estimateForm, cost: e.target.value })}
+                                    required
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold text-[#0E141C] mb-1">Estimation Notes / Terms</label>
+                            <textarea
+                                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#0066FF] focus:border-[#0066FF]"
+                                rows={4}
+                                placeholder="Explain the scope and cost breakdown..."
+                                value={estimateForm.notes}
+                                onChange={e => setEstimateForm({ ...estimateForm, notes: e.target.value })}
+                                required
+                            />
+                        </div>
+                        <div className="pt-2 flex gap-3">
+                            <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 bg-gray-3 text-[#0E141C] rounded-lg font-bold hover:bg-gray-200 transition-colors">
+                                Cancel
+                            </button>
+                            <button type="submit" className="flex-1 px-4 py-2.5 bg-[#0066FF] text-white rounded-lg font-bold hover:bg-[#0066FF]/90 transition-colors shadow-lg shadow-blue-200/50">
+                                Submit Estimate
+                            </button>
+                        </div>
+                    </form>
                 </div>
-            )}
+            </div>
+        </div>
+    )
+}
+
+function ApproveLeaveModal({ leave, form, setForm, monthUsage, onClose, onSubmit }: any) {
+    return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-2xl w-full max-w-md overflow-hidden">
+                <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between bg-green-50">
+                    <h3 className="font-bold text-green-900 flex items-center gap-2"><CheckCircle className="w-5 h-5" /> Approve Leave</h3>
+                    <button onClick={onClose}><XCircle className="w-5 h-5 text-gray-500 hover:text-gray-800" /></button>
+                </div>
+                <form onSubmit={onSubmit} className="p-5 space-y-4">
+                    <div className="text-sm space-y-1">
+                        <div><span className="text-gray-500">Employee:</span> <span className="font-medium">{leave.user_name}</span></div>
+                        <div><span className="text-gray-500">Dates:</span> <span className="font-medium">{leave.start_date} → {leave.end_date}</span> <span className="text-gray-400">({leave.total_days} day{leave.total_days === 1 ? '' : 's'})</span></div>
+                        <div className="text-gray-700 mt-2 bg-gray-50 p-2 rounded">{leave.reason}</div>
+                    </div>
+
+                    {monthUsage && (
+                        <div className="text-xs bg-blue-50 border border-blue-200 text-blue-800 rounded-lg px-3 py-2 flex items-center gap-2">
+                            <Calendar className="w-4 h-4 flex-shrink-0" />
+                            <span>
+                                Approved this month so far: <b>{monthUsage.approved_days_in_month}</b>.
+                                Free quota remaining: <b>{monthUsage.remaining_free}</b>.
+                            </span>
+                        </div>
+                    )}
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Leave type</label>
+                        <select
+                            value={form.leave_type}
+                            onChange={e => setForm({ ...form, leave_type: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            required
+                        >
+                            <option value="casual">Casual</option>
+                            <option value="medical">Medical</option>
+                            <option value="emergency">Emergency</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="flex items-start gap-2 cursor-pointer text-sm">
+                            <input
+                                type="checkbox"
+                                checked={form.is_salary_cut}
+                                onChange={e => setForm({ ...form, is_salary_cut: e.target.checked })}
+                                className="mt-1"
+                            />
+                            <span>
+                                <span className="font-medium text-gray-900 flex items-center gap-1">
+                                    <AlertTriangle className="w-3.5 h-3.5 text-red-500" />
+                                    Mark as salary-cut leave
+                                </span>
+                                <span className="text-xs text-gray-500 block mt-0.5">
+                                    Default checked if this user already used their 1 free day this month.
+                                </span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Note (optional)</label>
+                        <textarea
+                            value={form.approval_note}
+                            onChange={e => setForm({ ...form, approval_note: e.target.value })}
+                            rows={2}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            placeholder="e.g. Approved with conditions…"
+                        />
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-2">
+                        <button type="button" onClick={onClose} className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">Cancel</button>
+                        <button type="submit" className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">Approve</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    )
+}
+
+function RejectLeaveModal({ leave, reason, setReason, onClose, onSubmit }: any) {
+    return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-2xl w-full max-w-md overflow-hidden">
+                <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between bg-red-50">
+                    <h3 className="font-bold text-red-900 flex items-center gap-2"><XCircle className="w-5 h-5" /> Reject Leave</h3>
+                    <button onClick={onClose}><XCircle className="w-5 h-5 text-gray-500 hover:text-gray-800" /></button>
+                </div>
+                <form onSubmit={onSubmit} className="p-5 space-y-4">
+                    <div className="text-sm space-y-1">
+                        <div><span className="text-gray-500">Employee:</span> <span className="font-medium">{leave.user_name}</span></div>
+                        <div><span className="text-gray-500">Dates:</span> <span className="font-medium">{leave.start_date} → {leave.end_date}</span></div>
+                        <div className="text-gray-700 mt-2 bg-gray-50 p-2 rounded">{leave.reason}</div>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Rejection reason (required)</label>
+                        <textarea
+                            value={reason}
+                            onChange={e => setReason(e.target.value)}
+                            rows={3}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500"
+                            placeholder="Explain why this leave can't be granted…"
+                            required
+                        />
+                    </div>
+                    <div className="flex justify-end gap-2 pt-2">
+                        <button type="button" onClick={onClose} className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">Cancel</button>
+                        <button type="submit" className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium">Reject</button>
+                    </div>
+                </form>
+            </div>
         </div>
     )
 }

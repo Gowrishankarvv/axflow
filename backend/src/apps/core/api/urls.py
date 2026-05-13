@@ -16,4 +16,5 @@ urlpatterns = [
     path("", include("apps.core.api.app_init.urls")),
     path("", include("apps.core.api.dashboard.urls")),
     path("", include("apps.core.api.timers.urls")),
+    path("", include("apps.core.api.leaves.urls")),
 ]
