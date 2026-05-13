@@ -4,7 +4,7 @@ from django.core.cache import cache
 from django.conf import settings
 from django.db import models
 from datetime import timedelta
-from .models import User, TimeEntry, Task, ClockSession, Project
+from .models import User, TimeEntry, Task, ClockSession, Project, DataRequest, Notification, LeaveRequest
 
 @receiver([post_save, post_delete], sender=User)
 def invalidate_user_cache(sender, instance, **kwargs):
@@ -106,3 +106,76 @@ def sync_task_status_to_request(sender, instance, created, **kwargs):
             
         if should_save:
             req.save(update_fields=['status'])
+
+
+@receiver(post_save, sender=DataRequest)
+def notify_on_new_data_request(sender, instance, created, **kwargs):
+    """Fan out an in-app Notification to managers + superusers when a new
+    data request is submitted. Excludes the requester themselves (no one
+    needs a "you submitted a request" notification)."""
+    if not created:
+        return
+
+    requester = instance.requester
+    recipients = User.objects.filter(
+        role__in=["manager", "superuser"], is_active=True,
+    )
+    if requester:
+        recipients = recipients.exclude(id=requester.id)
+
+    requester_name = (
+        (requester.first_name or requester.username) if requester else "Someone"
+    )
+    title = "New data request submitted"
+    message = f"{requester_name} submitted: {instance.title or 'Untitled request'}"
+
+    Notification.objects.bulk_create([
+        Notification(
+            user=u,
+            actor=requester,
+            kind="request_submitted",
+            title=title,
+            message=message,
+            link="/requests",
+        )
+        for u in recipients
+    ])
+
+
+@receiver(post_save, sender=LeaveRequest)
+def notify_on_new_leave_request(sender, instance, created, **kwargs):
+    """Fan out an in-app Notification to managers + superusers when an employee
+    submits a leave request. The approval UI lives inside /requests (under the
+    "Leave Requests" tab), so the click-through targets that path."""
+    if not created:
+        return
+
+    requester = instance.user
+    recipients = User.objects.filter(
+        role__in=["manager", "superuser"], is_active=True,
+    )
+    if requester:
+        recipients = recipients.exclude(id=requester.id)
+
+    requester_name = (
+        (requester.first_name or requester.username) if requester else "Someone"
+    )
+    days = instance.total_days
+    day_word = "day" if days == 1 else "days"
+    title = "New leave request submitted"
+    message = (
+        f"{requester_name} requested {days} {day_word} off "
+        f"({instance.start_date} → {instance.end_date})"
+    )
+
+    Notification.objects.bulk_create([
+        Notification(
+            user=u,
+            actor=requester,
+            kind="leave_submitted",
+            title=title,
+            message=message,
+            link="/requests",
+        )
+        for u in recipients
+    ])

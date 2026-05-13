@@ -36,6 +36,7 @@ const mutationInvalidations: Record<string, string[]> = {
   ],
   '/tags': ['/tags', '/app-initial-data', '/reports/team-summary'],
   '/leaves': ['/leaves'],
+  '/notifications': ['/notifications'],
 }
 
 type CacheProfile = {
@@ -246,12 +247,9 @@ export async function fetchMe() {
   return data
 }
 
-export async function checkNewUser(username: string): Promise<any> {
-  return api.post('/auth/check-new-user/', { username })
-}
-
-export async function setNewPassword(username: string, password: string, confirmPassword: string): Promise<any> {
-  return api.post('/auth/set-new-password/', { username, password, confirm_password: confirmPassword })
-}
+// checkNewUser / setNewPassword removed — the old "12345678"-seed onboarding
+// backdoor is gone. New users are issued a real temp password by an admin and
+// log in normally; the backend's must_set_password flag (returned by /auth/login/)
+// routes them through /auth/set-password/ on first login.
 
 export default api

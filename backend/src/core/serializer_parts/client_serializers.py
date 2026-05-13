@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
 from rest_framework import serializers
 
@@ -43,21 +44,35 @@ class ClientSerializer(serializers.ModelSerializer):
         client = super().create(validated_data)
 
         if admin_email and admin_password:
-            if User.objects.filter(email=admin_email).exists():
-                raise serializers.ValidationError({"admin_email": "User with this email already exists."})
+            # Case-insensitive uniqueness check on both email AND username
+            # (we use the email as the username, so a clash on either side blocks).
+            if (
+                User.objects.filter(email__iexact=admin_email).exists()
+                or User.objects.filter(username__iexact=admin_email).exists()
+            ):
+                raise serializers.ValidationError({
+                    "admin_email": "A user with this email already exists. Add a login to the existing client instead, or use a different email."
+                })
 
             first_name = admin_name.split(" ")[0] if admin_name else ""
             last_name = " ".join(admin_name.split(" ")[1:]) if admin_name and " " in admin_name else ""
 
-            User.objects.create_user(
-                username=admin_email,
-                email=admin_email,
-                password=admin_password,
-                first_name=first_name,
-                last_name=last_name,
-                role="client",
-                client_org=client,
-                is_active=True,
-            )
+            try:
+                User.objects.create_user(
+                    username=admin_email,
+                    email=admin_email,
+                    password=admin_password,
+                    first_name=first_name,
+                    last_name=last_name,
+                    role="client",
+                    client_org=client,
+                    is_active=True,
+                )
+            except DjangoValidationError as exc:
+                # The User model's save() calls full_clean(), which can raise this
+                # for race-condition duplicates or domain validation failures.
+                # Surface as a DRF 400 rather than a 500.
+                detail = getattr(exc, "message_dict", None) or {"detail": exc.messages}
+                raise serializers.ValidationError({"admin_email": detail})
 
         return client

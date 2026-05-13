@@ -11,6 +11,7 @@ from .time_models import (
 from .request_models import DataRequest, Invoice, RequestFile
 from .leave_models import LeaveRequest
 from .offer_letter_models import OfferLetter
+from .notification_models import Notification
 
 __all__ = [
     "ActiveTimeEntry",
@@ -21,6 +22,7 @@ __all__ = [
     "DataRequest",
     "Invoice",
     "LeaveRequest",
+    "Notification",
     "OfferLetter",
     "OrganizationUnit",
     "Project",

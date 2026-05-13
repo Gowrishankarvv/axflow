@@ -6,9 +6,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.core.selectors import get_user_by_email, get_user_by_username
+from apps.core.selectors import get_user_by_email
 from apps.core.serializers import SetPasswordSerializer
-from apps.core.services import auth_me_payload, issue_tokens, logout_with_refresh_token, normalize_email, set_user_password
+from apps.core.services import auth_me_payload, issue_tokens, logout_with_refresh_token, normalize_email
 
 
 class LoginView(APIView):
@@ -32,18 +32,26 @@ class LoginView(APIView):
 
         if user is None:
             allowed_domains = [d.strip().lower() for d in settings.ALLOWED_EMAIL_DOMAINS]
+            # Clients are external — they intentionally bypass the domain check.
+            # Without a user row we still want a generic error rather than
+            # confirming the email exists.
             if domain not in allowed_domains:
-                return Response({"detail": "Email domain not allowed."}, status=400)
+                return Response({"detail": "Invalid credentials."}, status=400)
             return Response({"detail": "Invalid credentials."}, status=400)
 
         if not user.check_password(password):
             return Response({"detail": "Invalid credentials."}, status=400)
         if not user.is_active:
             return Response({"detail": "Account is disabled."}, status=403)
-        if user.must_set_password:
-            return Response({"must_set_password": True}, status=403)
 
-        return Response(issue_tokens(user))
+        # Always issue tokens — even when must_set_password is True. The
+        # frontend reads the must_set_password flag and routes the user to
+        # /set-password/ before letting them use the rest of the app. This is
+        # what replaces the old `12345678`-seed backdoor.
+        payload = issue_tokens(user)
+        if user.must_set_password:
+            payload["must_set_password"] = True
+        return Response(payload)
 
 
 class SetPasswordView(APIView):
@@ -54,44 +62,6 @@ class SetPasswordView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response({"detail": "Password set.", **issue_tokens(request.user)})
-
-
-class CheckNewUserView(APIView):
-    permission_classes = []
-    authentication_classes = []
-
-    def post(self, request):
-        username = (request.data.get("username", "") or "").strip()
-        if not username:
-            return Response({"detail": "Username is required."}, status=400)
-
-        user = get_user_by_username(username)
-        if user is None:
-            return Response({"valid": False, "detail": "User not found."}, status=404)
-
-        if user.check_password("12345678"):
-            return Response({"valid": True, "user_id": user.id})
-        return Response({"valid": False, "detail": "User already has a password set."}, status=400)
-
-
-class SetNewPasswordView(APIView):
-    permission_classes = []
-    authentication_classes = []
-
-    def post(self, request):
-        username = (request.data.get("username", "") or "").strip()
-        password = (request.data.get("password", "") or "").strip()
-        if not username or not password:
-            return Response({"detail": "Username and new password are required."}, status=400)
-
-        user = get_user_by_username(username)
-        if user is None:
-            return Response({"detail": "User not found."}, status=404)
-        if not user.check_password("12345678"):
-            return Response({"detail": "User already set a password."}, status=400)
-
-        set_user_password(user, password)
-        return Response({"detail": "Password set successfully.", **issue_tokens(user)})
 
 
 class LogoutView(APIView):

@@ -1,6 +1,16 @@
 import React, { useEffect, useState } from 'react'
 import api, { getCached } from '../lib/api'
-import { Plus, Search, Building, Mail, Globe, CheckCircle, XCircle, Trash2, Edit2 } from 'lucide-react'
+import { Plus, Search, Building, Mail, Globe, CheckCircle, XCircle, Trash2, Edit2, Users, KeyRound, Copy } from 'lucide-react'
+
+type ClientLogin = {
+    id: number
+    first_name: string
+    last_name: string
+    email: string
+    username: string
+    is_active: boolean
+    must_set_password: boolean
+}
 
 export default function Clients({ me }: { me?: any }) {
     const [clients, setClients] = useState<any[]>([])
@@ -11,6 +21,17 @@ export default function Clients({ me }: { me?: any }) {
     const [form, setForm] = useState<{ name: string, domain: string, contact_email: string, is_active: boolean, logo: File | null }>({
         name: '', domain: '', contact_email: '', is_active: true, logo: null
     })
+
+    // --- "Manage Logins" modal state ---
+    const [loginsClient, setLoginsClient] = useState<any | null>(null)
+    const [clientLogins, setClientLogins] = useState<ClientLogin[]>([])
+    const [logToLoading, setLogToLoading] = useState(false)
+    const [loginForm, setLoginForm] = useState<{ first_name: string, last_name: string, email: string, password: string }>({
+        first_name: '', last_name: '', email: '', password: ''
+    })
+    const [showLoginForm, setShowLoginForm] = useState(false)
+    const [generatedTempPassword, setGeneratedTempPassword] = useState<{ email: string, password: string } | null>(null)
+    const [logToError, setLogToError] = useState<string | null>(null)
 
     async function load() {
         setLoading(true)
@@ -106,6 +127,80 @@ export default function Clients({ me }: { me?: any }) {
         }
     }
 
+    // --- Per-client login management ---
+
+    async function openLoginsModal(c: any) {
+        setLoginsClient(c)
+        setShowLoginForm(false)
+        setGeneratedTempPassword(null)
+        setLogToError(null)
+        setLoginForm({ first_name: '', last_name: '', email: '', password: '' })
+        await loadClientLogins(c.id)
+    }
+
+    async function loadClientLogins(clientId: number) {
+        setLogToLoading(true)
+        try {
+            const res = await api.get('/users/', { params: { role: 'client', client_org: clientId, page_size: 200 } })
+            const payload: any = res.data
+            setClientLogins(payload.results || payload || [])
+        } catch (e) {
+            console.error('Failed to load client logins', e)
+            setClientLogins([])
+        } finally {
+            setLogToLoading(false)
+        }
+    }
+
+    async function createLogin(e: React.FormEvent) {
+        e.preventDefault()
+        if (!loginsClient) return
+        setLogToError(null)
+        const body: any = {
+            first_name: loginForm.first_name,
+            last_name: loginForm.last_name,
+            email: loginForm.email,
+            username: loginForm.email,
+            role: 'client',
+            client_org: loginsClient.id,
+            is_active: true,
+        }
+        if (loginForm.password.trim()) body.password = loginForm.password.trim()
+        try {
+            const res = await api.post('/users/', body)
+            const data = res.data as any
+            // If admin left the password blank, backend minted a temp one and returned it once.
+            if (data.generated_password) {
+                setGeneratedTempPassword({ email: data.email, password: data.generated_password })
+            } else {
+                setGeneratedTempPassword(null)
+            }
+            setShowLoginForm(false)
+            setLoginForm({ first_name: '', last_name: '', email: '', password: '' })
+            await loadClientLogins(loginsClient.id)
+        } catch (err: any) {
+            const detail = err?.response?.data
+            const text = typeof detail === 'string'
+                ? detail
+                : (detail?.detail || JSON.stringify(detail) || 'Failed to create login')
+            setLogToError(text)
+        }
+    }
+
+    async function toggleLoginActive(login: ClientLogin) {
+        if (!loginsClient) return
+        try {
+            await api.patch(`/users/${login.id}/`, { is_active: !login.is_active })
+            await loadClientLogins(loginsClient.id)
+        } catch (err: any) {
+            alert(err?.response?.data?.detail || 'Failed to update login')
+        }
+    }
+
+    function copyToClipboard(text: string) {
+        try { navigator.clipboard.writeText(text) } catch { }
+    }
+
     return (
         <div className="p-6 space-y-6 bg-gradient-to-br from-gray-50 to-white min-h-screen">
             <div className="flex items-center justify-between">
@@ -175,6 +270,13 @@ export default function Clients({ me }: { me?: any }) {
                                 </div>
 
                                 <div className="absolute bottom-4 right-4 flex gap-2">
+                                    <button
+                                        onClick={() => openLoginsModal(c)}
+                                        className="p-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                                        title="Manage client logins"
+                                    >
+                                        <Users className="w-4 h-4" />
+                                    </button>
                                     <button onClick={() => openEdit(c)} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
                                         <Edit2 className="w-4 h-4" />
                                     </button>
@@ -334,6 +436,188 @@ export default function Clients({ me }: { me?: any }) {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {loginsClient && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-emerald-50 to-blue-50 sticky top-0 z-10">
+                            <div>
+                                <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                                    <Users className="w-5 h-5 text-emerald-600" />
+                                    {loginsClient.name} · Client Logins
+                                </h3>
+                                <p className="text-xs text-gray-500 mt-0.5">Users that can log in and see {loginsClient.name}'s projects.</p>
+                            </div>
+                            <button onClick={() => setLoginsClient(null)} className="text-gray-400 hover:text-gray-600">
+                                <XCircle className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        <div className="p-6 space-y-4">
+                            {/* One-shot temp password banner */}
+                            {generatedTempPassword && (
+                                <div className="bg-amber-50 border border-amber-300 rounded-lg p-4 space-y-2">
+                                    <div className="flex items-start gap-2">
+                                        <KeyRound className="w-5 h-5 text-amber-700 flex-shrink-0 mt-0.5" />
+                                        <div className="flex-1 min-w-0">
+                                            <div className="text-sm font-bold text-amber-900">Temporary password — save it now</div>
+                                            <div className="text-xs text-amber-800 mt-1">
+                                                This is the only time you'll see it. Share it with <b>{generatedTempPassword.email}</b>;
+                                                they'll be forced to set their own password on first login.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 bg-white border border-amber-200 rounded-md px-3 py-2">
+                                        <code className="flex-1 text-sm font-mono break-all">{generatedTempPassword.password}</code>
+                                        <button
+                                            type="button"
+                                            onClick={() => copyToClipboard(generatedTempPassword.password)}
+                                            className="text-amber-700 hover:text-amber-900 p-1"
+                                            title="Copy to clipboard"
+                                        >
+                                            <Copy className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setGeneratedTempPassword(null)}
+                                        className="text-xs text-amber-700 hover:text-amber-900 underline"
+                                    >
+                                        I've saved it — dismiss
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Existing logins */}
+                            <div>
+                                <div className="flex items-center justify-between mb-2">
+                                    <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+                                        Logins {clientLogins.length > 0 && <span className="text-gray-400 font-normal">({clientLogins.length})</span>}
+                                    </h4>
+                                    {!showLoginForm && (
+                                        <button
+                                            onClick={() => { setShowLoginForm(true); setLogToError(null) }}
+                                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700"
+                                        >
+                                            <Plus className="w-4 h-4" /> Create Login
+                                        </button>
+                                    )}
+                                </div>
+
+                                {logToLoading ? (
+                                    <div className="text-center py-6 text-gray-500 text-sm">Loading…</div>
+                                ) : clientLogins.length === 0 ? (
+                                    <div className="text-center py-6 border border-dashed border-gray-200 rounded-lg text-gray-500 text-sm">
+                                        No logins yet for {loginsClient.name}.
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2">
+                                        {clientLogins.map(u => (
+                                            <div key={u.id} className="border border-gray-100 rounded-lg p-3 flex items-center justify-between gap-3 flex-wrap">
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="font-medium text-gray-900 truncate">
+                                                        {(u.first_name || u.last_name) ? `${u.first_name} ${u.last_name}`.trim() : u.username}
+                                                    </div>
+                                                    <div className="text-xs text-gray-500 truncate">{u.email}</div>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <span className={`text-xs px-2 py-0.5 rounded-full ${u.is_active ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                                                            {u.is_active ? 'Active' : 'Disabled'}
+                                                        </span>
+                                                        {u.must_set_password && (
+                                                            <span className="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">Temp password</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => toggleLoginActive(u)}
+                                                    className={`text-xs font-medium px-3 py-1.5 rounded-lg ${u.is_active
+                                                        ? 'bg-red-50 text-red-700 hover:bg-red-100'
+                                                        : 'bg-green-50 text-green-700 hover:bg-green-100'
+                                                        }`}
+                                                >
+                                                    {u.is_active ? 'Disable' : 'Enable'}
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Create form */}
+                            {showLoginForm && (
+                                <form onSubmit={createLogin} className="border border-gray-200 rounded-lg p-4 space-y-3 bg-gray-50">
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-700 mb-1">First name</label>
+                                            <input
+                                                type="text"
+                                                value={loginForm.first_name}
+                                                onChange={e => setLoginForm({ ...loginForm, first_name: e.target.value })}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-emerald-500"
+                                                required
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-700 mb-1">Last name</label>
+                                            <input
+                                                type="text"
+                                                value={loginForm.last_name}
+                                                onChange={e => setLoginForm({ ...loginForm, last_name: e.target.value })}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-emerald-500"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-700 mb-1">Email (used to log in)</label>
+                                        <input
+                                            type="email"
+                                            value={loginForm.email}
+                                            onChange={e => setLoginForm({ ...loginForm, email: e.target.value })}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-emerald-500"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                                            Password <span className="text-gray-400 font-normal">(leave blank to auto-generate)</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={loginForm.password}
+                                            onChange={e => setLoginForm({ ...loginForm, password: e.target.value })}
+                                            placeholder="Leave blank for random temp password"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm font-mono focus:ring-2 focus:ring-emerald-500"
+                                        />
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            Either way, the user will be forced to set their own password on first login.
+                                        </p>
+                                    </div>
+
+                                    {logToError && (
+                                        <div className="text-xs text-red-700 bg-red-50 border border-red-200 rounded p-2">{logToError}</div>
+                                    )}
+
+                                    <div className="flex justify-end gap-2 pt-1">
+                                        <button
+                                            type="button"
+                                            onClick={() => { setShowLoginForm(false); setLogToError(null) }}
+                                            className="px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-200 rounded-md"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            className="px-3 py-1.5 bg-emerald-600 text-white text-sm font-medium rounded-md hover:bg-emerald-700"
+                                        >
+                                            Create Login
+                                        </button>
+                                    </div>
+                                </form>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}

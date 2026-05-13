@@ -20,7 +20,9 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, OrderingFilter]
-    filterset_fields = ["role", "manager"]
+    # client_org included so the Clients page can ask for
+    # /users/?role=client&client_org=<id> to list a single org's logins.
+    filterset_fields = ["role", "manager", "client_org"]
     ordering_fields = ["created_at", "first_name", "last_name", "id"]
 
     def get_queryset(self):
@@ -40,11 +42,25 @@ class UserViewSet(viewsets.ModelViewSet):
             return qs.filter(id__in=build_visible_user_ids(user), is_active=True)
         return qs.filter(id=user.id, is_active=True)
 
+    def create(self, request, *args, **kwargs):
+        # Default DRF flow, then bolt on the one-shot generated password so the
+        # admin UI can show it in a copy-banner.
+        response = super().create(request, *args, **kwargs)
+        if response.status_code in (200, 201):
+            instance: User | None = getattr(self, "_created_instance", None)
+            if instance is not None:
+                pwd = getattr(instance, "_generated_password", None)
+                if pwd:
+                    response.data["generated_password"] = pwd
+        return response
+
     def perform_create(self, serializer):
         instance: User = serializer.save()
         if not instance.username:
             instance.username = instance.email
             instance.save(update_fields=["username"])
+        # Stash on self so create() can pluck the transient _generated_password.
+        self._created_instance = instance
 
     def perform_update(self, serializer):
         instance: User = serializer.save()

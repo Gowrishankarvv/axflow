@@ -1,24 +1,32 @@
 import React, { useState } from 'react'
-import { Eye, EyeOff, CheckSquare, Square } from 'lucide-react'
-import api, { checkNewUser } from '../lib/api'
-import { setNewPassword } from '../lib/api'
+import { Eye, EyeOff } from 'lucide-react'
+import api from '../lib/api'
 import { useNavigate } from 'react-router-dom'
 import AuthLayout from '../components/layouts/AuthLayout'
 
+/**
+ * Login flow:
+ *  1. User submits email + password → POST /auth/login/.
+ *  2. Backend returns {access, refresh}. If the user was created with a temp
+ *     password (admin-issued), the response also includes must_set_password=true.
+ *     In that case the frontend stores the tokens AND switches to the
+ *     set-password step. The /auth/set-password/ call below is authenticated.
+ *  3. After /auth/set-password/ succeeds, we land on the dashboard.
+ *
+ * The old "Sign Up" flow (which relied on /auth/check-new-user/ +
+ * /auth/set-new-password/ — i.e. the `12345678`-seed backdoor) has been
+ * removed. Onboarding is now: admin creates the account with a random temp
+ * password → admin shares it with the user → user signs in normally.
+ */
 export default function Login() {
-  const [isNewUser, setIsNewUser] = useState(false)
   const [email, setEmail] = useState('')
-  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [newPassword, setNewPasswordState] = useState('')
+  const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [step, setStep] = useState<'login' | 'setPassword'>('login')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-
-  // Terms state for "Sign Up" visual compliance
-  const [agreeTerms, setAgreeTerms] = useState(true)
 
   const navigate = useNavigate()
 
@@ -27,173 +35,100 @@ export default function Login() {
     setError('')
     setLoading(true)
 
-    if (step === 'login') {
-      if (isNewUser) {
-        // New User Flow (Mapped to "Create Account" UI)
-        if (!agreeTerms) {
-          setError('You must agree to the Terms & Conditions')
-          setLoading(false)
-          return
-        }
-        try {
-          const response = await checkNewUser(username)
-          if (response.data.valid) {
-            setStep('setPassword') // Move to password creation
-          } else {
-            setError('Username not found or password already set')
-          }
-        } catch (err: any) {
-          setError(err?.response?.data?.detail || 'Invalid username')
+    try {
+      if (step === 'login') {
+        const { data } = await api.post('/auth/login/', { email, password })
+        // Store tokens unconditionally — the set-password call below is
+        // authenticated and needs the access token in localStorage.
+        localStorage.setItem('access', data.access)
+        localStorage.setItem('refresh', data.refresh)
+        if (data.must_set_password) {
+          setStep('setPassword')
+        } else {
+          setTimeout(() => navigate('/'), 0)
         }
       } else {
-        // Regular Login Flow
-        try {
-          const { data } = await api.post('/auth/login/', { email, password })
-          if (data.must_set_password) {
-            setStep('setPassword')
-          } else {
-            localStorage.setItem('access', data.access)
-            localStorage.setItem('refresh', data.refresh)
-            setTimeout(() => navigate('/'), 0)
-          }
-        } catch (err: any) {
-          const detail = err?.response?.data?.detail || 'Login failed'
-          if (detail && detail.toLowerCase().includes('must_set_password')) setStep('setPassword')
-          else if (err?.response?.status === 403) setStep('setPassword')
-          else setError(detail)
+        // Set-password step
+        if (newPassword !== confirmPassword) {
+          setError('Passwords do not match')
+          return
         }
+        const { data } = await api.post('/auth/set-password/', { password: newPassword })
+        // Backend returns fresh tokens — replace whatever we have.
+        if (data.access) localStorage.setItem('access', data.access)
+        if (data.refresh) localStorage.setItem('refresh', data.refresh)
+        setTimeout(() => navigate('/'), 0)
       }
-    } else {
-      // Set Password Flow
-      if (newPassword !== confirmPassword) {
-        setError('Passwords do not match')
-        setLoading(false)
-        return
-      }
-      try {
-        if (isNewUser) {
-          const response = await setNewPassword(username, newPassword, confirmPassword)
-          localStorage.setItem('access', response.data.access)
-          localStorage.setItem('refresh', response.data.refresh)
-          setTimeout(() => navigate('/login'), 0)
-        } else {
-          const response = await api.post('/auth/set-password/', { password: newPassword })
-          localStorage.setItem('access', response.data.access)
-          localStorage.setItem('refresh', response.data.refresh)
-          setTimeout(() => navigate('/login'), 0)
-        }
-      } catch (err: any) {
-        setError(err?.response?.data?.detail || err?.response?.data || 'Password set failed')
-      }
+    } catch (err: any) {
+      const detail = err?.response?.data?.detail || err?.response?.data?.password?.[0] || 'Login failed'
+      setError(typeof detail === 'string' ? detail : 'Login failed')
+    } finally {
+      setLoading(false)
     }
-
-    setLoading(false)
-  }
-
-  // Toggle between Login and "Create Account" (New User)
-  const toggleMode = (mode: 'signin' | 'signup') => {
-    setIsNewUser(mode === 'signup')
-    setError('')
-    setStep('login')
   }
 
   return (
     <AuthLayout
-      title={step === 'setPassword' ? "Secure Your Account" : (isNewUser ? "Join the Future" : "Welcome Back")}
-      subtitle={step === 'setPassword' ? "Create a strong password to protect your data." : (isNewUser ? "Create your account and start your journey with Axinortech." : "Sign in to access your dashboard and insights.")}
+      title={step === 'setPassword' ? 'Secure Your Account' : 'Welcome Back'}
+      subtitle={step === 'setPassword'
+        ? 'Create a strong password to protect your account.'
+        : 'Sign in to access your dashboard and insights.'}
     >
       <div className="w-full">
-        {/* Header Section */}
         <div className="text-center mb-8">
           <h2 className="text-2xl md:text-3xl font-extrabold text-brand-dark mb-2">
-            {step === 'setPassword' ? 'Set Password' : (isNewUser ? 'Create your account' : 'Sign in to Axinortech')}
+            {step === 'setPassword' ? 'Set Password' : 'Sign in to Axinortech'}
           </h2>
-          {step === 'login' && (
-            <div className="flex items-center justify-center gap-4 mt-6">
-              <button
-                type="button"
-                onClick={() => toggleMode('signup')}
-                className={`px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 border-2 ${isNewUser
-                  ? 'bg-brand-blue border-brand-blue text-white shadow-lg shadow-blue-500/30'
-                  : 'bg-transparent border-transparent text-gray-500 hover:text-brand-blue'}`}
-              >
-                Sign Up
-              </button>
-              <button
-                type="button"
-                onClick={() => toggleMode('signin')}
-                className={`px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 border-2 ${!isNewUser
-                  ? 'bg-brand-blue border-brand-blue text-white shadow-lg shadow-blue-500/30'
-                  : 'bg-transparent border-transparent text-gray-500 hover:text-brand-blue'}`}
-              >
-                Sign In
-              </button>
-            </div>
+          {step === 'setPassword' && (
+            <p className="text-sm text-gray-500 mt-2">
+              Your account uses a temporary password. Choose a new one to continue.
+            </p>
           )}
         </div>
 
         <form onSubmit={submit} className="space-y-5">
-
-          {/* INPUT FIELDS */}
           {step === 'login' ? (
             <>
-              {isNewUser ? (
-                <div className="space-y-1">
-                  <label className="block text-sm font-bold text-brand-dark ml-1">Username</label>
+              <div className="space-y-1">
+                <label className="block text-sm font-bold text-brand-dark ml-1">Email Address</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  className="w-full px-4 py-3 bg-white border border-gray-3 rounded-xl text-brand-dark placeholder-gray-400 focus:outline-none focus:border-brand-blue focus:ring-4 focus:ring-blue-50/50 transition-all font-medium"
+                  placeholder="name@company.com"
+                  required
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="block text-sm font-bold text-brand-dark ml-1">Password</label>
+                <div className="relative">
                   <input
-                    type="text"
-                    value={username}
-                    onChange={e => setUsername(e.target.value)}
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
                     className="w-full px-4 py-3 bg-white border border-gray-3 rounded-xl text-brand-dark placeholder-gray-400 focus:outline-none focus:border-brand-blue focus:ring-4 focus:ring-blue-50/50 transition-all font-medium"
-                    placeholder="Enter your username"
+                    placeholder="Enter your password"
                     required
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-blue transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
                 </div>
-              ) : (
-                <>
-                  <div className="space-y-1">
-                    <label className="block text-sm font-bold text-brand-dark ml-1">Email Address</label>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={e => setEmail(e.target.value)}
-                      className="w-full px-4 py-3 bg-white border border-gray-3 rounded-xl text-brand-dark placeholder-gray-400 focus:outline-none focus:border-brand-blue focus:ring-4 focus:ring-blue-50/50 transition-all font-medium"
-                      placeholder="name@company.com"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-sm font-bold text-brand-dark ml-1">Password</label>
-                    <div className="relative">
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        value={password}
-                        onChange={e => setPassword(e.target.value)}
-                        className="w-full px-4 py-3 bg-white border border-gray-3 rounded-xl text-brand-dark placeholder-gray-400 focus:outline-none focus:border-brand-blue focus:ring-4 focus:ring-blue-50/50 transition-all font-medium"
-                        placeholder="Enter your password"
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-blue transition-colors"
-                      >
-                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
+              </div>
             </>
           ) : (
-            /* SET PASSWORD FIELDS */
             <>
               <div className="space-y-1">
                 <label className="block text-sm font-bold text-brand-dark ml-1">New Password</label>
                 <input
                   type="password"
                   value={newPassword}
-                  onChange={e => setNewPasswordState(e.target.value)}
+                  onChange={e => setNewPassword(e.target.value)}
                   className="w-full px-4 py-3 bg-white border border-gray-3 rounded-xl text-brand-dark placeholder-gray-400 focus:outline-none focus:border-brand-blue focus:ring-4 focus:ring-blue-50/50 transition-all font-medium"
                   placeholder="Create new password"
                   required
@@ -213,30 +148,12 @@ export default function Login() {
             </>
           )}
 
-          {/* ERROR MESSAGE */}
           {error && (
             <div className="p-3 bg-red-50 text-red-600 text-sm font-medium rounded-lg text-center animate-in fade-in slide-in-from-top-1">
               {error}
             </div>
           )}
 
-          {/* EXTRAS: TERMS (Only for New User / Create Account) */}
-          {step === 'login' && isNewUser && (
-            <div className="flex items-start gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setAgreeTerms(!agreeTerms)}
-                className={`flex-shrink-0 mt-0.5 ${agreeTerms ? 'text-brand-blue' : 'text-gray-300'}`}
-              >
-                {agreeTerms ? <CheckSquare className="w-5 h-5" /> : <Square className="w-5 h-5" />}
-              </button>
-              <p className="text-xs text-gray-500 leading-normal">
-                By signing up, I agree to the <a href="#" className="font-bold text-brand-blue hover:underline">Terms & Conditions</a> and <a href="#" className="font-bold text-brand-blue hover:underline">Privacy Policy</a>.
-              </p>
-            </div>
-          )}
-
-          {/* SUBMIT BUTTON */}
           <button
             type="submit"
             disabled={loading}
@@ -248,19 +165,9 @@ export default function Login() {
                 Processing...
               </span>
             ) : (
-              step === 'setPassword' ? 'Set Password' : (isNewUser ? 'Sign Up' : 'Sign In')
+              step === 'setPassword' ? 'Set Password' : 'Sign In'
             )}
           </button>
-
-          {/* FORGOT PASSWORD (Only for Login) */}
-          {step === 'login' && !isNewUser && (
-            <div className="text-center pt-2">
-              <a href="#" className="text-sm font-semibold text-gray-400 hover:text-brand-dark transition-colors">
-                Forgot your password?
-              </a>
-            </div>
-          )}
-
         </form>
       </div>
     </AuthLayout>
