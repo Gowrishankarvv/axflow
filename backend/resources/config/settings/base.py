@@ -207,6 +207,18 @@ CORS_ALLOW_HEADERS = [
 ALLOWED_EMAIL_DOMAINS = as_list("ALLOWED_EMAIL_DOMAINS", "")
 USER_DEFAULT_TIMEZONE = "UTC"
 
+# ---- Outbound email (used by the Offer-Letter module) --------------------------
+# Defaults to SMTP. For dev without an SMTP account, set
+# EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend to print to stdout.
+EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = as_bool("EMAIL_USE_TLS", True)
+EMAIL_USE_SSL = as_bool("EMAIL_USE_SSL", False)
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER or "noreply@example.com")
+
 REDIS_URL = os.environ.get("REDIS_URL")
 if REDIS_URL:
     CACHES = {

@@ -4,6 +4,7 @@ from .time_serializers import ActiveTimeEntrySerializer, ClockSessionSerializer,
 from .client_serializers import ClientSerializer
 from .request_serializers import DataRequestSerializer, InvoiceSerializer, RequestFileSerializer
 from .leave_serializers import LeaveRequestSerializer
+from .offer_letter_serializers import OfferLetterSerializer
 
 __all__ = [
     "ActiveTimeEntrySerializer",
@@ -12,6 +13,7 @@ __all__ = [
     "DataRequestSerializer",
     "InvoiceSerializer",
     "LeaveRequestSerializer",
+    "OfferLetterSerializer",
     "OrganizationUnitSerializer",
     "ProjectAssignmentSerializer",
     "ProjectSerializer",
