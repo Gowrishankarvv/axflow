@@ -117,6 +117,10 @@ class ClockSession(models.Model):
     clock_out_time = models.DateTimeField(null=True, blank=True)
     duration = models.DurationField(null=True, blank=True)
     date = models.DateField()
+    # One lunch break per session. Both fields null = no break taken yet.
+    # start set, end null = currently on break. Both set = break finished.
+    lunch_start_time = models.DateTimeField(null=True, blank=True)
+    lunch_end_time = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -131,6 +135,14 @@ class ClockSession(models.Model):
         super().clean()
         if self.clock_out_time and self.clock_out_time <= self.clock_in_time:
             raise ValidationError("clock_out_time must be greater than clock_in_time")
+        if self.lunch_end_time and not self.lunch_start_time:
+            raise ValidationError("lunch_end_time set without lunch_start_time")
+        if self.lunch_start_time and self.clock_in_time and self.lunch_start_time < self.clock_in_time:
+            raise ValidationError("lunch_start_time must be on or after clock_in_time")
+        if self.lunch_end_time and self.lunch_start_time and self.lunch_end_time <= self.lunch_start_time:
+            raise ValidationError("lunch_end_time must be greater than lunch_start_time")
+        if self.clock_out_time and self.lunch_end_time and self.lunch_end_time > self.clock_out_time:
+            raise ValidationError("lunch_end_time cannot be after clock_out_time")
 
     def save(self, *args, **kwargs):
         if not self.date:
@@ -138,6 +150,21 @@ class ClockSession(models.Model):
         if self.clock_out_time and self.clock_in_time:
             self.duration = self.clock_out_time - self.clock_in_time
         return super().save(*args, **kwargs)
+
+    @property
+    def lunch_duration(self):
+        """Duration of the (completed) lunch break, or None if not finished."""
+        if self.lunch_start_time and self.lunch_end_time:
+            return self.lunch_end_time - self.lunch_start_time
+        return None
+
+    @property
+    def worked_duration(self):
+        """Net worked duration = gross duration minus lunch break."""
+        if not self.duration:
+            return None
+        ld = self.lunch_duration
+        return (self.duration - ld) if ld else self.duration
 
     @classmethod
     def get_active_session(cls, user):
