@@ -14,6 +14,7 @@ const ClientInvoices = React.lazy(() => import('./pages/client/ClientInvoices'))
 const Clients = React.lazy(() => import('./pages/Clients'))
 const Invoices = React.lazy(() => import('./pages/Invoices'))
 const Requests = React.lazy(() => import('./pages/Requests'))
+const Leave = React.lazy(() => import('./pages/Leave'))
 import { fetchMe, logout } from './lib/api'
 import { useAppData } from './lib/AppDataContext'
 import { useLoading } from './lib/LoadingContext'
@@ -34,7 +35,8 @@ import {
   BugIcon,
   InboxIcon,
   FileTextIcon as InvoiceIcon,
-  BriefcaseIcon
+  BriefcaseIcon,
+  CalendarIcon as LeaveCalendarIcon
 } from 'lucide-react'
 
 export default function App() {
@@ -153,6 +155,7 @@ export default function App() {
                 <Route path="/invoices" element={<Invoices />} />
                 <Route path="/clients" element={<Clients me={me} />} />
                 <Route path="/org-tree" element={<OrgTree />} />
+                <Route path="/leave" element={<Leave />} />
                 {me?.role === 'superuser' && <Route path="/admin" element={<Admin />} />}
                 <Route path="/" element={<Dashboard />} />
               </>
@@ -199,6 +202,7 @@ function Sidebar({
     { to: '/my-time', label: 'My Time', icon: ClockIcon, show: me?.role !== 'client' },
     { to: '/projects', label: 'Projects', icon: FolderIcon, show: me?.role !== 'client' },
     { to: '/requests', label: 'Requests', icon: InboxIcon, show: me?.role !== 'client' },
+    { to: '/leave', label: 'Leave', icon: LeaveCalendarIcon, show: me?.role !== 'client' },
     { to: '/team-time', label: 'Reports', icon: ChartBarIcon, show: me?.role !== 'client' },
     { to: '/clients', label: 'Clients', icon: BriefcaseIcon, show: me?.role === 'manager' || me?.role === 'superuser' },
     { to: '/invoices', label: 'Invoices', icon: InvoiceIcon, show: me?.role === 'superuser' },

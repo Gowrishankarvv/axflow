@@ -35,6 +35,7 @@ const mutationInvalidations: Record<string, string[]> = {
     ...GLOBAL_INVALIDATIONS,
   ],
   '/tags': ['/tags', '/app-initial-data', '/reports/team-summary'],
+  '/leaves': ['/leaves'],
 }
 
 type CacheProfile = {
@@ -56,6 +57,7 @@ const cacheProfiles: CacheProfile[] = [
   { test: /^\/dashboard\/summary\/aggregated/, ttlMs: 15 * 1000 },
   { test: /^\/reports\//, ttlMs: 15 * 1000 },
   { test: /^\/clock-sessions/, ttlMs: 5 * 1000 },
+  { test: /^\/leaves/, ttlMs: 30 * 1000 },
   { test: /^\/org-/, ttlMs: 5 * 60 * 1000 },
   { test: /^\/auth\/me/, ttlMs: 30 * 1000 },
 ]

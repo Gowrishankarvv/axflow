@@ -3,6 +3,7 @@ from .project_serializers import ProjectAssignmentSerializer, ProjectSerializer,
 from .time_serializers import ActiveTimeEntrySerializer, ClockSessionSerializer, TagSerializer, TimeEntrySerializer
 from .client_serializers import ClientSerializer
 from .request_serializers import DataRequestSerializer, InvoiceSerializer, RequestFileSerializer
+from .leave_serializers import LeaveRequestSerializer
 
 __all__ = [
     "ActiveTimeEntrySerializer",
@@ -10,6 +11,7 @@ __all__ = [
     "ClockSessionSerializer",
     "DataRequestSerializer",
     "InvoiceSerializer",
+    "LeaveRequestSerializer",
     "OrganizationUnitSerializer",
     "ProjectAssignmentSerializer",
     "ProjectSerializer",

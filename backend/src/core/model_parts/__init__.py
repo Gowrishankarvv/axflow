@@ -9,6 +9,7 @@ from .time_models import (
     TimeEntry,
 )
 from .request_models import DataRequest, Invoice, RequestFile
+from .leave_models import LeaveRequest
 
 __all__ = [
     "ActiveTimeEntry",
@@ -18,6 +19,7 @@ __all__ = [
     "DailySummary",
     "DataRequest",
     "Invoice",
+    "LeaveRequest",
     "OrganizationUnit",
     "Project",
     "ProjectAssignment",
