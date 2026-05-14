@@ -18,6 +18,7 @@ const Leave = React.lazy(() => import('./pages/Leave'))
 const OfferLetter = React.lazy(() => import('./pages/OfferLetter'))
 const Notifications = React.lazy(() => import('./pages/Notifications'))
 const Finance = React.lazy(() => import('./pages/Finance'))
+const CRM = React.lazy(() => import('./pages/CRM'))
 
 // Mirror of backend/src/core/permissions.py:EXECUTIVE_POSITIONS — keep in sync.
 const EXECUTIVE_POSITIONS = ['CEO', 'CFO', 'COO', 'CMO', 'Executive']
@@ -47,7 +48,8 @@ import {
   CalendarIcon as LeaveCalendarIcon,
   MailIcon as OfferMailIcon,
   BellIcon as NotificationsIcon,
-  WalletIcon as FinanceIcon
+  WalletIcon as FinanceIcon,
+  TargetIcon as CRMIcon
 } from 'lucide-react'
 
 export default function App() {
@@ -192,6 +194,7 @@ export default function App() {
                 <Route path="/requests" element={<Requests />} />
                 <Route path="/invoices" element={<Invoices />} />
                 <Route path="/clients" element={<Clients me={me} />} />
+                {(me?.role === 'manager' || me?.role === 'superuser') && <Route path="/crm" element={<CRM />} />}
                 <Route path="/org-tree" element={<OrgTree />} />
                 <Route path="/leave" element={<Leave />} />
                 <Route path="/notifications" element={<Notifications />} />
@@ -249,6 +252,7 @@ function Sidebar({
     { to: '/notifications', label: 'Notifications', icon: NotificationsIcon, show: true, badge: unreadNotifs },
     { to: '/team-time', label: 'Reports', icon: ChartBarIcon, show: me?.role !== 'client' },
     { to: '/clients', label: 'Clients', icon: BriefcaseIcon, show: me?.role === 'manager' || me?.role === 'superuser' },
+    { to: '/crm', label: 'CRM', icon: CRMIcon, show: me?.role === 'manager' || me?.role === 'superuser' },
     { to: '/invoices', label: 'Invoices', icon: InvoiceIcon, show: me?.role === 'superuser' },
     { to: '/finance', label: 'Finance', icon: FinanceIcon, show: isExecutive(me) },
     { to: '/offer-letter', label: 'Offer Letter', icon: OfferMailIcon, show: me?.role === 'superuser' },

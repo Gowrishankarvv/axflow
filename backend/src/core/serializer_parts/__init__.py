@@ -6,6 +6,7 @@ from .request_serializers import DataRequestSerializer, InvoiceSerializer, Reque
 from .leave_serializers import LeaveRequestSerializer
 from .offer_letter_serializers import OfferLetterSerializer
 from .notification_serializers import NotificationSerializer
+from .crm_serializers import LeadSerializer
 
 __all__ = [
     "ActiveTimeEntrySerializer",
@@ -13,6 +14,7 @@ __all__ = [
     "ClockSessionSerializer",
     "DataRequestSerializer",
     "InvoiceSerializer",
+    "LeadSerializer",
     "LeaveRequestSerializer",
     "NotificationSerializer",
     "OfferLetterSerializer",

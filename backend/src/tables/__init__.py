@@ -14,6 +14,7 @@ from .daily_summaries import DailySummary, get_daily_summaries_for_user
 from .data_requests import DataRequest, get_data_request_by_id
 from .request_files import RequestFile, get_request_files_for_request
 from .invoices import Invoice, get_invoices_for_client
+from .leads import Lead, get_lead_by_id
 
 __all__ = [
     'ActiveTimeEntry',
@@ -23,6 +24,7 @@ __all__ = [
     'DailySummary',
     'DataRequest',
     'Invoice',
+    'Lead',
     'OrganizationUnit',
     'Project',
     'ProjectAssignment',
@@ -40,6 +42,7 @@ __all__ = [
     'get_daily_summaries_for_user',
     'get_data_request_by_id',
     'get_invoices_for_client',
+    'get_lead_by_id',
     'get_open_tasks_for_user',
     'get_org_unit_by_id',
     'get_project_assignments_for_project',
