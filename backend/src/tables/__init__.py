@@ -17,6 +17,7 @@ from .invoices import Invoice, get_invoices_for_client
 from .leads import Lead, get_lead_by_id
 from .task_extension_requests import TaskExtensionRequest, extension_request_qs
 from .project_credentials import ProjectCredential, credential_qs
+from .tickets import Ticket, ticket_qs
 
 __all__ = [
     'ActiveTimeEntry',
@@ -36,6 +37,7 @@ __all__ = [
     'Task',
     'TaskAssignment',
     'TaskExtensionRequest',
+    'Ticket',
     'TimeEntry',
     'User',
     'get_active_clock_session_for_user',

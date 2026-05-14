@@ -9,6 +9,7 @@ from .notification_serializers import NotificationSerializer
 from .crm_serializers import LeadSerializer
 from .extension_serializers import TaskExtensionRequestSerializer
 from .credential_serializers import ProjectCredentialSerializer
+from .ticket_serializers import TicketSerializer
 
 __all__ = [
     "ActiveTimeEntrySerializer",
@@ -30,6 +31,7 @@ __all__ = [
     "TaskAssignmentSerializer",
     "TaskExtensionRequestSerializer",
     "TaskSerializer",
+    "TicketSerializer",
     "TimeEntrySerializer",
     "UserSerializer",
 ]
