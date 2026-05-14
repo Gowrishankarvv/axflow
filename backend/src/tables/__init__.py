@@ -15,6 +15,8 @@ from .data_requests import DataRequest, get_data_request_by_id
 from .request_files import RequestFile, get_request_files_for_request
 from .invoices import Invoice, get_invoices_for_client
 from .leads import Lead, get_lead_by_id
+from .task_extension_requests import TaskExtensionRequest, extension_request_qs
+from .project_credentials import ProjectCredential, credential_qs
 
 __all__ = [
     'ActiveTimeEntry',
@@ -28,10 +30,12 @@ __all__ = [
     'OrganizationUnit',
     'Project',
     'ProjectAssignment',
+    'ProjectCredential',
     'RequestFile',
     'Tag',
     'Task',
     'TaskAssignment',
+    'TaskExtensionRequest',
     'TimeEntry',
     'User',
     'get_active_clock_session_for_user',

@@ -7,6 +7,8 @@ from .leave_serializers import LeaveRequestSerializer
 from .offer_letter_serializers import OfferLetterSerializer
 from .notification_serializers import NotificationSerializer
 from .crm_serializers import LeadSerializer
+from .extension_serializers import TaskExtensionRequestSerializer
+from .credential_serializers import ProjectCredentialSerializer
 
 __all__ = [
     "ActiveTimeEntrySerializer",
@@ -20,11 +22,13 @@ __all__ = [
     "OfferLetterSerializer",
     "OrganizationUnitSerializer",
     "ProjectAssignmentSerializer",
+    "ProjectCredentialSerializer",
     "ProjectSerializer",
     "RequestFileSerializer",
     "SetPasswordSerializer",
     "TagSerializer",
     "TaskAssignmentSerializer",
+    "TaskExtensionRequestSerializer",
     "TaskSerializer",
     "TimeEntrySerializer",
     "UserSerializer",
