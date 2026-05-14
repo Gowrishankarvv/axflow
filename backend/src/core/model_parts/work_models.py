@@ -71,6 +71,10 @@ class Task(models.Model):
     planned_start_date = models.DateField(null=True, blank=True)
     planned_end_date = models.DateField(null=True, blank=True)
     due_date = models.DateField(null=True, blank=True)
+    # Tracks the dates we already sent reminders for, so the daily cron
+    # never double-notifies if it runs more than once on the same day.
+    start_reminder_sent_for = models.DateField(null=True, blank=True, editable=False)
+    due_reminder_sent_for = models.DateField(null=True, blank=True, editable=False)
 
     class Meta:
         indexes = [
