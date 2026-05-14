@@ -9,27 +9,31 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
 from rest_framework.parsers import FormParser, MultiPartParser
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from core.models import OfferLetter
+from core.permissions import IsManager
 from core.serializers import OfferLetterSerializer
 from tables import User
 
 
-def _is_superuser(user) -> bool:
-    return bool(user.is_superuser or getattr(user, "role", "") == "superuser")
+def _is_manager(user) -> bool:
+    return bool(
+        user
+        and user.is_authenticated
+        and (user.is_superuser or getattr(user, "role", "") in ("manager", "superuser"))
+    )
 
 
 class OfferLetterViewSet(viewsets.ModelViewSet):
     """Send an offer-letter email to an existing user, with an attachment.
 
-    Superuser-only. Each POST creates an OfferLetter row AND immediately sends
-    the email via Django's configured SMTP backend. Failures are recorded on
-    the row (status='failed', error_message=...).
+    Manager/superuser-only. Each POST creates an OfferLetter row AND immediately
+    sends the email via Django's configured SMTP backend. Failures are recorded
+    on the row (status='failed', error_message=...).
     """
     serializer_class = OfferLetterSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsManager]
     parser_classes = [MultiPartParser, FormParser]
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = ["status", "recipient"]
@@ -38,13 +42,13 @@ class OfferLetterViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = cast(User, self.request.user)
-        if not _is_superuser(user):
+        if not _is_manager(user):
             return OfferLetter.objects.none()
         return OfferLetter.objects.select_related("recipient", "sent_by").all()
 
     def create(self, request, *args, **kwargs):
         user = cast(User, request.user)
-        if not _is_superuser(user):
+        if not _is_manager(user):
             return Response({"detail": "Forbidden"}, status=403)
 
         recipient_id = request.data.get("recipient")  # field name matches model

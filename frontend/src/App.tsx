@@ -192,15 +192,15 @@ export default function App() {
                 <Route path="/projects" element={<Projects me={me} />} />
                 <Route path="/projects/:id" element={<ProjectDetail me={me} />} />
                 <Route path="/requests" element={<Requests />} />
-                <Route path="/invoices" element={<Invoices />} />
+                {(me?.role === 'manager' || me?.role === 'superuser') && <Route path="/invoices" element={<Invoices />} />}
                 <Route path="/clients" element={<Clients me={me} />} />
                 {(me?.role === 'manager' || me?.role === 'superuser') && <Route path="/crm" element={<CRM />} />}
-                <Route path="/org-tree" element={<OrgTree />} />
+                {(me?.role === 'manager' || me?.role === 'superuser') && <Route path="/org-tree" element={<OrgTree />} />}
                 <Route path="/leave" element={<Leave />} />
                 <Route path="/notifications" element={<Notifications />} />
                 {isExecutive(me) && <Route path="/finance" element={<Finance />} />}
-                {me?.role === 'superuser' && <Route path="/offer-letter" element={<OfferLetter />} />}
-                {me?.role === 'superuser' && <Route path="/admin" element={<Admin />} />}
+                {(me?.role === 'manager' || me?.role === 'superuser') && <Route path="/offer-letter" element={<OfferLetter />} />}
+                {(me?.role === 'manager' || me?.role === 'superuser') && <Route path="/admin" element={<Admin />} />}
                 <Route path="/" element={<Dashboard />} />
               </>
             ) : (
@@ -253,11 +253,11 @@ function Sidebar({
     { to: '/team-time', label: 'Reports', icon: ChartBarIcon, show: me?.role !== 'client' },
     { to: '/clients', label: 'Clients', icon: BriefcaseIcon, show: me?.role === 'manager' || me?.role === 'superuser' },
     { to: '/crm', label: 'CRM', icon: CRMIcon, show: me?.role === 'manager' || me?.role === 'superuser' },
-    { to: '/invoices', label: 'Invoices', icon: InvoiceIcon, show: me?.role === 'superuser' },
+    { to: '/invoices', label: 'Invoices', icon: InvoiceIcon, show: me?.role === 'manager' || me?.role === 'superuser' },
     { to: '/finance', label: 'Finance', icon: FinanceIcon, show: isExecutive(me) },
-    { to: '/offer-letter', label: 'Offer Letter', icon: OfferMailIcon, show: me?.role === 'superuser' },
-    { to: '/org-tree', label: 'Organization', icon: BuildingIcon, show: me?.role !== 'client' },
-    { to: '/admin', label: 'User Management', icon: UserPlusIcon, show: me?.role === 'superuser' },
+    { to: '/offer-letter', label: 'Offer Letter', icon: OfferMailIcon, show: me?.role === 'manager' || me?.role === 'superuser' },
+    { to: '/org-tree', label: 'Organization', icon: BuildingIcon, show: me?.role === 'manager' || me?.role === 'superuser' },
+    { to: '/admin', label: 'User Management', icon: UserPlusIcon, show: me?.role === 'manager' || me?.role === 'superuser' },
 
     // Client
     { to: '/', label: 'Dashboard', icon: HomeIcon, show: me?.role === 'client' },
