@@ -42,11 +42,19 @@ class ReportsSummaryView(APIView):
             user = request.user
             qs = TimeEntry.objects.all()
 
-            if not (user.is_superuser or user.role == "superuser"):
+            # Employees are hard-restricted to their own entries. They cannot
+            # override this via the user_id query param.
+            is_employee_only = (
+                not user.is_superuser
+                and getattr(user, "role", "") not in ("superuser", "manager")
+            )
+            if is_employee_only:
+                qs = qs.filter(user_id=user.id)
+            elif not (user.is_superuser or user.role == "superuser"):
                 visible_user_ids = build_visible_user_ids(user)
                 visible_entry_ids = TimeEntry.objects.filter(visible_to=user).values("id")
                 qs = qs.filter(Q(user_id__in=visible_user_ids) | Q(id__in=visible_entry_ids))
-            if user_id:
+            if user_id and not is_employee_only:
                 if user_id == "me":
                     qs = qs.filter(user_id=user.id)
                 else:
@@ -278,11 +286,19 @@ class TeamSummaryReportView(APIView):
         end_dt = tz.localize(datetime.combine(end_date, time.max))
 
         qs = TimeEntry.objects.all()
-        if not (user.is_superuser or user.role == "superuser"):
+        # Employees are hard-restricted to their own time entries regardless of
+        # any user_id query param. Managers/superusers still see their visible set.
+        is_employee_only = (
+            not user.is_superuser
+            and getattr(user, "role", "") not in ("superuser", "manager")
+        )
+        if is_employee_only:
+            qs = qs.filter(user_id=user.id)
+        elif not (user.is_superuser or user.role == "superuser"):
             visible_user_ids = build_visible_user_ids(user)
             visible_entry_ids = TimeEntry.objects.filter(visible_to=user).values("id")
             qs = qs.filter(Q(user_id__in=visible_user_ids) | Q(id__in=visible_entry_ids))
-        if qp_user_id:
+        if qp_user_id and not is_employee_only:
             if qp_user_id == "me":
                 qs = qs.filter(user_id=user.id)
             else:

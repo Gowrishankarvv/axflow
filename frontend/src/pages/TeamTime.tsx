@@ -185,7 +185,9 @@ export default function TeamTime({ me }: { me?: any }) {
           <div className="p-2 bg-blue-100 rounded-lg">
             <ChartBarIcon className="w-6 h-6 text-blue-600" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">Reports</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            {me?.role === 'employee' ? 'My Report' : 'Reports'}
+          </h1>
         </div>
         <div className="flex items-center gap-2">
           <div className="bg-white rounded-lg px-4 py-2 shadow-sm border border-gray-100">
@@ -497,7 +499,7 @@ export default function TeamTime({ me }: { me?: any }) {
           <div className="flex items-center gap-2 mb-6">
             <div className="w-5 h-5 bg-gradient-to-r from-purple-500 to-pink-500 rounded"></div>
             <h2 className="font-semibold text-gray-800">
-              {selectedProject ? 'User Distribution' : 'Project Distribution'}
+              {selectedProject && me?.role !== 'employee' ? 'User Distribution' : 'Project Distribution'}
             </h2>
           </div>
           <div className="h-80">
