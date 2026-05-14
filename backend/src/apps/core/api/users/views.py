@@ -6,7 +6,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import BasePermission, IsAuthenticated, SAFE_METHODS
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -16,9 +16,26 @@ from apps.core.serializers import UserSerializer
 from tables import User
 
 
+class _UserPermission(BasePermission):
+    """Read access stays open (employees see their own record via the existing
+    queryset filter). Writes (POST/PATCH/PUT/DELETE) are manager+superuser only,
+    so employees can't create/edit other users through the API even if they
+    bypass the hidden /admin page."""
+
+    def has_permission(self, request, view):
+        user = request.user
+        if not (user and user.is_authenticated):
+            return False
+        if request.method in SAFE_METHODS:
+            return True
+        return bool(
+            user.is_superuser or getattr(user, "role", "") in ("manager", "superuser")
+        )
+
+
 class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [_UserPermission]
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     # client_org included so the Clients page can ask for
     # /users/?role=client&client_org=<id> to list a single org's logins.

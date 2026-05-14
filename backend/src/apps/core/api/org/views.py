@@ -9,11 +9,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.core.selectors import build_visible_user_ids
+from core.permissions import IsManager
 from tables import Project, Task, TaskAssignment, User
 
 
 class OrganizationTreeView(APIView):
-    permission_classes = [IsAuthenticated]
+    # Org tree is a manager/superuser-only module.
+    permission_classes = [IsManager]
 
     def get(self, request):
         users_qs = User.objects.filter(is_active=True)
@@ -104,7 +106,7 @@ class OrganizationTreeView(APIView):
 
 
 class OrganizationHierarchyView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsManager]
 
     def get(self, request):
         user = cast(User, request.user)
