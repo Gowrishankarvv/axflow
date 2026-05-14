@@ -19,6 +19,7 @@ const OfferLetter = React.lazy(() => import('./pages/OfferLetter'))
 const Notifications = React.lazy(() => import('./pages/Notifications'))
 const Finance = React.lazy(() => import('./pages/Finance'))
 const CRM = React.lazy(() => import('./pages/CRM'))
+const Tickets = React.lazy(() => import('./pages/Tickets'))
 
 // Mirror of backend/src/core/permissions.py:EXECUTIVE_POSITIONS — keep in sync.
 const EXECUTIVE_POSITIONS = ['CEO', 'CFO', 'COO', 'CMO', 'Executive']
@@ -198,6 +199,7 @@ export default function App() {
                 {(me?.role === 'manager' || me?.role === 'superuser') && <Route path="/org-tree" element={<OrgTree />} />}
                 <Route path="/leave" element={<Leave />} />
                 <Route path="/notifications" element={<Notifications />} />
+                <Route path="/tickets" element={<Tickets />} />
                 {isExecutive(me) && <Route path="/finance" element={<Finance />} />}
                 {(me?.role === 'manager' || me?.role === 'superuser') && <Route path="/offer-letter" element={<OfferLetter />} />}
                 {(me?.role === 'manager' || me?.role === 'superuser') && <Route path="/admin" element={<Admin />} />}
@@ -429,21 +431,16 @@ function Sidebar({
             {!isCollapsed && <span className="font-medium relative z-10">Sign Out</span>}
           </button>
 
-          <button
-            onClick={() =>
-              window.open(
-                'https://docs.google.com/forms/d/e/1FAIpQLSfm8x2FKToHh4Q0TMXCzwDH3YqWlx-QuSymTBUF8hAvTFNGQg/viewform?usp=dialog',
-                '_blank'
-              )
-            }
+          <Link
+            to="/tickets"
             className={`group flex items-center text-gray-600 hover:bg-gray-3 rounded-lg transition-all duration-200 relative overflow-hidden ${isCollapsed ? 'w-full h-12 justify-center' : 'w-full gap-3 px-4 py-3'
-              }`}
-            title={isCollapsed ? 'Report Issue' : ''}
+              } ${location.pathname === '/tickets' ? 'bg-gray-3 text-[#0E141C]' : ''}`}
+            title={isCollapsed ? 'Bug / Feature Ticket' : ''}
           >
             <div className="absolute inset-0 bg-gradient-to-r from-gray-50 to-gray-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
             <BugIcon className="w-5 h-5 relative z-10 flex-shrink-0" />
-            {!isCollapsed && <span className="font-medium text-sm relative z-10">Bug/Feature Ticket</span>}
-          </button>
+            {!isCollapsed && <span className="font-medium text-sm relative z-10">Bug / Feature Ticket</span>}
+          </Link>
           {/* Bottom Row: Powered by + Axinortech */}
           <div className="flex flex-col items-start gap-1 mt-8">
             <span className="font-bold text-gray-400 text-xs">

@@ -15,6 +15,7 @@ from .notification_models import Notification
 from .crm_models import Lead
 from .extension_models import TaskExtensionRequest
 from .credential_models import ProjectCredential
+from .ticket_models import Ticket
 
 __all__ = [
     "ActiveTimeEntry",
@@ -37,6 +38,7 @@ __all__ = [
     "Task",
     "TaskAssignment",
     "TaskExtensionRequest",
+    "Ticket",
     "TimeEntry",
     "User",
     "validate_email_domain",

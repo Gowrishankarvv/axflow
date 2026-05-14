@@ -43,6 +43,7 @@ const mutationInvalidations: Record<string, string[]> = {
   // Extension approve/reject mutates a task's due_date and creates notifications.
   '/extension-requests': ['/extension-requests', '/tasks', '/notifications'],
   '/credentials': ['/credentials'],
+  '/tickets': ['/tickets', '/notifications'],
 }
 
 type CacheProfile = {
