@@ -37,6 +37,9 @@ const mutationInvalidations: Record<string, string[]> = {
   '/tags': ['/tags', '/app-initial-data', '/reports/team-summary'],
   '/leaves': ['/leaves'],
   '/notifications': ['/notifications'],
+  // Converting a lead can create/delete a Client + client login User, so the
+  // CRM mutates the same data the Clients & Users pages cache.
+  '/leads': ['/leads', '/clients', '/users', '/users/light', ...GLOBAL_INVALIDATIONS],
 }
 
 type CacheProfile = {

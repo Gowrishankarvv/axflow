@@ -12,6 +12,7 @@ from .request_models import DataRequest, Invoice, RequestFile
 from .leave_models import LeaveRequest
 from .offer_letter_models import OfferLetter
 from .notification_models import Notification
+from .crm_models import Lead
 
 __all__ = [
     "ActiveTimeEntry",
@@ -21,6 +22,7 @@ __all__ = [
     "DailySummary",
     "DataRequest",
     "Invoice",
+    "Lead",
     "LeaveRequest",
     "Notification",
     "OfferLetter",

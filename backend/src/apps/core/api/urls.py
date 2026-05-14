@@ -20,4 +20,5 @@ urlpatterns = [
     path("", include("apps.core.api.offer_letters.urls")),
     path("", include("apps.core.api.notifications.urls")),
     path("", include("apps.core.api.finance.urls")),
+    path("", include("apps.core.api.crm.urls")),
 ]
