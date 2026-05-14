@@ -11,6 +11,7 @@ const Login = React.lazy(() => import('./pages/Login'))
 const ClientDashboard = React.lazy(() => import('./pages/client/ClientDashboard'))
 const ClientRequests = React.lazy(() => import('./pages/client/ClientRequests'))
 const ClientInvoices = React.lazy(() => import('./pages/client/ClientInvoices'))
+const ClientProjectDetail = React.lazy(() => import('./pages/client/ClientProjectDetail'))
 const Clients = React.lazy(() => import('./pages/Clients'))
 const Invoices = React.lazy(() => import('./pages/Invoices'))
 const Requests = React.lazy(() => import('./pages/Requests'))
@@ -184,7 +185,7 @@ export default function App() {
                 <Route path="/requests" element={<ClientRequests />} />
                 <Route path="/invoices" element={<ClientInvoices />} />
                 <Route path="/projects" element={<Projects me={me} />} />
-                <Route path="/project-detail/:id" element={<ProjectDetail me={me} />} />
+                <Route path="/project-detail/:id" element={<ClientProjectDetail />} />
               </>
             ) : isAuthed ? (
               <>
@@ -251,7 +252,7 @@ function Sidebar({
     { to: '/projects', label: 'Projects', icon: FolderIcon, show: me?.role !== 'client' },
     { to: '/requests', label: 'Requests', icon: InboxIcon, show: me?.role !== 'client' },
     { to: '/leave', label: 'Leave', icon: LeaveCalendarIcon, show: me?.role !== 'client' },
-    { to: '/notifications', label: 'Notifications', icon: NotificationsIcon, show: true, badge: unreadNotifs },
+    { to: '/notifications', label: 'Notifications', icon: NotificationsIcon, show: me?.role !== 'client', badge: unreadNotifs },
     { to: '/team-time', label: 'Reports', icon: ChartBarIcon, show: me?.role !== 'client' },
     { to: '/clients', label: 'Clients', icon: BriefcaseIcon, show: me?.role === 'manager' || me?.role === 'superuser' },
     { to: '/crm', label: 'CRM', icon: CRMIcon, show: me?.role === 'manager' || me?.role === 'superuser' },
@@ -431,16 +432,18 @@ function Sidebar({
             {!isCollapsed && <span className="font-medium relative z-10">Sign Out</span>}
           </button>
 
-          <Link
-            to="/tickets"
-            className={`group flex items-center text-gray-600 hover:bg-gray-3 rounded-lg transition-all duration-200 relative overflow-hidden ${isCollapsed ? 'w-full h-12 justify-center' : 'w-full gap-3 px-4 py-3'
-              } ${location.pathname === '/tickets' ? 'bg-gray-3 text-[#0E141C]' : ''}`}
-            title={isCollapsed ? 'Bug / Feature Ticket' : ''}
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-gray-50 to-gray-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
-            <BugIcon className="w-5 h-5 relative z-10 flex-shrink-0" />
-            {!isCollapsed && <span className="font-medium text-sm relative z-10">Bug / Feature Ticket</span>}
-          </Link>
+          {me?.role !== 'client' && (
+            <Link
+              to="/tickets"
+              className={`group flex items-center text-gray-600 hover:bg-gray-3 rounded-lg transition-all duration-200 relative overflow-hidden ${isCollapsed ? 'w-full h-12 justify-center' : 'w-full gap-3 px-4 py-3'
+                } ${location.pathname === '/tickets' ? 'bg-gray-3 text-[#0E141C]' : ''}`}
+              title={isCollapsed ? 'Bug / Feature Ticket' : ''}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-gray-50 to-gray-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+              <BugIcon className="w-5 h-5 relative z-10 flex-shrink-0" />
+              {!isCollapsed && <span className="font-medium text-sm relative z-10">Bug / Feature Ticket</span>}
+            </Link>
+          )}
           {/* Bottom Row: Powered by + Axinortech */}
           <div className="flex flex-col items-start gap-1 mt-8">
             <span className="font-bold text-gray-400 text-xs">
