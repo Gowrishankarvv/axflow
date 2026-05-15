@@ -17,6 +17,7 @@ def _generate_temp_password(length: int = 12) -> str:
 
 class LeadSerializer(serializers.ModelSerializer):
     assigned_to_name = serializers.SerializerMethodField()
+    referred_by_name = serializers.SerializerMethodField()
     created_by_name = serializers.SerializerMethodField()
     status_display = serializers.CharField(source="get_status_display", read_only=True)
     source_display = serializers.CharField(source="get_source_display", read_only=True)
@@ -49,6 +50,8 @@ class LeadSerializer(serializers.ModelSerializer):
             "reason_not_proceed",
             "assigned_to",
             "assigned_to_name",
+            "referred_by",
+            "referred_by_name",
             "last_followed_up",
             "status",
             "status_display",
@@ -81,6 +84,25 @@ class LeadSerializer(serializers.ModelSerializer):
         if not u:
             return None
         return (u.first_name + " " + u.last_name).strip() or u.username
+
+    def get_referred_by_name(self, obj):
+        u = obj.referred_by
+        if not u:
+            return None
+        return (u.first_name + " " + u.last_name).strip() or u.username
+
+    def validate(self, attrs):
+        lead_type = attrs.get("lead_type", getattr(self.instance, "lead_type", None))
+        # `referred_by` is only meaningful for employee referrals; require it then.
+        referred_by = attrs.get("referred_by", getattr(self.instance, "referred_by", None))
+        if lead_type == "employee_referral" and not referred_by:
+            raise serializers.ValidationError({
+                "referred_by": "Select the employee who referred this lead.",
+            })
+        if lead_type != "employee_referral" and "referred_by" not in attrs and self.instance is None:
+            # On create with a non-referral type, leave referred_by null.
+            pass
+        return attrs
 
     def get_created_by_name(self, obj):
         u = obj.created_by
