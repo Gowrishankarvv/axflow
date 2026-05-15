@@ -23,6 +23,7 @@ class Lead(models.Model):
         ("ad", "Advertisement"),
         ("social_media", "Social Media"),
         ("personal_reference", "Personal Reference"),
+        ("employee_referral", "Employee Referral"),
         ("cold_outreach", "Cold Outreach"),
         ("event", "Event / Conference"),
         ("inbound", "Inbound Inquiry"),
@@ -72,6 +73,10 @@ class Lead(models.Model):
 
     assigned_to = models.ForeignKey(
         User, null=True, blank=True, on_delete=models.SET_NULL, related_name="crm_leads"
+    )
+    referred_by = models.ForeignKey(
+        User, null=True, blank=True, on_delete=models.SET_NULL, related_name="referred_leads",
+        help_text="Set when lead_type='employee_referral' — the employee who referred this lead.",
     )
     last_followed_up = models.DateField(null=True, blank=True)
 

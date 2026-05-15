@@ -24,6 +24,8 @@ type Lead = {
   reason_not_proceed: string
   assigned_to: number | null
   assigned_to_name: string | null
+  referred_by: number | null
+  referred_by_name: string | null
   last_followed_up: string | null
   status: string
   status_display: string
@@ -64,6 +66,7 @@ const LEAD_TYPE_OPTIONS = [
   { v: 'ad', l: 'Advertisement' },
   { v: 'social_media', l: 'Social Media' },
   { v: 'personal_reference', l: 'Personal Reference' },
+  { v: 'employee_referral', l: 'Employee Referral' },
   { v: 'cold_outreach', l: 'Cold Outreach' },
   { v: 'event', l: 'Event / Conference' },
   { v: 'inbound', l: 'Inbound Inquiry' },
@@ -123,6 +126,7 @@ function emptyLead(): Partial<Lead> {
     suggestion: '',
     reason_not_proceed: '',
     assigned_to: null,
+    referred_by: null,
     last_followed_up: null,
     status: 'pending',
     status_description: '',
@@ -215,6 +219,10 @@ export default function CRM() {
       alert('Name and date are required.')
       return
     }
+    if (draft.lead_type === 'employee_referral' && !draft.referred_by) {
+      alert('Please select the employee who referred this lead.')
+      return
+    }
     setSaving(true)
     try {
       const payload: any = { ...draft }
@@ -222,6 +230,9 @@ export default function CRM() {
       if (!payload.last_followed_up) payload.last_followed_up = null
       if (!payload.invoice_date) payload.invoice_date = null
       if (payload.assigned_to === '' || payload.assigned_to === undefined) payload.assigned_to = null
+      if (payload.referred_by === '' || payload.referred_by === undefined) payload.referred_by = null
+      // If the user switched off employee_referral, drop any stale referrer link.
+      if (payload.lead_type !== 'employee_referral') payload.referred_by = null
 
       let saved: Lead | null = null
       if (isNew) {
@@ -601,6 +612,21 @@ function LeadDrawer({
                   {LEAD_TYPE_OPTIONS.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
                 </select>
               </Field>
+              {draft.lead_type === 'employee_referral' && (
+                <Field label="Referred by (employee)">
+                  <select
+                    value={draft.referred_by ?? ''}
+                    onChange={e => set('referred_by', e.target.value === '' ? null : Number(e.target.value))}
+                    className={inputCls}>
+                    <option value="">— Select employee —</option>
+                    {users.map(u => (
+                      <option key={u.id} value={u.id}>
+                        {(u.first_name + ' ' + u.last_name).trim() || u.username}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              )}
               <Field label="Work type">
                 <select value={draft.work_type || 'other'} onChange={e => set('work_type', e.target.value)} className={inputCls}>
                   {WORK_TYPE_OPTIONS.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
