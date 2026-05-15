@@ -19,6 +19,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [activeSession, setActiveSession] = useState<any>(null)
   const [elapsedTime, setElapsedTime] = useState(0)
+  const [lunchElapsedTime, setLunchElapsedTime] = useState(0)
   const [allSessions, setAllSessions] = useState<any[]>([])
   const [sessionsPage, setSessionsPage] = useState(1)
   const [sessionsTotalPages, setSessionsTotalPages] = useState(1)
@@ -417,6 +418,7 @@ export default function Dashboard() {
       const res = await api.post('/clock-sessions/clock_out/')
       setActiveSession(null)
       setElapsedTime(0)
+      setLunchElapsedTime(0)
       // Refresh sessions
       loadAllSessions(sessionsPage)
     } catch (error) {
@@ -490,6 +492,11 @@ export default function Dashboard() {
           lunchMs = now.getTime() - lunchStart.getTime()
         }
         setElapsedTime(Math.max(0, Math.floor((now.getTime() - start.getTime() - lunchMs) / 1000)))
+        if (lunchStart && !lunchEnd) {
+          setLunchElapsedTime(Math.max(0, Math.floor((now.getTime() - lunchStart.getTime()) / 1000)))
+        } else {
+          setLunchElapsedTime(0)
+        }
         // Auto clock out at 9PM (21:00)
         if (now.getHours() === 21 && now.getMinutes() === 0) {
           handleClockOut()
@@ -943,8 +950,16 @@ export default function Dashboard() {
                     {Math.floor(elapsedTime / 3600).toString().padStart(2, '0')}:{Math.floor((elapsedTime % 3600) / 60).toString().padStart(2, '0')}:{(elapsedTime % 60).toString().padStart(2, '0')}
                   </div>
                   {activeSession.lunch_start_time && !activeSession.lunch_end_time && (
-                    <div className="text-xs uppercase tracking-wide text-amber-600 font-semibold mb-4">
-                      On lunch break — timer paused
+                    <div className="mb-4">
+                      <div className="text-xs uppercase tracking-wide text-amber-600 font-semibold mb-1">
+                        On lunch break — work timer paused
+                      </div>
+                      <div className="text-2xl font-bold font-mono text-amber-500">
+                        {Math.floor(lunchElapsedTime / 3600).toString().padStart(2, '0')}:{Math.floor((lunchElapsedTime % 3600) / 60).toString().padStart(2, '0')}:{(lunchElapsedTime % 60).toString().padStart(2, '0')}
+                      </div>
+                      <div className="text-[10px] uppercase tracking-wide text-amber-600/80">
+                        Lunch elapsed
+                      </div>
                     </div>
                   )}
                   {activeSession.lunch_start_time && activeSession.lunch_end_time && (
