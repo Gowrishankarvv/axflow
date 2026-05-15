@@ -4,8 +4,18 @@ from django.core.cache import cache
 from django.conf import settings
 from django.db import models
 from datetime import timedelta
-from .models import User, TimeEntry, Task, ClockSession, Project, DataRequest, Notification, LeaveRequest, SalaryPayment
-from .models import User, TimeEntry, Task, TaskAssignment, ClockSession, Project, DataRequest, Notification, LeaveRequest
+from .models import (
+    ClockSession,
+    DataRequest,
+    LeaveRequest,
+    Notification,
+    Project,
+    SalaryPayment,
+    Task,
+    TaskAssignment,
+    TimeEntry,
+    User,
+)
 from .notify_email import notify
 
 @receiver([post_save, post_delete], sender=User)
@@ -282,6 +292,9 @@ def notify_on_salary_processed(sender, instance, created, **kwargs):
             "Please approve once the amount is credited to your account."
         ),
         link="/notifications",
+    )
+
+
 @receiver(post_save, sender=TaskAssignment)
 def notify_on_task_assignment(sender, instance: TaskAssignment, created: bool, **kwargs):
     """Fire an in-app notification + email when a user is assigned to a task."""
