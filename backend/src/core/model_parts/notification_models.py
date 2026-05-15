@@ -23,6 +23,12 @@ class Notification(models.Model):
         # Add more event kinds here as features grow:
         # ("offer_sent",      "Offer Letter Sent"),
         # ("task_assigned",   "Task Assigned"),
+        ("task_assigned", "Task Assigned"),
+        ("task_start_today", "Task Starts Today"),
+        ("task_due_today", "Task Due Today"),
+        ("extension_submitted", "Extension Request Submitted"),
+        ("extension_approved", "Extension Request Approved"),
+        ("extension_rejected", "Extension Request Rejected"),
     ]
 
     user = models.ForeignKey(

@@ -1,16 +1,17 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
 from rest_framework.filters import OrderingFilter
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.throttling import ScopedRateThrottle
 
 from tables import Invoice
+from core.permissions import IsManagerOrClient
 from core.serializers import InvoiceSerializer
 
 
 class InvoiceViewSet(viewsets.ModelViewSet):
     serializer_class = InvoiceSerializer
-    permission_classes = [IsAuthenticated]
+    # Managers/superusers see all; clients see only their own; employees blocked.
+    permission_classes = [IsManagerOrClient]
     queryset = Invoice.objects.select_related("client", "project", "uploaded_by").order_by("-billing_period")
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "client_list"

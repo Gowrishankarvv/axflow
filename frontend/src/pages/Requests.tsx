@@ -1,8 +1,27 @@
 
 import React, { useEffect, useState } from 'react'
 import api, { getCached } from '../lib/api'
-import { FileText, CheckCircle, XCircle, Clock, IndianRupee, Download, Calendar, AlertTriangle } from 'lucide-react'
+import { FileText, CheckCircle, XCircle, Clock, IndianRupee, Download, Calendar, AlertTriangle, ClockIcon } from 'lucide-react'
 import { useAppData } from '../lib/AppDataContext'
+
+type ExtensionRequest = {
+    id: number
+    task: number
+    task_title: string
+    project_id: number
+    project_name: string
+    requester: number
+    requester_name: string
+    current_due_date: string | null
+    requested_due_date: string
+    reason: string
+    status: 'pending' | 'approved' | 'rejected'
+    decided_by: number | null
+    decided_by_name: string | null
+    decided_at: string | null
+    decision_note: string
+    created_at: string
+}
 
 
 type Leave = {
@@ -25,11 +44,17 @@ export default function Requests() {
     const me = data?.me
     const isManagerOrSuper = me?.role === 'manager' || me?.role === 'superuser'
 
-    const [activeTab, setActiveTab] = useState<'data' | 'leave'>('data')
+    const [activeTab, setActiveTab] = useState<'data' | 'leave' | 'extension'>('data')
     const [requests, setRequests] = useState<any[]>([])
     const [leaves, setLeaves] = useState<Leave[]>([])
+    const [extensions, setExtensions] = useState<ExtensionRequest[]>([])
     const [loading, setLoading] = useState(true)
     const [statusFilter, setStatusFilter] = useState('all')
+
+    // Extension review modal state
+    const [reviewingExtension, setReviewingExtension] = useState<ExtensionRequest | null>(null)
+    const [extensionAction, setExtensionAction] = useState<'approve' | 'reject' | null>(null)
+    const [extensionNote, setExtensionNote] = useState('')
 
     // Data-request modal state
     const [selectedRequest, setSelectedRequest] = useState<any | null>(null)
@@ -57,11 +82,31 @@ export default function Requests() {
                     setLeaves(payload.results || payload || [])
                 }))
             }
+            // Extension requests are visible to everyone -- managers see all,
+            // employees see their own.
+            tasks.push(api.get('/extension-requests/').then(r => {
+                const payload: any = r.data
+                setExtensions(payload.results || payload || [])
+            }).catch(() => { /* non-fatal */ }))
             await Promise.all(tasks)
         } catch (e) {
             console.error(e)
         } finally {
             setLoading(false)
+        }
+    }
+
+    async function decideExtension() {
+        if (!reviewingExtension || !extensionAction) return
+        try {
+            const url = `/extension-requests/${reviewingExtension.id}/${extensionAction}/`
+            const res = await api.post(url, { decision_note: extensionNote })
+            setExtensions(prev => prev.map(x => x.id === reviewingExtension.id ? (res.data as ExtensionRequest) : x))
+            setReviewingExtension(null)
+            setExtensionAction(null)
+            setExtensionNote('')
+        } catch (e: any) {
+            alert('Failed: ' + (e?.response?.data ? JSON.stringify(e.response.data) : e.message))
         }
     }
 
@@ -75,6 +120,8 @@ export default function Requests() {
 
     const pendingLeaves = leaves.filter(l => l.status === 'pending')
     const decidedLeaves = leaves.filter(l => l.status !== 'pending')
+    const pendingExtensions = extensions.filter(e => e.status === 'pending')
+    const decidedExtensions = extensions.filter(e => e.status !== 'pending')
 
     function openReview(req: any) {
         setSelectedRequest(req)
@@ -189,6 +236,14 @@ export default function Requests() {
                         </span>
                     </TabButton>
                 )}
+                <TabButton active={activeTab === 'extension'} onClick={() => setActiveTab('extension')}>
+                    <span className="flex items-center gap-2">
+                        Extension Requests
+                        {isManagerOrSuper && pendingExtensions.length > 0 && (
+                            <span className="bg-red-600 text-white text-xs px-1.5 py-0.5 rounded-full">{pendingExtensions.length}</span>
+                        )}
+                    </span>
+                </TabButton>
             </div>
 
             {activeTab === 'data' && (
@@ -209,6 +264,29 @@ export default function Requests() {
                     decided={decidedLeaves}
                     onApprove={(l) => openLeaveReview(l, 'approve')}
                     onReject={(l) => openLeaveReview(l, 'reject')}
+                />
+            )}
+
+            {activeTab === 'extension' && (
+                <ExtensionRequestsView
+                    loading={loading}
+                    pending={pendingExtensions}
+                    decided={decidedExtensions}
+                    isManager={isManagerOrSuper}
+                    onApprove={(e) => { setReviewingExtension(e); setExtensionAction('approve'); setExtensionNote('') }}
+                    onReject={(e) => { setReviewingExtension(e); setExtensionAction('reject'); setExtensionNote('') }}
+                />
+            )}
+
+            {/* Extension review modal */}
+            {reviewingExtension && extensionAction && (
+                <ExtensionReviewModal
+                    ext={reviewingExtension}
+                    action={extensionAction}
+                    note={extensionNote}
+                    setNote={setExtensionNote}
+                    onClose={() => { setReviewingExtension(null); setExtensionAction(null) }}
+                    onSubmit={decideExtension}
                 />
             )}
 
@@ -689,4 +767,148 @@ function getStatusColor(status: string) {
 
 function formatStatus(status: string) {
     return status.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())
+}
+
+function ExtensionRequestsView({
+    loading, pending, decided, isManager, onApprove, onReject,
+}: {
+    loading: boolean
+    pending: ExtensionRequest[]
+    decided: ExtensionRequest[]
+    isManager: boolean
+    onApprove: (e: ExtensionRequest) => void
+    onReject: (e: ExtensionRequest) => void
+}) {
+    if (loading) {
+        return <div className="bg-white rounded-xl p-8 text-center text-gray-1">Loading extension requests…</div>
+    }
+    if (pending.length === 0 && decided.length === 0) {
+        return (
+            <div className="bg-white rounded-xl p-8 text-center text-gray-1">
+                <ClockIcon className="w-10 h-10 mx-auto text-gray-300 mb-2" />
+                <p>No extension requests yet.</p>
+                <p className="text-xs mt-1">Assignees can submit extensions from the project page.</p>
+            </div>
+        )
+    }
+    return (
+        <div className="space-y-6">
+            {pending.length > 0 && (
+                <div>
+                    <h2 className="text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Pending {isManager && `(${pending.length})`}</h2>
+                    <div className="space-y-2">
+                        {pending.map(e => (
+                            <ExtensionRow key={e.id} ext={e} isManager={isManager} onApprove={onApprove} onReject={onReject} />
+                        ))}
+                    </div>
+                </div>
+            )}
+            {decided.length > 0 && (
+                <div>
+                    <h2 className="text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">History</h2>
+                    <div className="space-y-2">
+                        {decided.map(e => (
+                            <ExtensionRow key={e.id} ext={e} isManager={isManager} onApprove={onApprove} onReject={onReject} />
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    )
+}
+
+function ExtensionRow({
+    ext, isManager, onApprove, onReject,
+}: {
+    ext: ExtensionRequest
+    isManager: boolean
+    onApprove: (e: ExtensionRequest) => void
+    onReject: (e: ExtensionRequest) => void
+}) {
+    const badge =
+        ext.status === 'pending' ? 'bg-amber-100 text-amber-800'
+        : ext.status === 'approved' ? 'bg-emerald-100 text-emerald-800'
+        : 'bg-rose-100 text-rose-800'
+    return (
+        <div className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col md:flex-row md:items-center gap-3">
+            <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <span className="font-semibold text-[#0E141C]">{ext.task_title}</span>
+                    <span className="text-xs text-gray-500">· {ext.project_name}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${badge}`}>
+                        {formatStatus(ext.status)}
+                    </span>
+                </div>
+                <div className="text-sm text-gray-700">
+                    <span className="text-gray-500">Requested by</span> <strong>{ext.requester_name}</strong>{' '}
+                    <span className="text-gray-500">·</span>{' '}
+                    <span className="text-gray-500">From</span> {ext.current_due_date || '—'}{' '}
+                    <span className="text-gray-500">→ To</span> <strong>{ext.requested_due_date}</strong>
+                </div>
+                {ext.reason && <p className="text-sm text-gray-600 mt-1 italic">"{ext.reason}"</p>}
+                {ext.status !== 'pending' && ext.decided_by_name && (
+                    <p className="text-xs text-gray-500 mt-1">
+                        {formatStatus(ext.status)} by {ext.decided_by_name}
+                        {ext.decision_note && ` — "${ext.decision_note}"`}
+                    </p>
+                )}
+            </div>
+            {isManager && ext.status === 'pending' && (
+                <div className="flex gap-2 flex-shrink-0">
+                    <button
+                        onClick={() => onApprove(ext)}
+                        className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700">
+                        Approve
+                    </button>
+                    <button
+                        onClick={() => onReject(ext)}
+                        className="px-3 py-1.5 rounded-lg bg-rose-600 text-white text-sm font-medium hover:bg-rose-700">
+                        Reject
+                    </button>
+                </div>
+            )}
+        </div>
+    )
+}
+
+function ExtensionReviewModal({
+    ext, action, note, setNote, onClose, onSubmit,
+}: {
+    ext: ExtensionRequest
+    action: 'approve' | 'reject'
+    note: string
+    setNote: (s: string) => void
+    onClose: () => void
+    onSubmit: () => void
+}) {
+    return (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl max-w-md w-full p-6">
+                <h3 className="text-lg font-bold mb-1">
+                    {action === 'approve' ? 'Approve extension' : 'Reject extension'}
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                    Task: <strong>{ext.task_title}</strong><br />
+                    From <strong>{ext.current_due_date || '—'}</strong> to <strong>{ext.requested_due_date}</strong>
+                </p>
+                <label className="block text-sm font-medium mb-1">
+                    Note <span className="text-gray-400 text-xs">(optional)</span>
+                </label>
+                <textarea
+                    rows={3}
+                    value={note}
+                    onChange={e => setNote(e.target.value)}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm mb-4"
+                    placeholder={action === 'approve' ? 'Anything to communicate to the assignee?' : 'Why is this being rejected?'} />
+                <div className="flex justify-end gap-2">
+                    <button onClick={onClose} className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">Cancel</button>
+                    <button
+                        onClick={onSubmit}
+                        className={`px-4 py-2 text-white rounded-lg font-medium ${action === 'approve' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'}`}>
+                        {action === 'approve' ? 'Approve' : 'Reject'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
 }

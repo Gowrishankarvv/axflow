@@ -20,6 +20,10 @@ from .finance_models import (
     TRANSACTION_CATEGORY_CHOICES,
     TRANSACTION_FLOW_CHOICES,
 )
+from .crm_models import Lead
+from .extension_models import TaskExtensionRequest
+from .credential_models import ProjectCredential
+from .ticket_models import Ticket
 
 __all__ = [
     "ActiveTimeEntry",
@@ -29,6 +33,7 @@ __all__ = [
     "DailySummary",
     "DataRequest",
     "Invoice",
+    "Lead",
     "LeaveRequest",
     "MiscExpense",
     "Notification",
@@ -37,11 +42,14 @@ __all__ = [
     "Project",
     "ProjectAssignment",
     "ProjectBudget",
+    "ProjectCredential",
     "RequestFile",
     "SalaryPayment",
     "Tag",
     "Task",
     "TaskAssignment",
+    "TaskExtensionRequest",
+    "Ticket",
     "TimeEntry",
     "Transaction",
     "TRANSACTION_CATEGORY_CHOICES",

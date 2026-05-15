@@ -5,6 +5,8 @@ from django.conf import settings
 from django.db import models
 from datetime import timedelta
 from .models import User, TimeEntry, Task, ClockSession, Project, DataRequest, Notification, LeaveRequest, SalaryPayment
+from .models import User, TimeEntry, Task, TaskAssignment, ClockSession, Project, DataRequest, Notification, LeaveRequest
+from .notify_email import notify
 
 @receiver([post_save, post_delete], sender=User)
 def invalidate_user_cache(sender, instance, **kwargs):
@@ -280,4 +282,35 @@ def notify_on_salary_processed(sender, instance, created, **kwargs):
             "Please approve once the amount is credited to your account."
         ),
         link="/notifications",
+@receiver(post_save, sender=TaskAssignment)
+def notify_on_task_assignment(sender, instance: TaskAssignment, created: bool, **kwargs):
+    """Fire an in-app notification + email when a user is assigned to a task."""
+    if not created:
+        return
+    task = instance.task
+    project_name = task.project.name if task.project_id else "a project"
+    assigner_name = ""
+    if instance.assigned_by:
+        assigner_name = (
+            (instance.assigned_by.first_name + " " + instance.assigned_by.last_name).strip()
+            or instance.assigned_by.username
+        )
+
+    title = f"New task assigned: {task.title}"
+    bits = [f'You have been assigned the task "{task.title}" in project "{project_name}".']
+    if task.planned_start_date:
+        bits.append(f"Starts: {task.planned_start_date}.")
+    if task.due_date:
+        bits.append(f"Due: {task.due_date}.")
+    if assigner_name:
+        bits.append(f"Assigned by {assigner_name}.")
+    message = " ".join(bits)
+
+    notify(
+        user=instance.assignee,
+        actor=instance.assigned_by,
+        kind="task_assigned",
+        title=title,
+        message=message,
+        link=f"/projects/{task.project_id}",
     )

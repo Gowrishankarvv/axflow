@@ -245,8 +245,16 @@ class ProjectsCombinedView(APIView):
 
         projects_qs = Project.objects.all().order_by("-created_at")
 
+        # Client users see only projects belonging to their client_org. They are
+        # not assignees of internal staff projects, so the assignment-based
+        # filter below would always return zero rows for them.
+        if user.role == "client":
+            if user.client_org_id:
+                projects_qs = projects_qs.filter(client_id=user.client_org_id)
+            else:
+                projects_qs = projects_qs.none()
         # Superusers see all projects; others are restricted by assignments / hierarchy.
-        if not is_superuser:
+        elif not is_superuser:
             projects_qs = projects_qs.filter(projectassignment__assignee_id__in=visible_user_ids)
 
         projects_qs = projects_qs.select_related("created_by").prefetch_related("tasks__assignees")

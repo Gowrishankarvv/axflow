@@ -36,6 +36,18 @@ class IsClientUser(BasePermission):
         user = request.user
         return bool(user and user.is_authenticated and getattr(user, 'role', '') == 'client')
 
+
+class IsManagerOrClient(BasePermission):
+    """Allows manager + superuser staff, plus client-role users (who get a
+    filtered view in the viewset). Blocks plain employees."""
+    def has_permission(self, request, view):
+        user = request.user
+        if not (user and user.is_authenticated):
+            return False
+        if user.is_superuser or getattr(user, 'role', '') in ('manager', 'superuser', 'client'):
+            return True
+        return False
+
 class IsSelfOrManagerOrSuperuser(BasePermission):
     def has_object_permission(self, request, view, obj):
         user = request.user

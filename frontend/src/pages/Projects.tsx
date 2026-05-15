@@ -11,7 +11,7 @@ export default function Projects({ me }: { me?: any }) {
     name: '',
     description: '',
   })
-  const [tforms, setTforms] = useState<Record<number, { title: string; description: string; assignees: number[]; due_date: string }>>({})
+  const [tforms, setTforms] = useState<Record<number, { title: string; description: string; assignees: number[]; planned_start_date: string; due_date: string }>>({})
   const [users, setUsers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [clients, setClients] = useState<any[]>([])
@@ -121,9 +121,16 @@ export default function Projects({ me }: { me?: any }) {
 
   async function addTask(projectId: number, e: React.FormEvent, reloadTasks: () => void) {
     e.preventDefault()
-    const tf = tforms[projectId] || { title: '', description: '', assignees: [], due_date: '' }
-    await api.post('/tasks/', { project: projectId, title: tf.title, description: tf.description, assignees: tf.assignees, due_date: tf.due_date || null })
-    setTforms({ ...tforms, [projectId]: { title: '', description: '', assignees: [], due_date: '' } })
+    const tf = tforms[projectId] || { title: '', description: '', assignees: [], planned_start_date: '', due_date: '' }
+    await api.post('/tasks/', {
+      project: projectId,
+      title: tf.title,
+      description: tf.description,
+      assignees: tf.assignees,
+      planned_start_date: tf.planned_start_date || null,
+      due_date: tf.due_date || null,
+    })
+    setTforms({ ...tforms, [projectId]: { title: '', description: '', assignees: [], planned_start_date: '', due_date: '' } })
     reloadTasks()
   }
 
@@ -480,7 +487,7 @@ function ProjectCard({ p, me, tforms, setTforms, deleteProject, addTask, users }
                     setTforms({
                       ...tforms,
                       [p.project_id || p.id]: {
-                        ...(tforms[p.project_id || p.id] || { title: '', description: '', assignees: [], due_date: '' }),
+                        ...(tforms[p.project_id || p.id] || { title: '', description: '', assignees: [], planned_start_date: '', due_date: '' }),
                         title: e.target.value,
                       },
                     })
@@ -496,49 +503,70 @@ function ProjectCard({ p, me, tforms, setTforms, deleteProject, addTask, users }
                     setTforms({
                       ...tforms,
                       [p.project_id || p.id]: {
-                        ...(tforms[p.project_id || p.id] || { title: '', description: '', assignees: [], due_date: '' }),
+                        ...(tforms[p.project_id || p.id] || { title: '', description: '', assignees: [], planned_start_date: '', due_date: '' }),
                         description: e.target.value,
                       },
                     })
                   }
                 />
-                <div className="grid grid-cols-2 gap-3">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Assign to</label>
-                  <select
-                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                    value={tforms[p.project_id || p.id]?.assignees?.[0] || ''}
-                    onChange={e =>
-                      setTforms({
-                        ...tforms,
-                        [p.project_id || p.id]: {
-                          ...(tforms[p.project_id || p.id] || { title: '', description: '', assignees: [], due_date: '' }),
-                          assignees: e.target.value ? [parseInt(e.target.value)] : [],
-                        },
-                      })
-                    }
-                  >
-                    <option value="">Unassigned</option>
-                    {users.map((u: any) => (
-                      <option key={u.id} value={u.id}>
-                        {u.first_name || u.username || u.name || `User #${u.id}`}
-                      </option>
-                    ))}
-                  </select>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Due Date</label>
-                  <input
-                    type="date"
-                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                    value={tforms[p.project_id || p.id]?.due_date || ''}
-                    onChange={e =>
-                      setTforms({
-                        ...tforms,
-                        [p.project_id || p.id]: {
-                          ...(tforms[p.project_id || p.id] || { title: '', description: '', assignees: [], due_date: '' }),
-                          due_date: e.target.value,
-                        },
-                      })
-                    }
-                  />
+                <div className="grid grid-cols-1 gap-3">
+                  <div className="grid grid-cols-[120px_1fr] items-center gap-3">
+                    <label className="text-sm font-medium text-gray-700">Assign to</label>
+                    <select
+                      className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      value={tforms[p.project_id || p.id]?.assignees?.[0] || ''}
+                      onChange={e =>
+                        setTforms({
+                          ...tforms,
+                          [p.project_id || p.id]: {
+                            ...(tforms[p.project_id || p.id] || { title: '', description: '', assignees: [], planned_start_date: '', due_date: '' }),
+                            assignees: e.target.value ? [parseInt(e.target.value)] : [],
+                          },
+                        })
+                      }
+                    >
+                      <option value="">Unassigned</option>
+                      {users.map((u: any) => (
+                        <option key={u.id} value={u.id}>
+                          {u.first_name || u.username || u.name || `User #${u.id}`}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-[120px_1fr] items-center gap-3">
+                    <label className="text-sm font-medium text-gray-700">Start Date</label>
+                    <input
+                      type="date"
+                      className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      value={tforms[p.project_id || p.id]?.planned_start_date || ''}
+                      onChange={e =>
+                        setTforms({
+                          ...tforms,
+                          [p.project_id || p.id]: {
+                            ...(tforms[p.project_id || p.id] || { title: '', description: '', assignees: [], planned_start_date: '', due_date: '' }),
+                            planned_start_date: e.target.value,
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="grid grid-cols-[120px_1fr] items-center gap-3">
+                    <label className="text-sm font-medium text-gray-700">Due Date</label>
+                    <input
+                      type="date"
+                      className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      value={tforms[p.project_id || p.id]?.due_date || ''}
+                      onChange={e =>
+                        setTforms({
+                          ...tforms,
+                          [p.project_id || p.id]: {
+                            ...(tforms[p.project_id || p.id] || { title: '', description: '', assignees: [], planned_start_date: '', due_date: '' }),
+                            due_date: e.target.value,
+                          },
+                        })
+                      }
+                    />
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <button

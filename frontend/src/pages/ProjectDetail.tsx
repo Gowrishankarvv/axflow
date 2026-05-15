@@ -42,6 +42,21 @@ export default function ProjectDetail({ me }: { me?: any }) {
   const [clients, setClients] = useState<any[]>([])
   const [estimateTarget, setEstimateTarget] = useState<any | null>(null)
   const [estimateForm, setEstimateForm] = useState({ cost: '', notes: '' })
+  // Extension request modal state
+  const [extensionFor, setExtensionFor] = useState<any | null>(null)
+  const [extensionForm, setExtensionForm] = useState<{ requested_due_date: string; reason: string }>({ requested_due_date: '', reason: '' })
+
+  // Main tab in the project page -- tasks (default) vs credentials. Credentials
+  // is only available to manager/superuser.
+  const [mainTab, setMainTab] = useState<'tasks' | 'credentials'>('tasks')
+  // Credential modal state
+  const [credentials, setCredentials] = useState<any[]>([])
+  const [credentialsLoading, setCredentialsLoading] = useState(false)
+  const [editingCredential, setEditingCredential] = useState<any | null>(null)
+  const [credentialForm, setCredentialForm] = useState<any>({
+    kind: 'other', kind_custom: '', label: '', username: '', secret: '', url: '', notes: '',
+  })
+  const [revealedSecrets, setRevealedSecrets] = useState<Set<number>>(new Set())
 
   async function load() {
     setError('')
@@ -214,6 +229,106 @@ export default function ProjectDetail({ me }: { me?: any }) {
     })
     setEstimateTarget(null)
     await load()
+  }
+
+  function openExtension(t: any) {
+    setExtensionFor(t)
+    setExtensionForm({ requested_due_date: '', reason: '' })
+  }
+
+  async function loadCredentials() {
+    if (!projectId) return
+    setCredentialsLoading(true)
+    try {
+      const res = await api.get('/credentials/', { params: { project: projectId, page_size: 200 } })
+      setCredentials((res.data as any).results || res.data || [])
+    } catch (e) { console.error(e) }
+    finally { setCredentialsLoading(false) }
+  }
+
+  function openNewCredential() {
+    setEditingCredential({ id: null })
+    setCredentialForm({ kind: 'other', kind_custom: '', label: '', username: '', secret: '', url: '', notes: '' })
+  }
+
+  function openEditCredential(c: any) {
+    setEditingCredential(c)
+    setCredentialForm({
+      kind: c.kind || 'other',
+      kind_custom: c.kind_custom || '',
+      label: c.label || '',
+      username: c.username || '',
+      secret: c.secret || '',
+      url: c.url || '',
+      notes: c.notes || '',
+    })
+  }
+
+  async function saveCredential(e: React.FormEvent) {
+    e.preventDefault()
+    if (!editingCredential) return
+    if (!credentialForm.label) {
+      alert('Label is required.')
+      return
+    }
+    try {
+      const payload = { ...credentialForm, project: projectId }
+      if (editingCredential.id) {
+        const res = await api.patch(`/credentials/${editingCredential.id}/`, payload)
+        setCredentials(prev => prev.map(x => x.id === editingCredential.id ? res.data : x))
+      } else {
+        const res = await api.post('/credentials/', payload)
+        setCredentials(prev => [res.data as any, ...prev])
+      }
+      setEditingCredential(null)
+    } catch (err: any) {
+      alert('Failed to save: ' + (err?.response?.data ? JSON.stringify(err.response.data) : err.message))
+    }
+  }
+
+  async function deleteCredential(id: number) {
+    if (!confirm('Delete this credential? This cannot be undone.')) return
+    try {
+      await api.delete(`/credentials/${id}/`)
+      setCredentials(prev => prev.filter(x => x.id !== id))
+    } catch (e: any) {
+      alert('Failed to delete: ' + e.message)
+    }
+  }
+
+  function toggleSecretReveal(id: number) {
+    setRevealedSecrets(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+
+  // Load credentials lazily when the user first switches to that tab.
+  useEffect(() => {
+    if (mainTab === 'credentials' && credentials.length === 0 && !credentialsLoading) {
+      loadCredentials()
+    }
+  }, [mainTab, projectId])
+
+  async function submitExtension(e: React.FormEvent) {
+    e.preventDefault()
+    if (!extensionFor) return
+    if (!extensionForm.requested_due_date) {
+      alert('Pick a new due date.')
+      return
+    }
+    try {
+      await api.post('/extension-requests/', {
+        task: extensionFor.id,
+        requested_due_date: extensionForm.requested_due_date,
+        reason: extensionForm.reason,
+      })
+      setExtensionFor(null)
+      alert('Extension request submitted. You\'ll be notified when it\'s reviewed.')
+    } catch (err: any) {
+      alert('Failed to submit: ' + (err?.response?.data ? JSON.stringify(err.response.data) : err.message))
+    }
   }
 
   if (loading || !project) {
@@ -577,14 +692,25 @@ export default function ProjectDetail({ me }: { me?: any }) {
                       </div>
                     </div>
                   )}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Due Date</label>
-                    <input
-                      type="date"
-                      className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                      value={tf.due_date}
-                      onChange={e => setTf({ ...tf, due_date: e.target.value })}
-                    />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                      <input
+                        type="date"
+                        className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                        value={tf.planned_start_date}
+                        onChange={e => setTf({ ...tf, planned_start_date: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Due Date</label>
+                      <input
+                        type="date"
+                        className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                        value={tf.due_date}
+                        onChange={e => setTf({ ...tf, due_date: e.target.value })}
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -597,7 +723,7 @@ export default function ProjectDetail({ me }: { me?: any }) {
                 </button>
 
                 {showMoreTaskOptions && (
-                  <div className="grid md:grid-cols-3 gap-4 mt-2">
+                  <div className="grid md:grid-cols-2 gap-4 mt-2">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Actual Start Date <span className="text-gray-400 text-xs">(optional)</span>
@@ -607,17 +733,6 @@ export default function ProjectDetail({ me }: { me?: any }) {
                         className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                         value={tf.actual_start_date}
                         onChange={e => setTf({ ...tf, actual_start_date: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Planned Start Date <span className="text-gray-400 text-xs">(optional)</span>
-                      </label>
-                      <input
-                        type="date"
-                        className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                        value={tf.planned_start_date}
-                        onChange={e => setTf({ ...tf, planned_start_date: e.target.value })}
                       />
                     </div>
                     <div>
@@ -736,7 +851,24 @@ export default function ProjectDetail({ me }: { me?: any }) {
         )}
       </div>
 
+      {/* Tab bar -- Tasks (everyone) / Credentials (manager+superuser) */}
+      <div className="flex items-center gap-1 border-b border-gray-200">
+        <button
+          onClick={() => setMainTab('tasks')}
+          className={`px-4 py-2 text-sm font-bold transition-colors border-b-2 -mb-px ${mainTab === 'tasks' ? 'border-[#0066FF] text-[#0066FF]' : 'border-transparent text-gray-500 hover:text-gray-800'}`}>
+          Tasks <span className="ml-1 text-xs text-gray-400">{tasks.length}</span>
+        </button>
+        {(me?.role === 'manager' || me?.role === 'superuser') && (
+          <button
+            onClick={() => setMainTab('credentials')}
+            className={`px-4 py-2 text-sm font-bold transition-colors border-b-2 -mb-px ${mainTab === 'credentials' ? 'border-[#0066FF] text-[#0066FF]' : 'border-transparent text-gray-500 hover:text-gray-800'}`}>
+            Credentials <span className="ml-1 text-xs text-gray-400">{credentials.length}</span>
+          </button>
+        )}
+      </div>
+
       {/* Tasks List */}
+      {mainTab === 'tasks' && (
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-gray-800">Tasks</h2>
@@ -788,6 +920,12 @@ export default function ProjectDetail({ me }: { me?: any }) {
                         <User className="w-4 h-4" />
                         <span>{t.assigned_user_names?.join(', ') || 'Unassigned'}</span>
                       </div>
+                      {t.planned_start_date && (
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-blue-600" />
+                          <span>Start: {new Date(t.planned_start_date).toLocaleDateString()}</span>
+                        </div>
+                      )}
                       {t.due_date && (
                         <div className="flex items-center gap-2">
                           <Calendar className="w-4 h-4" />
@@ -801,20 +939,13 @@ export default function ProjectDetail({ me }: { me?: any }) {
                         </div>
                       )}
                     </div>
-                    {(t.actual_start_date || t.planned_start_date || t.planned_end_date) && (
+                    {(t.actual_start_date || t.planned_end_date) && (
                       <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500 pt-2 border-t border-gray-200">
                         {t.actual_start_date && (
                           <div className="flex items-center gap-1.5">
                             <Calendar className="w-3 h-3 text-green-600" />
                             <span className="font-medium text-green-700">Actual Start:</span>
                             <span>{new Date(t.actual_start_date).toLocaleDateString()}</span>
-                          </div>
-                        )}
-                        {t.planned_start_date && (
-                          <div className="flex items-center gap-1.5">
-                            <Calendar className="w-3 h-3 text-blue-600" />
-                            <span className="font-medium text-blue-700">Planned Start:</span>
-                            <span>{new Date(t.planned_start_date).toLocaleDateString()}</span>
                           </div>
                         )}
                         {t.planned_end_date && (
@@ -855,6 +986,14 @@ export default function ProjectDetail({ me }: { me?: any }) {
                       >
                         Completed
                       </button>
+                      {t.due_date && t.status !== 'done' && (
+                        <button
+                          className="px-3 py-1 text-xs font-medium bg-amber-100 text-amber-800 rounded-lg hover:bg-amber-200 transition-colors duration-200 ml-2"
+                          onClick={() => openExtension(t)}
+                          title="Request a due date extension">
+                          Request Extension
+                        </button>
+                      )}
                     </div>
                   )}
                   {/* Edit button based on role */}
@@ -899,6 +1038,31 @@ export default function ProjectDetail({ me }: { me?: any }) {
           </div>
         )}
       </div>
+      )}
+
+      {/* Credentials section -- manager/superuser only */}
+      {mainTab === 'credentials' && (me?.role === 'manager' || me?.role === 'superuser') && (
+        <CredentialsSection
+          credentials={credentials}
+          loading={credentialsLoading}
+          revealedSecrets={revealedSecrets}
+          onToggleReveal={toggleSecretReveal}
+          onNew={openNewCredential}
+          onEdit={openEditCredential}
+          onDelete={deleteCredential}
+        />
+      )}
+
+      {/* Credential form modal */}
+      {editingCredential && (
+        <CredentialModal
+          form={credentialForm}
+          setForm={setCredentialForm}
+          isNew={!editingCredential.id}
+          onClose={() => setEditingCredential(null)}
+          onSubmit={saveCredential}
+        />
+      )}
 
       <style>{`
         @keyframes slideDown {
@@ -929,6 +1093,49 @@ export default function ProjectDetail({ me }: { me?: any }) {
           animation: slideDown 0.4s ease-out forwards;
         }
       `}</style>
+      {extensionFor && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-800">Request Extension</h3>
+              <button onClick={() => setExtensionFor(null)} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+            </div>
+            <div className="mb-4 bg-gray-50 p-3 rounded-lg text-sm">
+              <p className="font-medium text-gray-900">{extensionFor.title}</p>
+              <p className="text-gray-600 mt-1">
+                Current due date: <strong>{extensionFor.due_date || '—'}</strong>
+              </p>
+            </div>
+            <form onSubmit={submitExtension} className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">New due date</label>
+                <input
+                  type="date"
+                  required
+                  min={extensionFor.due_date || undefined}
+                  value={extensionForm.requested_due_date}
+                  onChange={e => setExtensionForm({ ...extensionForm, requested_due_date: e.target.value })}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Reason</label>
+                <textarea
+                  rows={3}
+                  required
+                  value={extensionForm.reason}
+                  onChange={e => setExtensionForm({ ...extensionForm, reason: e.target.value })}
+                  placeholder="Why do you need more time?"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-400" />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <button type="button" onClick={() => setExtensionFor(null)} className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 font-medium">Submit</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {estimateTarget && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md animate-slideDown">
@@ -1062,14 +1269,25 @@ export default function ProjectDetail({ me }: { me?: any }) {
                         </select>
                       </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Due Date</label>
-                      <input
-                        type="date"
-                        className="w-full border rounded px-3 py-2"
-                        value={editForm.due_date}
-                        onChange={e => setEditForm({ ...editForm, due_date: e.target.value })}
-                      />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Start Date</label>
+                        <input
+                          type="date"
+                          className="w-full border rounded px-3 py-2"
+                          value={editForm.planned_start_date}
+                          onChange={e => setEditForm({ ...editForm, planned_start_date: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Due Date</label>
+                        <input
+                          type="date"
+                          className="w-full border rounded px-3 py-2"
+                          value={editForm.due_date}
+                          onChange={e => setEditForm({ ...editForm, due_date: e.target.value })}
+                        />
+                      </div>
                     </div>
                   </div>
                   <button
@@ -1080,7 +1298,7 @@ export default function ProjectDetail({ me }: { me?: any }) {
                     {showMoreEditOptions ? 'Hide advanced options' : 'More options'}
                   </button>
                   {showMoreEditOptions && (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2 pt-2 border-t">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2 pt-2 border-t">
                       <div>
                         <label className="block text-sm font-medium mb-1">
                           Actual Start Date <span className="text-gray-400 text-xs">(optional)</span>
@@ -1090,17 +1308,6 @@ export default function ProjectDetail({ me }: { me?: any }) {
                           className="w-full border rounded px-3 py-2"
                           value={editForm.actual_start_date}
                           onChange={e => setEditForm({ ...editForm, actual_start_date: e.target.value })}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-1">
-                          Planned Start Date <span className="text-gray-400 text-xs">(optional)</span>
-                        </label>
-                        <input
-                          type="date"
-                          className="w-full border rounded px-3 py-2"
-                          value={editForm.planned_start_date}
-                          onChange={e => setEditForm({ ...editForm, planned_start_date: e.target.value })}
                         />
                       </div>
                       <div>
@@ -1147,6 +1354,228 @@ export default function ProjectDetail({ me }: { me?: any }) {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+// ---------- Credentials components ----------
+
+const CRED_KIND_OPTIONS = [
+  { v: 'google', l: 'Google' },
+  { v: 'github', l: 'GitHub' },
+  { v: 'aws', l: 'AWS' },
+  { v: 'cdn', l: 'CDN' },
+  { v: 'database', l: 'Database' },
+  { v: 'ftp', l: 'FTP / SSH' },
+  { v: 'smtp', l: 'SMTP / Email' },
+  { v: 'dlt', l: 'DLT' },
+  { v: 'api_key', l: 'API Key' },
+  { v: 'other', l: 'Other' },
+]
+
+function CredentialsSection({
+  credentials, loading, revealedSecrets, onToggleReveal, onNew, onEdit, onDelete,
+}: {
+  credentials: any[]
+  loading: boolean
+  revealedSecrets: Set<number>
+  onToggleReveal: (id: number) => void
+  onNew: () => void
+  onEdit: (c: any) => void
+  onDelete: (id: number) => void
+}) {
+  function copyToClipboard(text: string) {
+    if (!text) return
+    navigator.clipboard.writeText(text)
+  }
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-xl font-bold text-gray-800">Credentials</h2>
+          <p className="text-xs text-gray-500 mt-1">
+            Stored in plain text. Only managers and superusers can see this tab.
+          </p>
+        </div>
+        <button
+          onClick={onNew}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#0066FF] text-white font-medium hover:bg-blue-700 transition-colors">
+          <Plus className="w-4 h-4" /> New Credential
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-10 text-gray-400">Loading…</div>
+      ) : credentials.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Target className="w-8 h-8 text-gray-400" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-800 mb-2">No credentials yet</h3>
+          <p className="text-gray-600">Click "New Credential" to add the first one for this project.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {credentials.map(c => {
+            const revealed = revealedSecrets.has(c.id)
+            return (
+              <div key={c.id} className="border border-gray-200 rounded-xl p-4 hover:shadow-sm transition-shadow">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-2">
+                      <span className="font-bold text-gray-900">{c.label}</span>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-medium">
+                        {c.kind_display || c.kind}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                      {c.username && (
+                        <Field label="Username">
+                          <div className="flex items-center gap-2">
+                            <code className="bg-gray-50 px-2 py-1 rounded text-gray-800 truncate flex-1">{c.username}</code>
+                            <button onClick={() => copyToClipboard(c.username)} className="text-gray-500 hover:text-gray-800 text-xs">Copy</button>
+                          </div>
+                        </Field>
+                      )}
+                      {c.secret && (
+                        <Field label="Password / Secret">
+                          <div className="flex items-center gap-2">
+                            <code className="bg-gray-50 px-2 py-1 rounded text-gray-800 truncate flex-1 font-mono">
+                              {revealed ? c.secret : '•'.repeat(Math.min(c.secret.length, 12))}
+                            </code>
+                            <button onClick={() => onToggleReveal(c.id)} className="text-gray-500 hover:text-gray-800 text-xs">
+                              {revealed ? 'Hide' : 'Reveal'}
+                            </button>
+                            <button onClick={() => copyToClipboard(c.secret)} className="text-gray-500 hover:text-gray-800 text-xs">Copy</button>
+                          </div>
+                        </Field>
+                      )}
+                      {c.url && (
+                        <Field label="URL">
+                          <a href={c.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 truncate block">
+                            {c.url}
+                          </a>
+                        </Field>
+                      )}
+                    </div>
+                    {c.notes && (
+                      <p className="mt-2 text-sm text-gray-600 whitespace-pre-wrap italic">"{c.notes}"</p>
+                    )}
+                    <p className="mt-2 text-xs text-gray-400">
+                      Added by {c.created_by_name || 'unknown'} on {new Date(c.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-1 flex-shrink-0">
+                    <button onClick={() => onEdit(c)} className="px-3 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">Edit</button>
+                    <button onClick={() => onDelete(c.id)} className="px-3 py-1 text-xs font-medium bg-red-100 text-red-700 rounded-lg hover:bg-red-200">Delete</button>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="text-xs font-medium text-gray-500 mb-1">{label}</div>
+      {children}
+    </div>
+  )
+}
+
+function CredentialModal({
+  form, setForm, isNew, onClose, onSubmit,
+}: {
+  form: any
+  setForm: (f: any) => void
+  isNew: boolean
+  onClose: () => void
+  onSubmit: (e: React.FormEvent) => void
+}) {
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="sticky top-0 bg-white border-b border-gray-200 p-5 flex items-center justify-between">
+          <h3 className="text-lg font-bold text-gray-900">{isNew ? 'New Credential' : 'Edit Credential'}</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+        </div>
+        <form onSubmit={onSubmit} className="p-5 space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Type</label>
+              <select
+                value={form.kind}
+                onChange={e => setForm({ ...form, kind: e.target.value })}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm">
+                {CRED_KIND_OPTIONS.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
+              </select>
+            </div>
+            {form.kind === 'other' && (
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Custom type</label>
+                <input
+                  value={form.kind_custom}
+                  onChange={e => setForm({ ...form, kind_custom: e.target.value })}
+                  placeholder="e.g. Stripe"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" />
+              </div>
+            )}
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Label *</label>
+            <input
+              required
+              value={form.label}
+              onChange={e => setForm({ ...form, label: e.target.value })}
+              placeholder='e.g. "Production AWS"'
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Username / Account ID</label>
+            <input
+              value={form.username}
+              onChange={e => setForm({ ...form, username: e.target.value })}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Password / Token</label>
+            <textarea
+              rows={2}
+              value={form.secret}
+              onChange={e => setForm({ ...form, secret: e.target.value })}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">URL</label>
+            <input
+              type="url"
+              value={form.url}
+              onChange={e => setForm({ ...form, url: e.target.value })}
+              placeholder="https://…"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Notes</label>
+            <textarea
+              rows={3}
+              value={form.notes}
+              onChange={e => setForm({ ...form, notes: e.target.value })}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <button type="button" onClick={onClose} className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">Cancel</button>
+            <button type="submit" className="px-4 py-2 bg-[#0066FF] text-white rounded-lg font-medium hover:bg-blue-700">
+              {isNew ? 'Save credential' : 'Save changes'}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   )
 }

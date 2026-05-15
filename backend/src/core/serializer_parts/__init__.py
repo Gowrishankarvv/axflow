@@ -12,6 +12,10 @@ from .finance_serializers import (
     SalaryPaymentSerializer,
     TransactionSerializer,
 )
+from .crm_serializers import LeadSerializer
+from .extension_serializers import TaskExtensionRequestSerializer
+from .credential_serializers import ProjectCredentialSerializer
+from .ticket_serializers import TicketSerializer
 
 __all__ = [
     "ActiveTimeEntrySerializer",
@@ -19,6 +23,7 @@ __all__ = [
     "ClockSessionSerializer",
     "DataRequestSerializer",
     "InvoiceSerializer",
+    "LeadSerializer",
     "LeaveRequestSerializer",
     "MiscExpenseSerializer",
     "NotificationSerializer",
@@ -26,13 +31,16 @@ __all__ = [
     "OrganizationUnitSerializer",
     "ProjectAssignmentSerializer",
     "ProjectBudgetSerializer",
+    "ProjectCredentialSerializer",
     "ProjectSerializer",
     "RequestFileSerializer",
     "SalaryPaymentSerializer",
     "SetPasswordSerializer",
     "TagSerializer",
     "TaskAssignmentSerializer",
+    "TaskExtensionRequestSerializer",
     "TaskSerializer",
+    "TicketSerializer",
     "TimeEntrySerializer",
     "TransactionSerializer",
     "UserSerializer",

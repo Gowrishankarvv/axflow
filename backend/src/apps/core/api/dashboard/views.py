@@ -142,7 +142,17 @@ class DashboardSummaryAggregatedView(APIView):
         team_view = request.query_params.get("team") in ("1", "true", "True")
         target_user_ids = None
 
-        if team_view:
+        # Employees are hard-restricted to their own dashboard data, regardless
+        # of any user_id or team_view query parameter they pass.
+        is_employee_only = (
+            not user.is_superuser
+            and getattr(user, "role", "") not in ("superuser", "manager")
+        )
+        if is_employee_only:
+            target_user_ids = [user.id]
+            team_view = False
+            qp_user_id = None
+        elif team_view:
             if not (user.is_superuser or user.role == "superuser"):
                 target_user_ids = list(build_visible_user_ids(user))
         elif qp_user_id:
@@ -153,8 +163,6 @@ class DashboardSummaryAggregatedView(APIView):
                     target_user_ids = [int(qp_user_id)]
                 except ValueError:
                     return Response({"detail": "Invalid user_id"}, status=400)
-        elif user.role == "employee" and not user.is_superuser:
-            target_user_ids = [user.id]
         else:
             if not (user.is_superuser or user.role == "superuser"):
                 target_user_ids = list(build_visible_user_ids(user))
