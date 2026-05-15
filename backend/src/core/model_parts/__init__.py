@@ -24,6 +24,7 @@ from .crm_models import Lead
 from .extension_models import TaskExtensionRequest
 from .credential_models import ProjectCredential
 from .ticket_models import Ticket
+from .salary_models import EmployeeSalary
 
 __all__ = [
     "ActiveTimeEntry",
@@ -32,6 +33,7 @@ __all__ = [
     "Comment",
     "DailySummary",
     "DataRequest",
+    "EmployeeSalary",
     "Invoice",
     "Lead",
     "LeaveRequest",
