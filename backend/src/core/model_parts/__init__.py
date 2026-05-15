@@ -12,6 +12,14 @@ from .request_models import DataRequest, Invoice, RequestFile
 from .leave_models import LeaveRequest
 from .offer_letter_models import OfferLetter
 from .notification_models import Notification
+from .finance_models import (
+    MiscExpense,
+    ProjectBudget,
+    SalaryPayment,
+    Transaction,
+    TRANSACTION_CATEGORY_CHOICES,
+    TRANSACTION_FLOW_CHOICES,
+)
 
 __all__ = [
     "ActiveTimeEntry",
@@ -22,16 +30,22 @@ __all__ = [
     "DataRequest",
     "Invoice",
     "LeaveRequest",
+    "MiscExpense",
     "Notification",
     "OfferLetter",
     "OrganizationUnit",
     "Project",
     "ProjectAssignment",
+    "ProjectBudget",
     "RequestFile",
+    "SalaryPayment",
     "Tag",
     "Task",
     "TaskAssignment",
     "TimeEntry",
+    "Transaction",
+    "TRANSACTION_CATEGORY_CHOICES",
+    "TRANSACTION_FLOW_CHOICES",
     "User",
     "validate_email_domain",
 ]

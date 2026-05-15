@@ -18,6 +18,8 @@ class Notification(models.Model):
         ("leave_submitted", "Leave Request Submitted"),
         ("leave_approved", "Leave Request Approved"),
         ("leave_rejected", "Leave Request Rejected"),
+        ("salary_processed", "Salary Processed — Approval Needed"),
+        ("salary_acknowledged", "Salary Receipt Acknowledged"),
         # Add more event kinds here as features grow:
         # ("offer_sent",      "Offer Letter Sent"),
         # ("task_assigned",   "Task Assigned"),

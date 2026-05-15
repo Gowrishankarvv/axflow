@@ -6,6 +6,12 @@ from .request_serializers import DataRequestSerializer, InvoiceSerializer, Reque
 from .leave_serializers import LeaveRequestSerializer
 from .offer_letter_serializers import OfferLetterSerializer
 from .notification_serializers import NotificationSerializer
+from .finance_serializers import (
+    MiscExpenseSerializer,
+    ProjectBudgetSerializer,
+    SalaryPaymentSerializer,
+    TransactionSerializer,
+)
 
 __all__ = [
     "ActiveTimeEntrySerializer",
@@ -14,16 +20,20 @@ __all__ = [
     "DataRequestSerializer",
     "InvoiceSerializer",
     "LeaveRequestSerializer",
+    "MiscExpenseSerializer",
     "NotificationSerializer",
     "OfferLetterSerializer",
     "OrganizationUnitSerializer",
     "ProjectAssignmentSerializer",
+    "ProjectBudgetSerializer",
     "ProjectSerializer",
     "RequestFileSerializer",
+    "SalaryPaymentSerializer",
     "SetPasswordSerializer",
     "TagSerializer",
     "TaskAssignmentSerializer",
     "TaskSerializer",
     "TimeEntrySerializer",
+    "TransactionSerializer",
     "UserSerializer",
 ]

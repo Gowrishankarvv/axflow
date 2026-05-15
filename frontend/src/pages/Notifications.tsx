@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../lib/api'
-import { Bell, CheckCheck, FileText, Circle, Calendar, CheckCircle2, XCircle } from 'lucide-react'
+import { Bell, CheckCheck, FileText, Circle, Calendar, CheckCircle2, XCircle, Wallet } from 'lucide-react'
 
 type Notification = {
     id: number
@@ -105,7 +105,7 @@ export default function NotificationsPage() {
             ) : (
                 <div className="space-y-2">
                     {notifications.map(n => (
-                        <NotificationRow key={n.id} n={n} onClick={() => handleClick(n)} />
+                        <NotificationRow key={n.id} n={n} onClick={() => handleClick(n)} onActed={load} />
                     ))}
                 </div>
             )}
@@ -124,29 +124,80 @@ function FilterButton({ active, onClick, children }: { active: boolean, onClick:
     )
 }
 
-function NotificationRow({ n, onClick }: { n: Notification, onClick: () => void }) {
+function NotificationRow({ n, onClick, onActed }: { n: Notification, onClick: () => void, onActed: () => void }) {
+    const isSalary = n.kind === 'salary_processed'
+    const [acting, setActing] = useState(false)
+    const [done, setDone] = useState<null | 'approved' | 'rejected'>(null)
+
+    async function actOnSalary(action: 'approve' | 'reject') {
+        // Find the user's pending salary record and act on it.
+        setActing(true)
+        try {
+            const { data } = await api.get('/finance/salaries/', { params: { scope: 'mine' } })
+            const list = (data as any).results || data || []
+            const pending = list.find((s: any) => s.status === 'processed')
+            if (!pending) {
+                alert('No pending salary found.')
+                return
+            }
+            let note = ''
+            if (action === 'reject') {
+                note = prompt('Reason for rejection?') || ''
+                if (!note) return
+            }
+            await api.post(`/finance/salaries/${pending.id}/${action}/`, { note })
+            setDone(action === 'approve' ? 'approved' : 'rejected')
+            try { await api.patch(`/notifications/${n.id}/`, { is_read: true }) } catch { }
+            onActed()
+        } catch (e: any) {
+            alert(e?.response?.data?.detail || 'Failed to act on salary.')
+        } finally {
+            setActing(false)
+        }
+    }
+
     return (
-        <button
-            onClick={onClick}
+        <div
             className={`w-full text-left flex items-start gap-3 p-4 rounded-xl border transition-colors ${n.is_read
                 ? 'bg-white border-gray-100 hover:bg-gray-50'
                 : 'bg-blue-50/50 border-blue-100 hover:bg-blue-50'
                 }`}
         >
-            <div className={`flex-shrink-0 p-2 rounded-lg ${n.is_read ? 'bg-gray-100' : 'bg-blue-100'}`}>
-                {iconForKind(n.kind, n.is_read)}
-            </div>
-            <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                    <h3 className={`text-sm ${n.is_read ? 'font-medium text-gray-700' : 'font-bold text-gray-900'}`}>
-                        {n.title}
-                    </h3>
-                    {!n.is_read && <Circle className="w-2 h-2 fill-blue-500 text-blue-500" />}
+            <button onClick={onClick} className="flex items-start gap-3 flex-1 min-w-0 text-left">
+                <div className={`flex-shrink-0 p-2 rounded-lg ${n.is_read ? 'bg-gray-100' : 'bg-blue-100'}`}>
+                    {iconForKind(n.kind, n.is_read)}
                 </div>
-                <p className="text-sm text-gray-600 mt-0.5 break-words">{n.message}</p>
-                <div className="text-xs text-gray-400 mt-1">{timeAgo(n.created_at)}</div>
-            </div>
-        </button>
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                        <h3 className={`text-sm ${n.is_read ? 'font-medium text-gray-700' : 'font-bold text-gray-900'}`}>
+                            {n.title}
+                        </h3>
+                        {!n.is_read && <Circle className="w-2 h-2 fill-blue-500 text-blue-500" />}
+                    </div>
+                    <p className="text-sm text-gray-600 mt-0.5 break-words">{n.message}</p>
+                    <div className="text-xs text-gray-400 mt-1">{timeAgo(n.created_at)}</div>
+                </div>
+            </button>
+            {isSalary && !done && (
+                <div className="flex flex-col gap-1 flex-shrink-0">
+                    <button
+                        onClick={() => actOnSalary('approve')}
+                        disabled={acting}
+                        className="px-3 py-1 text-xs font-medium bg-emerald-600 text-white rounded hover:bg-emerald-700 disabled:opacity-50"
+                    >Approve</button>
+                    <button
+                        onClick={() => actOnSalary('reject')}
+                        disabled={acting}
+                        className="px-3 py-1 text-xs font-medium border border-rose-300 text-rose-700 rounded hover:bg-rose-50 disabled:opacity-50"
+                    >Reject</button>
+                </div>
+            )}
+            {done && (
+                <div className={`text-xs font-medium flex-shrink-0 ${done === 'approved' ? 'text-emerald-700' : 'text-rose-700'}`}>
+                    {done === 'approved' ? 'Acknowledged ✓' : 'Rejected'}
+                </div>
+            )}
+        </div>
     )
 }
 
@@ -158,6 +209,12 @@ function iconForKind(kind: string, isRead: boolean) {
     }
     if (kind === 'leave_rejected') {
         return <XCircle className={`w-4 h-4 ${isRead ? 'text-rose-400' : 'text-rose-600'}`} />
+    }
+    if (kind === 'salary_processed') {
+        return <Wallet className={`w-4 h-4 ${isRead ? 'text-amber-400' : 'text-amber-600'}`} />
+    }
+    if (kind === 'salary_acknowledged') {
+        return <CheckCircle2 className={`w-4 h-4 ${isRead ? 'text-emerald-400' : 'text-emerald-600'}`} />
     }
     switch (kind) {
         case 'request_submitted':
