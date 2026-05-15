@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.models import (
+    EmployeeSalary,
     MiscExpense,
     ProjectBudget,
     SalaryPayment,
@@ -158,6 +159,22 @@ class SalaryPaymentViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         if not self._is_exec(request.user):
             return Response({"detail": "Forbidden"}, status=403)
+        # Enforce that the amount equals the employee's currently-configured
+        # salary. The frontend prefills + locks this field, but we also
+        # validate server-side so a custom amount cannot be smuggled in.
+        emp_id = request.data.get("employee")
+        if not emp_id:
+            return Response({"detail": "employee is required"}, status=400)
+        configured = EmployeeSalary.current_for(emp_id)
+        if not configured:
+            return Response(
+                {"detail": "No salary is configured for this employee. Set one in the Salary module first."},
+                status=400,
+            )
+        # Force the canonical amount regardless of what was posted.
+        mutable_data = request.data.copy() if hasattr(request.data, "copy") else dict(request.data)
+        mutable_data["amount"] = str(configured.amount)
+        request._full_data = mutable_data
         return super().create(request, *args, **kwargs)
 
     def perform_create(self, serializer):

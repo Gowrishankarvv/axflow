@@ -759,14 +759,41 @@ function SalaryForm({
         period_year: now.getFullYear(),
         note: '',
     })
+    const [configuredStatus, setConfiguredStatus] = useState<'idle' | 'loading' | 'configured' | 'missing'>('idle')
     const [submitting, setSubmitting] = useState(false)
     const [err, setErr] = useState<string | null>(null)
+
+    async function onEmployeeChange(value: string) {
+        setForm(f => ({ ...f, employee: value, amount: '' }))
+        setErr(null)
+        if (!value) {
+            setConfiguredStatus('idle')
+            return
+        }
+        setConfiguredStatus('loading')
+        try {
+            const { data } = await api.get('/salary/records/current/', { params: { employee: value } })
+            setForm(f => ({ ...f, amount: String((data as any).amount) }))
+            setConfiguredStatus('configured')
+        } catch (e: any) {
+            if (e?.response?.status === 404) {
+                setConfiguredStatus('missing')
+            } else {
+                setConfiguredStatus('idle')
+                setErr(e?.response?.data?.detail || 'Failed to load configured salary.')
+            }
+        }
+    }
 
     async function submit(e: React.FormEvent) {
         e.preventDefault()
         setErr(null)
-        if (!form.employee || !form.amount) {
-            setErr('Employee and amount are required.')
+        if (!form.employee) {
+            setErr('Please select an employee.')
+            return
+        }
+        if (configuredStatus !== 'configured') {
+            setErr('No salary is configured for this employee yet. Set one in the Salary module first.')
             return
         }
         setSubmitting(true)
@@ -792,7 +819,7 @@ function SalaryForm({
                 <Field label="Employee">
                     <select
                         value={form.employee}
-                        onChange={e => setForm({ ...form, employee: e.target.value })}
+                        onChange={e => onEmployeeChange(e.target.value)}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
                     >
                         <option value="">— Select employee —</option>
@@ -803,14 +830,26 @@ function SalaryForm({
                         ))}
                     </select>
                 </Field>
-                <Field label="Salary Amount">
+                <Field label="Salary Amount (from Salary module)">
                     <input
-                        type="number" step="0.01" min="0"
-                        value={form.amount}
-                        onChange={e => setForm({ ...form, amount: e.target.value })}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                        type="text"
+                        readOnly
+                        value={
+                            configuredStatus === 'loading' ? 'Loading…'
+                                : configuredStatus === 'configured' ? form.amount
+                                    : configuredStatus === 'missing' ? 'Not configured'
+                                        : ''
+                        }
+                        placeholder="Select an employee first"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-gray-100 text-gray-700 cursor-not-allowed"
                     />
                 </Field>
+                {configuredStatus === 'missing' && (
+                    <div className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-lg p-2 flex gap-1.5">
+                        <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                        <span>This employee has no configured salary. Open the Salary module to set one.</span>
+                    </div>
+                )}
                 <div className="grid grid-cols-2 gap-3">
                     <Field label="Month">
                         <select

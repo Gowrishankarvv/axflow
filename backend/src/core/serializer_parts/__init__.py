@@ -16,12 +16,14 @@ from .crm_serializers import LeadSerializer
 from .extension_serializers import TaskExtensionRequestSerializer
 from .credential_serializers import ProjectCredentialSerializer
 from .ticket_serializers import TicketSerializer
+from .salary_serializers import EmployeeSalarySerializer
 
 __all__ = [
     "ActiveTimeEntrySerializer",
     "ClientSerializer",
     "ClockSessionSerializer",
     "DataRequestSerializer",
+    "EmployeeSalarySerializer",
     "InvoiceSerializer",
     "LeadSerializer",
     "LeaveRequestSerializer",

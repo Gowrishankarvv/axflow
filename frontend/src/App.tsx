@@ -19,6 +19,7 @@ const Leave = React.lazy(() => import('./pages/Leave'))
 const OfferLetter = React.lazy(() => import('./pages/OfferLetter'))
 const Notifications = React.lazy(() => import('./pages/Notifications'))
 const Finance = React.lazy(() => import('./pages/Finance'))
+const Salary = React.lazy(() => import('./pages/Salary'))
 const CRM = React.lazy(() => import('./pages/CRM'))
 const Tickets = React.lazy(() => import('./pages/Tickets'))
 
@@ -51,7 +52,8 @@ import {
   MailIcon as OfferMailIcon,
   BellIcon as NotificationsIcon,
   WalletIcon as FinanceIcon,
-  TargetIcon as CRMIcon
+  TargetIcon as CRMIcon,
+  CoinsIcon as SalaryIcon
 } from 'lucide-react'
 
 export default function App() {
@@ -202,6 +204,7 @@ export default function App() {
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/tickets" element={<Tickets />} />
                 {isExecutive(me) && <Route path="/finance" element={<Finance />} />}
+                {isExecutive(me) && <Route path="/salary" element={<Salary />} />}
                 {(me?.role === 'manager' || me?.role === 'superuser') && <Route path="/offer-letter" element={<OfferLetter />} />}
                 {(me?.role === 'manager' || me?.role === 'superuser') && <Route path="/admin" element={<Admin />} />}
                 <Route path="/" element={<Dashboard />} />
@@ -258,6 +261,7 @@ function Sidebar({
     { to: '/crm', label: 'CRM', icon: CRMIcon, show: me?.role === 'manager' || me?.role === 'superuser' },
     { to: '/invoices', label: 'Invoices', icon: InvoiceIcon, show: me?.role === 'manager' || me?.role === 'superuser' },
     { to: '/finance', label: 'Finance', icon: FinanceIcon, show: isExecutive(me) },
+    { to: '/salary', label: 'Salary', icon: SalaryIcon, show: isExecutive(me) },
     { to: '/offer-letter', label: 'Offer Letter', icon: OfferMailIcon, show: me?.role === 'manager' || me?.role === 'superuser' },
     { to: '/org-tree', label: 'Organization', icon: BuildingIcon, show: me?.role === 'manager' || me?.role === 'superuser' },
     { to: '/admin', label: 'User Management', icon: UserPlusIcon, show: me?.role === 'manager' || me?.role === 'superuser' },

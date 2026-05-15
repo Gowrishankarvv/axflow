@@ -24,4 +24,5 @@ urlpatterns = [
     path("", include("apps.core.api.extension_requests.urls")),
     path("", include("apps.core.api.credentials.urls")),
     path("", include("apps.core.api.tickets.urls")),
+    path("", include("apps.core.api.salary.urls")),
 ]
