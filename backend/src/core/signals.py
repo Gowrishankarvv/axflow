@@ -4,6 +4,7 @@ from django.core.cache import cache
 from django.conf import settings
 from django.db import models
 from datetime import timedelta
+from .models import User, TimeEntry, Task, ClockSession, Project, DataRequest, Notification, LeaveRequest, SalaryPayment
 from .models import User, TimeEntry, Task, TaskAssignment, ClockSession, Project, DataRequest, Notification, LeaveRequest
 from .notify_email import notify
 
@@ -251,6 +252,36 @@ def notify_on_leave_decision(sender, instance, created, **kwargs):
     )
 
 
+# --- Salary processed → notify the employee to confirm receipt --------------
+
+@receiver(post_save, sender=SalaryPayment)
+def notify_on_salary_processed(sender, instance, created, **kwargs):
+    """When a new SalaryPayment is created, ping the employee so they can
+    approve once the money lands in their account."""
+    if not created:
+        return
+    if not instance.employee_id:
+        return
+
+    amount_str = f"{instance.amount}"
+    period = ""
+    if instance.period_month and instance.period_year:
+        try:
+            from calendar import month_name
+            period = f" for {month_name[instance.period_month]} {instance.period_year}"
+        except Exception:
+            period = ""
+
+    Notification.objects.create(
+        user=instance.employee,
+        actor=instance.processed_by,
+        kind="salary_processed",
+        title="Salary processed — please confirm",
+        message=(
+            f"Your salary of ₹{amount_str}{period} has been processed. "
+            "Please approve once the amount is credited to your account."
+        ),
+        link="/notifications",
 @receiver(post_save, sender=TaskAssignment)
 def notify_on_task_assignment(sender, instance: TaskAssignment, created: bool, **kwargs):
     """Fire an in-app notification + email when a user is assigned to a task."""
