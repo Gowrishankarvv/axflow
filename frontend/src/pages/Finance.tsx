@@ -55,6 +55,9 @@ type Salary = {
     employee: number
     employee_name: string
     amount: number | string
+    gross_amount: number | string | null
+    salary_cut: number | string
+    salary_cut_days: number
     period_month: number | null
     period_year: number | null
     note: string
@@ -702,14 +705,16 @@ function Salaries({
                         <tr>
                             <th className="text-left px-4 py-3">Employee</th>
                             <th className="text-left px-4 py-3">Period</th>
-                            <th className="text-right px-4 py-3">Amount</th>
+                            <th className="text-right px-4 py-3">Gross</th>
+                            <th className="text-right px-4 py-3">Salary Cut</th>
+                            <th className="text-right px-4 py-3">Net Paid</th>
                             <th className="text-left px-4 py-3">Status</th>
                             <th className="text-left px-4 py-3">Processed</th>
                         </tr>
                     </thead>
                     <tbody>
                         {salaries.length === 0 && (
-                            <tr><td colSpan={5} className="text-center py-8 text-gray-400">No salaries processed yet.</td></tr>
+                            <tr><td colSpan={7} className="text-center py-8 text-gray-400">No salaries processed yet.</td></tr>
                         )}
                         {salaries.map(s => (
                             <tr key={s.id} className="border-t border-gray-100">
@@ -719,7 +724,18 @@ function Salaries({
                                         ? `${monthName(s.period_month)} ${s.period_year}`
                                         : '—'}
                                 </td>
-                                <td className="px-4 py-3 text-right font-mono">{cur(s.amount)}</td>
+                                <td className="px-4 py-3 text-right font-mono text-gray-600">
+                                    {s.gross_amount != null ? cur(s.gross_amount) : '—'}
+                                </td>
+                                <td className="px-4 py-3 text-right font-mono">
+                                    {Number(s.salary_cut) > 0
+                                        ? <span className="text-rose-600">
+                                            −{cur(s.salary_cut)}
+                                            <span className="text-[11px] text-gray-400 ml-1">({s.salary_cut_days}d)</span>
+                                          </span>
+                                        : <span className="text-gray-400">—</span>}
+                                </td>
+                                <td className="px-4 py-3 text-right font-mono font-semibold">{cur(s.amount)}</td>
                                 <td className="px-4 py-3">
                                     <StatusBadge status={s.status} />
                                 </td>
@@ -736,6 +752,7 @@ function Salaries({
             {showForm && (
                 <SalaryForm
                     employees={employees}
+                    cur={cur}
                     onClose={() => setShowForm(false)}
                     onSaved={() => { setShowForm(false); onChanged() }}
                 />
@@ -745,9 +762,10 @@ function Salaries({
 }
 
 function SalaryForm({
-    employees, onClose, onSaved,
+    employees, cur, onClose, onSaved,
 }: {
     employees: Employee[]
+    cur: (n: any) => string
     onClose: () => void
     onSaved: () => void
 }) {
@@ -760,22 +778,29 @@ function SalaryForm({
         note: '',
     })
     const [configuredStatus, setConfiguredStatus] = useState<'idle' | 'loading' | 'configured' | 'missing'>('idle')
+    const [cut, setCut] = useState<{
+        salary_cut_days: number; per_day: number
+        gross_amount: number; salary_cut: number; net_amount: number
+    } | null>(null)
     const [submitting, setSubmitting] = useState(false)
     const [err, setErr] = useState<string | null>(null)
 
-    async function onEmployeeChange(value: string) {
-        setForm(f => ({ ...f, employee: value, amount: '' }))
-        setErr(null)
-        if (!value) {
+    async function loadConfigured(employee: string, month: number, year: number) {
+        if (!employee) {
             setConfiguredStatus('idle')
+            setCut(null)
             return
         }
         setConfiguredStatus('loading')
         try {
-            const { data } = await api.get('/salary/records/current/', { params: { employee: value } })
+            const { data } = await api.get('/salary/records/current/', {
+                params: { employee, month, year },
+            })
             setForm(f => ({ ...f, amount: String((data as any).amount) }))
+            setCut((data as any).salary_cut || null)
             setConfiguredStatus('configured')
         } catch (e: any) {
+            setCut(null)
             if (e?.response?.status === 404) {
                 setConfiguredStatus('missing')
             } else {
@@ -784,6 +809,20 @@ function SalaryForm({
             }
         }
     }
+
+    async function onEmployeeChange(value: string) {
+        setForm(f => ({ ...f, employee: value, amount: '' }))
+        setErr(null)
+        await loadConfigured(value, form.period_month, form.period_year)
+    }
+
+    // Re-evaluate the salary cut whenever the pay period changes.
+    useEffect(() => {
+        if (form.employee) {
+            loadConfigured(form.employee, form.period_month, form.period_year)
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [form.period_month, form.period_year])
 
     async function submit(e: React.FormEvent) {
         e.preventDefault()
@@ -844,6 +883,24 @@ function SalaryForm({
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-gray-100 text-gray-700 cursor-not-allowed"
                     />
                 </Field>
+                {configuredStatus === 'configured' && cut && (
+                    <div className="text-xs border border-gray-200 rounded-lg overflow-hidden">
+                        <Row label="Gross salary" value={cur(cut.gross_amount)} />
+                        <Row
+                            label={
+                                cut.salary_cut_days > 0
+                                    ? `Salary cut · ${cut.salary_cut_days} leave day(s) @ ${cur(cut.per_day)}/day`
+                                    : 'Salary cut · no salary-cut leave this period'
+                            }
+                            value={cut.salary_cut > 0 ? `− ${cur(cut.salary_cut)}` : cur(0)}
+                            rose={cut.salary_cut > 0}
+                        />
+                        <div className="flex justify-between px-3 py-2 bg-gray-50 font-semibold">
+                            <span>Net to be paid</span>
+                            <span className="font-mono">{cur(cut.net_amount)}</span>
+                        </div>
+                    </div>
+                )}
                 {configuredStatus === 'missing' && (
                     <div className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-lg p-2 flex gap-1.5">
                         <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
@@ -1079,6 +1136,15 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
             <span className="block text-xs font-medium text-gray-700 mb-1">{label}</span>
             {children}
         </label>
+    )
+}
+
+function Row({ label, value, rose }: { label: string; value: string; rose?: boolean }) {
+    return (
+        <div className="flex justify-between px-3 py-2 border-b border-gray-100">
+            <span className="text-gray-600">{label}</span>
+            <span className={`font-mono ${rose ? 'text-rose-600' : 'text-gray-800'}`}>{value}</span>
+        </div>
     )
 }
 

@@ -121,7 +121,19 @@ class SalaryPayment(models.Model):
     employee = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="salary_payments",
     )
+    # `amount` is the *net* paid out (gross minus any salary cut). The ledger
+    # mirrors this field, so the Finance balance always reflects money that
+    # actually left the account.
     amount = models.DecimalField(max_digits=14, decimal_places=2)
+    # Configured monthly salary before the leave-based cut, kept for the
+    # payslip breakdown.
+    gross_amount = models.DecimalField(
+        max_digits=14, decimal_places=2, null=True, blank=True,
+    )
+    salary_cut = models.DecimalField(
+        max_digits=14, decimal_places=2, default=Decimal("0"),
+    )
+    salary_cut_days = models.PositiveSmallIntegerField(default=0)
     period_month = models.PositiveSmallIntegerField(
         null=True, blank=True, help_text="1-12, the month this salary covers",
     )

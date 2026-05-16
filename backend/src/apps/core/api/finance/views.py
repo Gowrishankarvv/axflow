@@ -171,23 +171,41 @@ class SalaryPaymentViewSet(viewsets.ModelViewSet):
                 {"detail": "No salary is configured for this employee. Set one in the Salary module first."},
                 status=400,
             )
-        # Force the canonical amount regardless of what was posted.
-        mutable_data = request.data.copy() if hasattr(request.data, "copy") else dict(request.data)
-        mutable_data["amount"] = str(configured.amount)
-        request._full_data = mutable_data
+        # `amount`/`gross_amount`/`salary_cut` are read-only on the serializer
+        # and computed server-side in perform_create — nothing to force here.
         return super().create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
+        from apps.core.salary_cut import compute_salary_cut
+
+        emp = serializer.validated_data["employee"]
+        today = timezone.localdate()
+        year = serializer.validated_data.get("period_year") or today.year
+        month = serializer.validated_data.get("period_month") or today.month
+
+        configured = EmployeeSalary.current_for(emp.id)
+        breakdown = compute_salary_cut(configured.amount, emp.id, year, month)
+
         sal = serializer.save(
             processed_by=self.request.user,
             processed_at=timezone.now(),
             status="processed",
+            amount=breakdown["net_amount"],
+            gross_amount=breakdown["gross_amount"],
+            salary_cut=breakdown["salary_cut"],
+            salary_cut_days=breakdown["salary_cut_days"],
         )
+        desc = f"Salary: {sal.employee.first_name or sal.employee.username}"
+        if breakdown["salary_cut"]:
+            desc += (
+                f" (gross {breakdown['gross_amount']} − cut {breakdown['salary_cut']}"
+                f" for {breakdown['salary_cut_days']} leave day(s))"
+            )
         txn = Transaction.objects.create(
             flow="expense",
             category="salary",
             amount=sal.amount,
-            description=f"Salary: {sal.employee.first_name or sal.employee.username}",
+            description=desc,
             note=sal.note,
             occurred_on=timezone.localdate(),
             created_by=self.request.user,

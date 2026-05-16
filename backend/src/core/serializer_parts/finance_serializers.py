@@ -64,13 +64,15 @@ class SalaryPaymentSerializer(serializers.ModelSerializer):
         model = SalaryPayment
         fields = [
             "id", "employee", "employee_name",
-            "amount", "period_month", "period_year", "note",
+            "amount", "gross_amount", "salary_cut", "salary_cut_days",
+            "period_month", "period_year", "note",
             "status",
             "employee_response_at", "employee_response_note",
             "processed_by", "processed_by_name", "processed_at",
             "transaction",
         ]
         read_only_fields = [
+            "amount", "gross_amount", "salary_cut", "salary_cut_days",
             "status", "employee_response_at", "employee_response_note",
             "processed_by", "processed_by_name", "processed_at",
             "employee_name", "transaction",

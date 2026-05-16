@@ -16,6 +16,17 @@ type Revision = {
     created_at: string
 }
 
+type SalaryCut = {
+    year: number
+    month: number
+    days_in_month: number
+    salary_cut_days: number
+    per_day: number
+    gross_amount: number
+    salary_cut: number
+    net_amount: number
+}
+
 type RosterRow = {
     employee_id: number
     employee_name: string
@@ -23,6 +34,7 @@ type RosterRow = {
     role: string
     position: string
     current_salary: Revision | null
+    salary_cut: SalaryCut | null
 }
 
 export default function Salary() {
@@ -114,13 +126,15 @@ export default function Salary() {
                             <th className="text-left px-4 py-3">Employee</th>
                             <th className="text-left px-4 py-3">Position</th>
                             <th className="text-right px-4 py-3">Current Salary</th>
+                            <th className="text-right px-4 py-3">Salary Cut (this month)</th>
+                            <th className="text-right px-4 py-3">Net Payable</th>
                             <th className="text-left px-4 py-3 pl-4">Since</th>
                             <th className="px-4 py-3"></th>
                         </tr>
                     </thead>
                     <tbody>
                         {filtered.length === 0 && (
-                            <tr><td colSpan={5} className="text-center py-8 text-gray-400">No employees match.</td></tr>
+                            <tr><td colSpan={7} className="text-center py-8 text-gray-400">No employees match.</td></tr>
                         )}
                         {filtered.map(r => (
                             <tr key={r.employee_id} className="border-t border-gray-100">
@@ -133,6 +147,27 @@ export default function Salary() {
                                     {r.current_salary
                                         ? formatINR(parseFloat(String(r.current_salary.amount)), r.current_salary.currency)
                                         : <span className="text-rose-600 text-xs font-medium">Not set</span>}
+                                </td>
+                                <td className="px-4 py-3 text-right font-mono">
+                                    {r.salary_cut && r.salary_cut.salary_cut > 0 ? (
+                                        <div>
+                                            <div className="text-rose-600">
+                                                −{formatINR(r.salary_cut.salary_cut, r.current_salary?.currency)}
+                                            </div>
+                                            <div className="text-[11px] text-gray-400 font-sans">
+                                                {r.salary_cut.salary_cut_days} day(s) · {formatINR(r.salary_cut.per_day, r.current_salary?.currency)}/day
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <span className="text-gray-400 text-xs">—</span>
+                                    )}
+                                </td>
+                                <td className="px-4 py-3 text-right font-mono">
+                                    {r.salary_cut
+                                        ? <span className={r.salary_cut.salary_cut > 0 ? 'font-semibold text-emerald-700' : ''}>
+                                            {formatINR(r.salary_cut.net_amount, r.current_salary?.currency)}
+                                          </span>
+                                        : <span className="text-gray-400 text-xs">—</span>}
                                 </td>
                                 <td className="px-4 py-3 text-gray-500 text-xs">
                                     {r.current_salary ? r.current_salary.effective_from : '—'}

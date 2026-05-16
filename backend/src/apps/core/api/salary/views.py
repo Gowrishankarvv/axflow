@@ -1,13 +1,30 @@
 from __future__ import annotations
 
+from django.utils import timezone
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from apps.core.salary_cut import compute_salary_cut
 from core.models import EmployeeSalary, User
 from core.permissions import IsExecutive
 from core.serializers import EmployeeSalarySerializer
+
+
+def _cut_payload(amount, employee_id: int, year: int, month: int) -> dict:
+    """JSON-safe salary-cut breakdown for an employee in one month."""
+    b = compute_salary_cut(amount, employee_id, year, month)
+    return {
+        "year": b["year"],
+        "month": b["month"],
+        "days_in_month": b["days_in_month"],
+        "salary_cut_days": b["salary_cut_days"],
+        "per_day": float(b["per_day"]),
+        "gross_amount": float(b["gross_amount"]),
+        "salary_cut": float(b["salary_cut"]),
+        "net_amount": float(b["net_amount"]),
+    }
 
 
 class EmployeeSalaryViewSet(viewsets.ModelViewSet):
@@ -41,15 +58,23 @@ class EmployeeSalaryViewSet(viewsets.ModelViewSet):
         sal = EmployeeSalary.current_for(emp_id)
         if not sal:
             return Response({"detail": "No salary configured for this employee.", "configured": False}, status=404)
+        today = timezone.localdate()
+        try:
+            year = int(request.query_params.get("year") or today.year)
+            month = int(request.query_params.get("month") or today.month)
+        except (TypeError, ValueError):
+            return Response({"detail": "year and month must be integers"}, status=400)
         return Response({
             "configured": True,
             **EmployeeSalarySerializer(sal).data,
+            "salary_cut": _cut_payload(sal.amount, int(emp_id), year, month),
         })
 
     @action(detail=False, methods=["get"], url_path="roster")
     def roster(self, request):
         """Every non-client employee with their current salary (or null if not set yet)."""
         users = User.objects.filter(is_active=True).exclude(role="client").order_by("first_name", "username")
+        today = timezone.localdate()
         rows = []
         for u in users:
             sal = EmployeeSalary.current_for(u.id)
@@ -60,5 +85,10 @@ class EmployeeSalaryViewSet(viewsets.ModelViewSet):
                 "role": u.role,
                 "position": u.position,
                 "current_salary": EmployeeSalarySerializer(sal).data if sal else None,
+                # Salary cut for the current month (None until a salary is set).
+                "salary_cut": (
+                    _cut_payload(sal.amount, u.id, today.year, today.month)
+                    if sal else None
+                ),
             })
         return Response(rows)
