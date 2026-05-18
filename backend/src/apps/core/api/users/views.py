@@ -87,8 +87,8 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"], url_path="light")
     def light(self, request: Request):
-        qs = self.get_queryset().exclude(role="client").only("id", "first_name", "last_name", "username", "role", "position", "manager_id")
-        data = list(qs.values("id", "first_name", "last_name", "username", "role", "position", "manager_id"))
+        qs = self.get_queryset().exclude(role="client").only("id", "first_name", "last_name", "username", "email", "role", "position", "manager_id")
+        data = list(qs.values("id", "first_name", "last_name", "username", "email", "role", "position", "manager_id"))
         return Response(data)
 
 
@@ -102,6 +102,6 @@ class LightUsersView(APIView):
         else:
             visible_ids = build_visible_user_ids(user)
             qs = User.objects.filter(id__in=visible_ids, is_active=True).exclude(role="client")
-        qs = qs.only("id", "first_name", "last_name", "username", "role", "position", "manager_id")
-        data = list(qs.values("id", "first_name", "last_name", "username", "role", "position", "manager_id"))
+        qs = qs.only("id", "first_name", "last_name", "username", "email", "role", "position", "manager_id")
+        data = list(qs.values("id", "first_name", "last_name", "username", "email", "role", "position", "manager_id"))
         return Response(data)
