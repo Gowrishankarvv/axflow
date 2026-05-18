@@ -43,6 +43,16 @@ class TimeEntry(models.Model):
         help_text="Manager who added the comment",
     )
     tags = models.ManyToManyField("Tag", related_name="time_entries", blank=True)
+    # Links this hour back to the employee's daily plan item, and records
+    # whether that hour's work was completed (None = unmarked).
+    plan_item = models.ForeignKey(
+        "DailyPlanItem", on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="time_entries",
+    )
+    done = models.BooleanField(
+        null=True, blank=True, default=None,
+        help_text="Per-hour completion: true=done, false=not done, null=unmarked",
+    )
 
     class Meta:
         indexes = [

@@ -121,17 +121,41 @@ export default function Projects({ me }: { me?: any }) {
 
   async function addTask(projectId: number, e: React.FormEvent, reloadTasks: () => void) {
     e.preventDefault()
+    if (!projectId) {
+      alert('Could not determine the project for this task. Please refresh and try again.')
+      return false
+    }
     const tf = tforms[projectId] || { title: '', description: '', assignees: [], planned_start_date: '', due_date: '' }
-    await api.post('/tasks/', {
-      project: projectId,
-      title: tf.title,
-      description: tf.description,
-      assignees: tf.assignees,
-      planned_start_date: tf.planned_start_date || null,
-      due_date: tf.due_date || null,
-    })
+    if (!tf.title?.trim()) {
+      alert('Task title is required.')
+      return false
+    }
+    try {
+      await api.post('/tasks/', {
+        project: projectId,
+        title: tf.title,
+        description: tf.description,
+        assignees: tf.assignees,
+        planned_start_date: tf.planned_start_date || null,
+        due_date: tf.due_date || null,
+      })
+    } catch (err: any) {
+      const d = err?.response?.data
+      const msg = typeof d === 'object' && d
+        ? Object.entries(d).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(' ') : v}`).join('\n')
+        : (d?.detail || 'Failed to create the task.')
+      alert(msg)
+      return false
+    }
+    // Bust the cached task list + combined projects payload, otherwise the
+    // reload below serves a stale list and the new task appears to "not save".
+    const { Cache } = await import('../lib/cache')
+    Cache.remove(Cache.key('/tasks/', { project: projectId, page_size: 1000 }))
+    Cache.remove(Cache.key('/tasks/', { page_size: 10000 }))
+    Cache.remove(Cache.key('/projects/combined/', {}))
     setTforms({ ...tforms, [projectId]: { title: '', description: '', assignees: [], planned_start_date: '', due_date: '' } })
     reloadTasks()
+    return true
   }
 
   if (loading) {
@@ -478,7 +502,7 @@ function ProjectCard({ p, me, tforms, setTforms, deleteProject, addTask, users }
 
           {showAddTask && (
             <div className="mt-3 p-4 bg-gray-50 rounded-xl space-y-3 animate-slideDown">
-              <form onSubmit={(e) => { addTask(p.project_id, e, loadTasks); setShowAddTask(false) }} className="space-y-3">
+              <form onSubmit={async (e) => { const ok = await addTask(p.project_id || p.id, e, loadTasks); if (ok) setShowAddTask(false) }} className="space-y-3">
                 <input
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                   placeholder="Task title"

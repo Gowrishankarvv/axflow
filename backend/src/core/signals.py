@@ -10,6 +10,7 @@ from .models import (
     LeaveRequest,
     Notification,
     Project,
+    ProjectAssignment,
     SalaryPayment,
     Task,
     TaskAssignment,
@@ -292,6 +293,25 @@ def notify_on_salary_processed(sender, instance, created, **kwargs):
             "Please approve once the amount is credited to your account."
         ),
         link="/notifications",
+    )
+
+
+@receiver(post_save, sender=TaskAssignment)
+def ensure_project_membership_on_task_assignment(sender, instance: TaskAssignment, created: bool, **kwargs):
+    """Assigning a user to a task auto-adds them to that task's project.
+
+    Idempotent: ProjectAssignment has a unique (project, assignee) constraint,
+    so get_or_create never duplicates an existing membership.
+    """
+    if not created:
+        return
+    task = instance.task
+    if not task or not task.project_id:
+        return
+    ProjectAssignment.objects.get_or_create(
+        project_id=task.project_id,
+        assignee_id=instance.assignee_id,
+        defaults={"assigned_by": instance.assigned_by},
     )
 
 

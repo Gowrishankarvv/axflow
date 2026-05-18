@@ -8,6 +8,7 @@ from .time_models import (
     Tag,
     TimeEntry,
 )
+from .daily_plan_models import DailyPlanItem
 from .request_models import DataRequest, Invoice, RequestFile
 from .leave_models import LeaveRequest
 from .offer_letter_models import OfferLetter
@@ -34,6 +35,7 @@ __all__ = [
     "Client",
     "ClockSession",
     "Comment",
+    "DailyPlanItem",
     "DailySummary",
     "DataRequest",
     "EmployeeSalary",
