@@ -3,6 +3,7 @@ import { Link, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 const Dashboard = React.lazy(() => import('./pages/Dashboard'))
 const MyTime = React.lazy(() => import('./pages/MyTime'))
 const TeamTime = React.lazy(() => import('./pages/TeamTime'))
+const Reports = React.lazy(() => import('./pages/Reports'))
 const Projects = React.lazy(() => import('./pages/Projects'))
 const ProjectDetail = React.lazy(() => import('./pages/ProjectDetail'))
 const OrgTree = React.lazy(() => import('./pages/OrgTree'))
@@ -192,6 +193,7 @@ export default function App() {
             ) : isAuthed ? (
               <>
                 <Route path="/my-time" element={<MyTime />} />
+                <Route path="/reports" element={<Reports me={me} />} />
                 <Route path="/team-time" element={<TeamTime me={me} />} />
                 <Route path="/projects" element={<Projects me={me} />} />
                 <Route path="/projects/:id" element={<ProjectDetail me={me} />} />
@@ -256,7 +258,7 @@ function Sidebar({
     { to: '/requests', label: 'Requests', icon: InboxIcon, show: me?.role !== 'client' },
     { to: '/leave', label: 'Leave', icon: LeaveCalendarIcon, show: me?.role !== 'client' },
     { to: '/notifications', label: 'Notifications', icon: NotificationsIcon, show: me?.role !== 'client', badge: unreadNotifs },
-    { to: '/team-time', label: 'Reports', icon: ChartBarIcon, show: me?.role !== 'client' },
+    { to: '/reports', label: 'Reports', icon: ChartBarIcon, show: me?.role !== 'client' },
     { to: '/clients', label: 'Clients', icon: BriefcaseIcon, show: me?.role === 'manager' || me?.role === 'superuser' },
     { to: '/crm', label: 'CRM', icon: CRMIcon, show: me?.role === 'manager' || me?.role === 'superuser' },
     { to: '/invoices', label: 'Invoices', icon: InvoiceIcon, show: me?.role === 'manager' || me?.role === 'superuser' },
