@@ -112,6 +112,21 @@ type ProjectExpense = {
     created_by_name: string | null
 }
 
+type ProjectOverview = {
+    id: number
+    name: string
+    client: string | null
+    end_date: string | null
+    is_active: boolean
+    income_total: number
+    expense_total: number
+    net: number
+    internal_total: number
+    external_total: number
+    planned_amount: number
+    remaining: number
+}
+
 type Project = { id: number; name: string }
 type Employee = { id: number; first_name: string; username: string; role?: string }
 
@@ -985,12 +1000,39 @@ function Budgets({
     onChanged: () => void
 }) {
     const [showForm, setShowForm] = useState(false)
+    const [showEnded, setShowEnded] = useState(false)
+    const [overview, setOverview] = useState<ProjectOverview[]>([])
+    const [loadingOv, setLoadingOv] = useState(true)
+
     const usedProjectIds = new Set(budgets.map(b => b.project))
     const availableProjects = projects.filter(p => !usedProjectIds.has(p.id))
+    const budgetByProject = new Map(budgets.map(b => [b.project, b]))
+
+    async function loadOverview() {
+        setLoadingOv(true)
+        try {
+            const { data } = await api.get('/finance/project-overview/')
+            setOverview(unwrap(data.projects) || [])
+        } finally {
+            setLoadingOv(false)
+        }
+    }
+    useEffect(() => { loadOverview() }, [budgets])
+
+    const refresh = () => { onChanged(); loadOverview() }
+    const visible = overview.filter(p => showEnded || p.is_active)
 
     return (
         <div className="space-y-4">
-            <div className="flex justify-end">
+            <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 text-sm text-gray-600">
+                    <input
+                        type="checkbox"
+                        checked={showEnded}
+                        onChange={e => setShowEnded(e.target.checked)}
+                    />
+                    Show ended projects
+                </label>
                 <button
                     onClick={() => setShowForm(true)}
                     disabled={availableProjects.length === 0}
@@ -1001,59 +1043,92 @@ function Budgets({
             </div>
 
             <div className="grid md:grid-cols-2 gap-4">
-                {budgets.length === 0 && (
+                {loadingOv && (
+                    <div className="col-span-2 text-center py-12 text-gray-400">Loading projects…</div>
+                )}
+                {!loadingOv && visible.length === 0 && (
                     <div className="col-span-2 text-center py-12 text-gray-400 border border-dashed border-gray-200 rounded-xl bg-white">
-                        No project budgets defined.
+                        No {showEnded ? '' : 'active '}projects.
                     </div>
                 )}
-                {budgets.map(b => {
-                    const planned = parseFloat(String(b.planned_amount))
-                    const pct = planned > 0 ? Math.min(100, (b.actual_spend / planned) * 100) : 0
-                    const over = b.actual_spend > planned
+                {!loadingOv && visible.map(p => {
+                    const planned = p.planned_amount
+                    const pct = planned > 0 ? Math.min(100, (p.expense_total / planned) * 100) : 0
+                    const over = planned > 0 && p.expense_total > planned
+                    const bdg = budgetByProject.get(p.id)
                     return (
-                        <div key={b.id} className="bg-white border border-gray-200 rounded-xl p-5">
-                            <div className="flex justify-between items-start mb-2">
+                        <div key={p.id} className="bg-white border border-gray-200 rounded-xl p-5">
+                            <div className="flex justify-between items-start mb-3">
                                 <div className="flex items-center gap-2">
                                     <Briefcase className="w-4 h-4 text-indigo-600" />
-                                    <span className="font-semibold text-gray-900">{b.project_name}</span>
+                                    <div>
+                                        <span className="font-semibold text-gray-900">{p.name}</span>
+                                        {p.client && <span className="ml-2 text-xs text-gray-400">{p.client}</span>}
+                                    </div>
                                 </div>
-                                <button
-                                    onClick={async () => {
-                                        if (!confirm('Delete this budget?')) return
-                                        await api.delete(`/finance/project-budgets/${b.id}/`)
-                                        onChanged()
-                                    }}
-                                    className="text-xs text-gray-400 hover:text-red-600"
-                                >Delete</button>
+                                {!p.is_active && (
+                                    <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Ended</span>
+                                )}
                             </div>
-                            <div className="text-sm text-gray-500 mb-3">
-                                Spent <span className="font-mono font-semibold text-gray-900">{cur(b.actual_spend)}</span> of {cur(planned)}
+
+                            <div className="grid grid-cols-3 gap-2 mb-3">
+                                <div className="rounded-lg bg-emerald-50 px-3 py-2">
+                                    <div className="text-[10px] uppercase text-emerald-700 font-medium">Income</div>
+                                    <div className="font-mono text-sm font-semibold text-emerald-700">{cur(p.income_total)}</div>
+                                </div>
+                                <div className="rounded-lg bg-rose-50 px-3 py-2">
+                                    <div className="text-[10px] uppercase text-rose-700 font-medium">Expense</div>
+                                    <div className="font-mono text-sm font-semibold text-rose-700">{cur(p.expense_total)}</div>
+                                </div>
+                                <div className="rounded-lg bg-gray-50 px-3 py-2">
+                                    <div className="text-[10px] uppercase text-gray-500 font-medium">Net</div>
+                                    <div className={`font-mono text-sm font-semibold ${p.net < 0 ? 'text-rose-600' : 'text-gray-800'}`}>{cur(p.net)}</div>
+                                </div>
                             </div>
-                            <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-                                <div
-                                    className={`h-full ${over ? 'bg-rose-500' : 'bg-emerald-500'}`}
-                                    style={{ width: `${pct}%` }}
-                                />
-                            </div>
-                            <div className="flex justify-between mt-2 text-xs">
-                                <span className="text-gray-500">{pct.toFixed(0)}% used</span>
-                                <span className={over ? 'text-rose-600 font-bold' : 'text-gray-600'}>
-                                    {over ? `Over by ${cur(b.actual_spend - planned)}` : `Remaining ${cur(b.remaining)}`}
-                                </span>
-                            </div>
-                            {b.note && <div className="text-xs text-gray-500 mt-3 italic">{b.note}</div>}
+
+                            {planned > 0 ? (
+                                <>
+                                    <div className="text-xs text-gray-500 mb-1">
+                                        Spent <span className="font-mono text-gray-800">{cur(p.expense_total)}</span> of {cur(planned)} budget
+                                    </div>
+                                    <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                                        <div className={`h-full ${over ? 'bg-rose-500' : 'bg-emerald-500'}`} style={{ width: `${pct}%` }} />
+                                    </div>
+                                    <div className="flex justify-between mt-2 text-xs">
+                                        <span className="text-gray-500">{pct.toFixed(0)}% used</span>
+                                        <span className={over ? 'text-rose-600 font-bold' : 'text-gray-600'}>
+                                            {over ? `Over by ${cur(p.expense_total - planned)}` : `Remaining ${cur(p.remaining)}`}
+                                        </span>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="text-xs text-gray-400">No budget set for this project.</div>
+                            )}
+
+                            {bdg && (
+                                <div className="flex justify-end mt-3">
+                                    <button
+                                        onClick={async () => {
+                                            if (!confirm('Delete this budget? Income/expense history stays.')) return
+                                            await api.delete(`/finance/project-budgets/${bdg.id}/`)
+                                            refresh()
+                                        }}
+                                        className="text-xs text-gray-400 hover:text-red-600"
+                                    >Delete budget</button>
+                                </div>
+                            )}
                         </div>
                     )
                 })}
             </div>
 
-            <ProjectExpenses projects={projects} cur={cur} onChanged={onChanged} />
+            <ProjectExpenses projects={projects} overview={overview} cur={cur} onChanged={refresh} />
 
             {showForm && (
                 <BudgetForm
                     projects={availableProjects}
                     onClose={() => setShowForm(false)}
-                    onSaved={() => { setShowForm(false); onChanged() }}
+                    onSaved={() => { setShowForm(false); refresh() }}
                 />
             )}
         </div>
@@ -1062,39 +1137,47 @@ function Budgets({
 
 // ------------------------------------------------ Internal/External spend --
 function ProjectExpenses({
-    projects, cur, onChanged,
+    projects, overview, cur, onChanged,
 }: {
     projects: Project[]
+    overview: ProjectOverview[]
     cur: (n: any) => string
     onChanged: () => void
 }) {
     const [projectId, setProjectId] = useState<string>('')
     const [types, setTypes] = useState<ExpenseType[]>([])
     const [expenses, setExpenses] = useState<ProjectExpense[]>([])
+    const [incomes, setIncomes] = useState<Transaction[]>([])
     const [loading, setLoading] = useState(false)
+
+    const ov = overview.find(o => String(o.id) === projectId)
 
     async function loadTypes() {
         const { data } = await api.get('/finance/expense-types/')
         setTypes(unwrap(data))
     }
 
-    async function loadExpenses(pid: string) {
-        if (!pid) { setExpenses([]); return }
+    async function loadProject(pid: string) {
+        if (!pid) { setExpenses([]); setIncomes([]); return }
         setLoading(true)
         try {
-            const { data } = await api.get('/finance/project-expenses/', { params: { project: pid } })
-            setExpenses(unwrap(data))
+            const [ex, inc] = await Promise.all([
+                api.get('/finance/project-expenses/', { params: { project: pid } }),
+                api.get('/finance/transactions/', { params: { project: pid, flow: 'income' } }),
+            ])
+            setExpenses(unwrap(ex.data))
+            setIncomes(unwrap(inc.data))
         } finally {
             setLoading(false)
         }
     }
 
     useEffect(() => { loadTypes() }, [])
-    useEffect(() => { loadExpenses(projectId) }, [projectId])
+    useEffect(() => { loadProject(projectId) }, [projectId])
 
     function refresh() {
         loadTypes()
-        loadExpenses(projectId)
+        loadProject(projectId)
         onChanged()
     }
 
@@ -1120,21 +1203,65 @@ function ProjectExpenses({
                     Select a project to manage its Internal and External expenses.
                 </div>
             ) : loading ? (
-                <div className="text-center py-10 text-gray-400">Loading expenses…</div>
+                <div className="text-center py-10 text-gray-400">Loading…</div>
             ) : (
-                <div className="grid lg:grid-cols-2 gap-4">
-                    <ScopePanel
-                        scope="internal" projectId={projectId}
-                        types={types.filter(t => t.scope === 'internal')}
-                        expenses={expenses.filter(e => e.scope === 'internal')}
-                        cur={cur} onChanged={refresh}
-                    />
-                    <ScopePanel
-                        scope="external" projectId={projectId}
-                        types={types.filter(t => t.scope === 'external')}
-                        expenses={expenses.filter(e => e.scope === 'external')}
-                        cur={cur} onChanged={refresh}
-                    />
+                <div className="space-y-4">
+                    {ov && (
+                        <div className="grid grid-cols-3 gap-3">
+                            <div className="rounded-lg bg-emerald-50 px-4 py-3">
+                                <div className="text-[10px] uppercase text-emerald-700 font-medium">Income</div>
+                                <div className="font-mono text-lg font-semibold text-emerald-700">{cur(ov.income_total)}</div>
+                            </div>
+                            <div className="rounded-lg bg-rose-50 px-4 py-3">
+                                <div className="text-[10px] uppercase text-rose-700 font-medium">Expense</div>
+                                <div className="font-mono text-lg font-semibold text-rose-700">{cur(ov.expense_total)}</div>
+                            </div>
+                            <div className="rounded-lg bg-gray-50 px-4 py-3">
+                                <div className="text-[10px] uppercase text-gray-500 font-medium">Net</div>
+                                <div className={`font-mono text-lg font-semibold ${ov.net < 0 ? 'text-rose-600' : 'text-gray-800'}`}>{cur(ov.net)}</div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="grid lg:grid-cols-2 gap-4">
+                        <ScopePanel
+                            scope="internal" projectId={projectId}
+                            types={types.filter(t => t.scope === 'internal')}
+                            expenses={expenses.filter(e => e.scope === 'internal')}
+                            cur={cur} onChanged={refresh}
+                        />
+                        <ScopePanel
+                            scope="external" projectId={projectId}
+                            types={types.filter(t => t.scope === 'external')}
+                            expenses={expenses.filter(e => e.scope === 'external')}
+                            cur={cur} onChanged={refresh}
+                        />
+                    </div>
+
+                    <div className="border border-gray-200 rounded-xl overflow-hidden">
+                        <div className="px-4 py-3 bg-emerald-50 flex items-center justify-between">
+                            <span className="font-semibold text-gray-900">Income from this project</span>
+                            <span className="text-sm text-gray-500">
+                                {cur(incomes.reduce((s, t) => s + parseFloat(String(t.amount) || '0'), 0))}
+                            </span>
+                        </div>
+                        <div className="divide-y divide-gray-100">
+                            {incomes.length === 0 && (
+                                <div className="px-4 py-8 text-center text-sm text-gray-400">
+                                    No income tagged to this project yet. Tag a project when adding income in “Income &amp; Expenses”.
+                                </div>
+                            )}
+                            {incomes.map(t => (
+                                <div key={t.id} className="px-4 py-3 flex items-center justify-between text-sm">
+                                    <span className="truncate text-gray-700">
+                                        {t.description || t.category_label || 'Income'}
+                                        <span className="text-gray-400"> · {t.occurred_on}</span>
+                                    </span>
+                                    <span className="font-mono text-emerald-700 shrink-0">{cur(t.amount)}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

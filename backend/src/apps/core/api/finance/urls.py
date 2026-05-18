@@ -7,6 +7,7 @@ from .views import (
     MiscExpenseViewSet,
     ProjectBudgetViewSet,
     ProjectExpenseViewSet,
+    ProjectFinanceOverviewView,
     SalaryPaymentViewSet,
     TransactionViewSet,
 )
@@ -21,5 +22,6 @@ router.register(r"finance/project-expenses", ProjectExpenseViewSet, basename="fi
 
 urlpatterns = [
     path("finance/summary/", FinanceSummaryView.as_view(), name="finance-summary"),
+    path("finance/project-overview/", ProjectFinanceOverviewView.as_view(), name="finance-project-overview"),
     path("", include(router.urls)),
 ]

@@ -16,6 +16,7 @@ from core.models import (
     EmployeeSalary,
     ExpenseType,
     MiscExpense,
+    Project,
     ProjectBudget,
     ProjectExpense,
     SalaryPayment,
@@ -428,3 +429,73 @@ class ProjectExpenseViewSet(viewsets.ModelViewSet):
         if instance.transaction_id:
             instance.transaction.delete()
         instance.delete()
+
+
+class ProjectFinanceOverviewView(APIView):
+    """Per-project income/expense overview for the Project Budgets page.
+
+    Lists every project with money tagged to it (via Transaction.project),
+    showing income vs. expense, net, and the planned budget envelope. A
+    project counts as "active" when it has no end_date or its end_date is
+    today or later — there is no project status field, so this is the only
+    available signal.
+    """
+
+    permission_classes = [IsAuthenticated, IsExecutive]
+
+    def get(self, request):
+        today = timezone.localdate()
+
+        # Income / expense totals per project, in one grouped query.
+        income_map: dict[int, float] = {}
+        expense_map: dict[int, float] = {}
+        for row in (
+            Transaction.objects.filter(project__isnull=False)
+            .values("project_id", "flow")
+            .annotate(total=Sum("amount"))
+        ):
+            target = income_map if row["flow"] == "income" else expense_map
+            target[row["project_id"]] = float(row["total"] or 0)
+
+        # Internal / external split from the itemised expense lines.
+        internal_map: dict[int, float] = {}
+        external_map: dict[int, float] = {}
+        for row in (
+            ProjectExpense.objects.values("project_id", "scope")
+            .annotate(total=Sum("amount"))
+        ):
+            target = internal_map if row["scope"] == "internal" else external_map
+            target[row["project_id"]] = float(row["total"] or 0)
+
+        budget_map = {
+            b.project_id: float(b.planned_amount)
+            for b in ProjectBudget.objects.all()
+        }
+
+        projects = Project.objects.select_related("client").order_by("name")
+        out = []
+        for p in projects:
+            income = income_map.get(p.id, 0.0)
+            expense = expense_map.get(p.id, 0.0)
+            planned = budget_map.get(p.id, 0.0)
+            is_active = p.end_date is None or p.end_date >= today
+            out.append({
+                "id": p.id,
+                "name": p.name,
+                "client": p.client.name if p.client else None,
+                "end_date": p.end_date.isoformat() if p.end_date else None,
+                "is_active": is_active,
+                "income_total": round(income, 2),
+                "expense_total": round(expense, 2),
+                "net": round(income - expense, 2),
+                "internal_total": round(internal_map.get(p.id, 0.0), 2),
+                "external_total": round(external_map.get(p.id, 0.0), 2),
+                "planned_amount": round(planned, 2),
+                "remaining": round(planned - expense, 2),
+            })
+
+        return Response({
+            "currency": "INR",
+            "projects": out,
+            "active_count": sum(1 for r in out if r["is_active"]),
+        })
