@@ -89,6 +89,29 @@ type ProjectBudget = {
     remaining: number
 }
 
+type ExpenseType = {
+    id: number
+    scope: 'internal' | 'external'
+    name: string
+    is_builtin: boolean
+    requires_person: boolean
+}
+
+type ProjectExpense = {
+    id: number
+    project: number
+    scope: 'internal' | 'external'
+    expense_type: number
+    expense_type_name: string
+    requires_person: boolean
+    amount: number | string
+    note: string
+    person_name: string
+    person_role: string
+    occurred_on: string
+    created_by_name: string | null
+}
+
 type Project = { id: number; name: string }
 type Employee = { id: number; first_name: string; username: string; role?: string }
 
@@ -1024,6 +1047,8 @@ function Budgets({
                 })}
             </div>
 
+            <ProjectExpenses projects={projects} cur={cur} onChanged={onChanged} />
+
             {showForm && (
                 <BudgetForm
                     projects={availableProjects}
@@ -1032,6 +1057,363 @@ function Budgets({
                 />
             )}
         </div>
+    )
+}
+
+// ------------------------------------------------ Internal/External spend --
+function ProjectExpenses({
+    projects, cur, onChanged,
+}: {
+    projects: Project[]
+    cur: (n: any) => string
+    onChanged: () => void
+}) {
+    const [projectId, setProjectId] = useState<string>('')
+    const [types, setTypes] = useState<ExpenseType[]>([])
+    const [expenses, setExpenses] = useState<ProjectExpense[]>([])
+    const [loading, setLoading] = useState(false)
+
+    async function loadTypes() {
+        const { data } = await api.get('/finance/expense-types/')
+        setTypes(unwrap(data))
+    }
+
+    async function loadExpenses(pid: string) {
+        if (!pid) { setExpenses([]); return }
+        setLoading(true)
+        try {
+            const { data } = await api.get('/finance/project-expenses/', { params: { project: pid } })
+            setExpenses(unwrap(data))
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    useEffect(() => { loadTypes() }, [])
+    useEffect(() => { loadExpenses(projectId) }, [projectId])
+
+    function refresh() {
+        loadTypes()
+        loadExpenses(projectId)
+        onChanged()
+    }
+
+    return (
+        <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <h3 className="font-semibold text-gray-900">Project Expenses</h3>
+                    <p className="text-xs text-gray-500">Record actual internal & external spend per project.</p>
+                </div>
+                <select
+                    value={projectId}
+                    onChange={e => setProjectId(e.target.value)}
+                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm min-w-[220px]"
+                >
+                    <option value="">— Select a project —</option>
+                    {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+            </div>
+
+            {!projectId ? (
+                <div className="text-center py-10 text-gray-400 border border-dashed border-gray-200 rounded-xl">
+                    Select a project to manage its Internal and External expenses.
+                </div>
+            ) : loading ? (
+                <div className="text-center py-10 text-gray-400">Loading expenses…</div>
+            ) : (
+                <div className="grid lg:grid-cols-2 gap-4">
+                    <ScopePanel
+                        scope="internal" projectId={projectId}
+                        types={types.filter(t => t.scope === 'internal')}
+                        expenses={expenses.filter(e => e.scope === 'internal')}
+                        cur={cur} onChanged={refresh}
+                    />
+                    <ScopePanel
+                        scope="external" projectId={projectId}
+                        types={types.filter(t => t.scope === 'external')}
+                        expenses={expenses.filter(e => e.scope === 'external')}
+                        cur={cur} onChanged={refresh}
+                    />
+                </div>
+            )}
+        </div>
+    )
+}
+
+function ScopePanel({
+    scope, projectId, types, expenses, cur, onChanged,
+}: {
+    scope: 'internal' | 'external'
+    projectId: string
+    types: ExpenseType[]
+    expenses: ProjectExpense[]
+    cur: (n: any) => string
+    onChanged: () => void
+}) {
+    const [showExpense, setShowExpense] = useState(false)
+    const [showType, setShowType] = useState(false)
+
+    const total = expenses.reduce((s, e) => s + parseFloat(String(e.amount) || '0'), 0)
+
+    // Group expenses by type for a tidy breakdown.
+    const byType = useMemo(() => {
+        const m: Record<string, { name: string; total: number; items: ProjectExpense[] }> = {}
+        for (const e of expenses) {
+            const k = e.expense_type_name || '—'
+            if (!m[k]) m[k] = { name: k, total: 0, items: [] }
+            m[k].total += parseFloat(String(e.amount) || '0')
+            m[k].items.push(e)
+        }
+        return Object.values(m).sort((a, b) => b.total - a.total)
+    }, [expenses])
+
+    return (
+        <div className="border border-gray-200 rounded-xl overflow-hidden">
+            <div className={`px-4 py-3 flex items-center justify-between ${scope === 'internal' ? 'bg-indigo-50' : 'bg-amber-50'}`}>
+                <div>
+                    <span className="font-semibold text-gray-900 capitalize">{scope}</span>
+                    <span className="ml-2 text-sm text-gray-500">{cur(total)}</span>
+                </div>
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => setShowType(true)}
+                        className="text-xs px-2 py-1 rounded border border-gray-300 bg-white hover:bg-gray-50"
+                    >+ Type</button>
+                    <button
+                        onClick={() => setShowExpense(true)}
+                        className={`text-xs px-2 py-1 rounded text-white ${scope === 'internal' ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-amber-600 hover:bg-amber-700'}`}
+                    >+ Expense</button>
+                </div>
+            </div>
+
+            <div className="divide-y divide-gray-100">
+                {byType.length === 0 && (
+                    <div className="px-4 py-8 text-center text-sm text-gray-400">No {scope} expenses yet.</div>
+                )}
+                {byType.map(group => (
+                    <div key={group.name} className="px-4 py-3">
+                        <div className="flex justify-between text-sm font-medium text-gray-800">
+                            <span>{group.name}</span>
+                            <span className="font-mono">{cur(group.total)}</span>
+                        </div>
+                        <div className="mt-1 space-y-1">
+                            {group.items.map(it => (
+                                <div key={it.id} className="flex items-center justify-between text-xs text-gray-500">
+                                    <span className="truncate">
+                                        {it.person_name
+                                            ? `${it.person_name}${it.person_role ? ` · ${it.person_role}` : ''}`
+                                            : (it.note || '—')}
+                                        <span className="text-gray-400"> · {it.occurred_on}</span>
+                                    </span>
+                                    <span className="flex items-center gap-2 shrink-0">
+                                        <span className="font-mono text-gray-700">{cur(it.amount)}</span>
+                                        <button
+                                            onClick={async () => {
+                                                if (!confirm('Delete this expense?')) return
+                                                await api.delete(`/finance/project-expenses/${it.id}/`)
+                                                onChanged()
+                                            }}
+                                            className="text-gray-400 hover:text-red-600"
+                                        >Delete</button>
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {showExpense && (
+                <ExpenseForm
+                    scope={scope} projectId={projectId} types={types}
+                    onClose={() => setShowExpense(false)}
+                    onSaved={() => { setShowExpense(false); onChanged() }}
+                />
+            )}
+            {showType && (
+                <AddTypeForm
+                    scope={scope}
+                    onClose={() => setShowType(false)}
+                    onSaved={() => { setShowType(false); onChanged() }}
+                />
+            )}
+        </div>
+    )
+}
+
+function ExpenseForm({
+    scope, projectId, types, onClose, onSaved,
+}: {
+    scope: 'internal' | 'external'
+    projectId: string
+    types: ExpenseType[]
+    onClose: () => void
+    onSaved: () => void
+}) {
+    const [form, setForm] = useState({
+        expense_type: types[0]?.id ? String(types[0].id) : '',
+        amount: '',
+        note: '',
+        person_name: '',
+        person_role: '',
+        occurred_on: todayISO(),
+    })
+    const [submitting, setSubmitting] = useState(false)
+    const [err, setErr] = useState<string | null>(null)
+
+    const selectedType = types.find(t => String(t.id) === form.expense_type)
+    const needsPerson = !!selectedType?.requires_person
+
+    async function submit(e: React.FormEvent) {
+        e.preventDefault()
+        setErr(null)
+        if (!form.expense_type || !form.amount) {
+            setErr('Expense type and amount are required.')
+            return
+        }
+        if (needsPerson && !form.person_name.trim()) {
+            setErr('Employee name is required for this expense type.')
+            return
+        }
+        setSubmitting(true)
+        try {
+            await api.post('/finance/project-expenses/', {
+                project: parseInt(projectId, 10),
+                scope,
+                expense_type: parseInt(form.expense_type, 10),
+                amount: parseFloat(form.amount),
+                note: form.note,
+                person_name: needsPerson ? form.person_name : '',
+                person_role: needsPerson ? form.person_role : '',
+                occurred_on: form.occurred_on,
+            })
+            onSaved()
+        } catch (e: any) {
+            const d = e?.response?.data
+            setErr(typeof d === 'object' ? Object.values(d).flat().join(' ') : (d?.detail || 'Failed to save.'))
+        } finally {
+            setSubmitting(false)
+        }
+    }
+
+    return (
+        <Modal title={`New ${scope} expense`} onClose={onClose}>
+            <form onSubmit={submit} className="space-y-3">
+                <Field label="Expense Type">
+                    <select
+                        value={form.expense_type}
+                        onChange={e => setForm({ ...form, expense_type: e.target.value })}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                    >
+                        <option value="">— Select type —</option>
+                        {types.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                    </select>
+                </Field>
+                {needsPerson && (
+                    <>
+                        <Field label="Employee Name">
+                            <input
+                                value={form.person_name}
+                                onChange={e => setForm({ ...form, person_name: e.target.value })}
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                            />
+                        </Field>
+                        <Field label="Role">
+                            <input
+                                value={form.person_role}
+                                onChange={e => setForm({ ...form, person_role: e.target.value })}
+                                placeholder="e.g. Freelance Designer"
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                            />
+                        </Field>
+                    </>
+                )}
+                <Field label="Amount">
+                    <input
+                        type="number" step="0.01" min="0"
+                        value={form.amount}
+                        onChange={e => setForm({ ...form, amount: e.target.value })}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                    />
+                </Field>
+                <Field label="Date">
+                    <input
+                        type="date"
+                        value={form.occurred_on}
+                        onChange={e => setForm({ ...form, occurred_on: e.target.value })}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                    />
+                </Field>
+                <Field label="Note (optional)">
+                    <input
+                        value={form.note}
+                        onChange={e => setForm({ ...form, note: e.target.value })}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                    />
+                </Field>
+                {err && <div className="text-xs text-red-600">{err}</div>}
+                <div className="flex justify-end gap-2 pt-2">
+                    <button type="button" onClick={onClose} className="px-4 py-2 text-sm rounded-lg border border-gray-300">Cancel</button>
+                    <button type="submit" disabled={submitting} className="px-4 py-2 text-sm rounded-lg bg-indigo-600 text-white disabled:opacity-50">
+                        {submitting ? 'Saving…' : 'Save'}
+                    </button>
+                </div>
+            </form>
+        </Modal>
+    )
+}
+
+function AddTypeForm({
+    scope, onClose, onSaved,
+}: {
+    scope: 'internal' | 'external'
+    onClose: () => void
+    onSaved: () => void
+}) {
+    const [name, setName] = useState('')
+    const [submitting, setSubmitting] = useState(false)
+    const [err, setErr] = useState<string | null>(null)
+
+    async function submit(e: React.FormEvent) {
+        e.preventDefault()
+        setErr(null)
+        if (!name.trim()) { setErr('Name is required.'); return }
+        setSubmitting(true)
+        try {
+            await api.post('/finance/expense-types/', { scope, name: name.trim() })
+            onSaved()
+        } catch (e: any) {
+            const d = e?.response?.data
+            setErr(typeof d === 'object' ? Object.values(d).flat().join(' ') : (d?.detail || 'Failed to save.'))
+        } finally {
+            setSubmitting(false)
+        }
+    }
+
+    return (
+        <Modal title={`New ${scope} expense type`} onClose={onClose}>
+            <form onSubmit={submit} className="space-y-3">
+                <p className="text-xs text-gray-500">
+                    This type is added to the shared {scope} catalogue and can be reused on any project.
+                </p>
+                <Field label="Type Name">
+                    <input
+                        value={name}
+                        onChange={e => setName(e.target.value)}
+                        placeholder={scope === 'internal' ? 'e.g. Database Cost' : 'e.g. Travel'}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                    />
+                </Field>
+                {err && <div className="text-xs text-red-600">{err}</div>}
+                <div className="flex justify-end gap-2 pt-2">
+                    <button type="button" onClick={onClose} className="px-4 py-2 text-sm rounded-lg border border-gray-300">Cancel</button>
+                    <button type="submit" disabled={submitting} className="px-4 py-2 text-sm rounded-lg bg-indigo-600 text-white disabled:opacity-50">
+                        {submitting ? 'Saving…' : 'Add Type'}
+                    </button>
+                </div>
+            </form>
+        </Modal>
     )
 }
 

@@ -7,8 +7,10 @@ from .leave_serializers import LeaveRequestSerializer
 from .offer_letter_serializers import OfferLetterSerializer
 from .notification_serializers import NotificationSerializer
 from .finance_serializers import (
+    ExpenseTypeSerializer,
     MiscExpenseSerializer,
     ProjectBudgetSerializer,
+    ProjectExpenseSerializer,
     SalaryPaymentSerializer,
     TransactionSerializer,
 )
@@ -20,6 +22,8 @@ from .salary_serializers import EmployeeSalarySerializer
 
 __all__ = [
     "ActiveTimeEntrySerializer",
+    "ExpenseTypeSerializer",
+    "ProjectExpenseSerializer",
     "ClientSerializer",
     "ClockSessionSerializer",
     "DataRequestSerializer",
