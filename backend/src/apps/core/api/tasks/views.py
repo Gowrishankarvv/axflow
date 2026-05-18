@@ -80,18 +80,15 @@ class TaskViewSet(viewsets.ModelViewSet):
             assignees.append(user.id)
             serializer.validated_data["assignees"] = assignees
 
+        # Assigning a user to a task auto-adds them to that task's project
+        # (instead of rejecting non-members). Idempotent via the unique
+        # (project, assignee) constraint.
         if assignees and project_id:
-            invalid_assignees = []
             for assignee_id in assignees:
-                if not ProjectAssignment.objects.filter(project_id=project_id, assignee_id=assignee_id).exists():
-                    invalid_assignees.append(assignee_id)
-            if invalid_assignees:
-                from rest_framework.exceptions import ValidationError
-
-                raise ValidationError(
-                    {
-                        "assignees": f"Users {invalid_assignees} must be assigned to this project before being assigned tasks."
-                    }
+                ProjectAssignment.objects.get_or_create(
+                    project_id=project_id,
+                    assignee_id=assignee_id,
+                    defaults={"assigned_by": user},
                 )
 
         serializer.save(created_by=user)

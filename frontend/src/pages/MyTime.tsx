@@ -148,7 +148,13 @@ export default function MyTime() {
   const [users, setUsers] = useState<any[]>([])
   const [me, setMe] = useState<any>(null)
   const [selectedUserId, setSelectedUserId] = useState<string>('me')
-  const [form, setForm] = useState({ project: '', task: '', start_datetime: '', end_datetime: '', description: '', repeatWeekly: false, user: '', tags: [] as number[] })
+  const [form, setForm] = useState({ project: '', task: '', start_datetime: '', end_datetime: '', description: '', repeatWeekly: false, user: '', tags: [] as number[], plan_item: '' as any, done: '' as any })
+  // Today's daily plan (items the employee plans to complete today).
+  const [planItems, setPlanItems] = useState<any[]>([])
+  const [planTaskId, setPlanTaskId] = useState('')
+  const [planDesc, setPlanDesc] = useState('')
+  const [planBusy, setPlanBusy] = useState(false)
+  const [myTasks, setMyTasks] = useState<any[]>([])
   const [editId, setEditId] = useState<number | null>(null)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -364,6 +370,21 @@ export default function MyTime() {
         setProjects(projectsArr)
         setAssignedProjects(projectsArr)
       }
+
+      // Today's daily plan for the selected user (read-only unless it's "me").
+      try {
+        const pres = await api.get('/daily-plan/', { params: { user: selectedUserId || 'me', date: ymd(new Date()) } })
+        const pd: any = pres.data
+        setPlanItems(pd.results || pd || [])
+      } catch { setPlanItems([]) }
+      // Tasks the current user is assigned to (the plan-item picker).
+      if (!selectedUserId || selectedUserId === 'me') {
+        try {
+          const tres = await api.get('/tasks/my_notifications/', { params: { page_size: 200 } })
+          const td: any = tres.data
+          setMyTasks(td.results || td || [])
+        } catch { setMyTasks([]) }
+      }
     } catch (error) {
       console.error('Failed to load time entries:', error)
     } finally {
@@ -486,7 +507,9 @@ export default function MyTime() {
       description: entry.description || '',
       repeatWeekly: false,
       user: String(entry.user) || 'me',
-      tags: resolveEntryTagIds(entry)
+      tags: resolveEntryTagIds(entry),
+      plan_item: entry.plan_item ? String(entry.plan_item) : '',
+      done: entry.done === true ? 'true' : entry.done === false ? 'false' : '',
     })
 
     setShowActionModal(false)
@@ -605,6 +628,9 @@ export default function MyTime() {
       }
       if (confirmExceed) payload.confirm_exceed = true
       if (form.task) payload.task = Number(form.task)
+      if (form.plan_item) payload.plan_item = Number(form.plan_item)
+      if (form.done === 'true') payload.done = true
+      else if (form.done === 'false') payload.done = false
       if (form.user && form.user !== 'me') {
         payload.user = Number(form.user)
       } else if (selectedUserId && selectedUserId !== 'me') {
@@ -643,7 +669,7 @@ export default function MyTime() {
       } else {
         await api.post('/time-entries/', payload)
       }
-      setForm({ project: '', task: '', start_datetime: '', end_datetime: '', description: '', repeatWeekly: false, user: '', tags: [] })
+      setForm({ project: '', task: '', start_datetime: '', end_datetime: '', description: '', repeatWeekly: false, user: '', tags: [], plan_item: '', done: '' })
       setEditId(null)
       setSelectedSlot(null)
       setShowTimeEntryModal(false)
@@ -660,9 +686,38 @@ export default function MyTime() {
     setShowTimeEntryModal(false)
     setSelectedSlot(null)
     setEditId(null)
-    setForm({ project: '', task: '', start_datetime: '', end_datetime: '', description: '', repeatWeekly: false, user: '', tags: [] })
+    setForm({ project: '', task: '', start_datetime: '', end_datetime: '', description: '', repeatWeekly: false, user: '', tags: [], plan_item: '', done: '' })
     setError('')
     setSelectedEntry(null)
+  }
+
+  const planEditable = (!selectedUserId || selectedUserId === 'me')
+
+  async function addPlanItem(e: React.FormEvent) {
+    e.preventDefault()
+    if (!planTaskId || !planDesc.trim()) return
+    setPlanBusy(true)
+    try {
+      await api.post('/daily-plan/', { task: Number(planTaskId), description: planDesc.trim() })
+      setPlanTaskId('')
+      setPlanDesc('')
+      await load()
+    } catch (err: any) {
+      const d = err?.response?.data
+      alert(typeof d === 'object' && d ? Object.values(d).flat().join('\n') : (d?.detail || 'Could not add plan item.'))
+    } finally {
+      setPlanBusy(false)
+    }
+  }
+
+  async function deletePlanItem(id: number) {
+    if (!confirm('Remove this plan item?')) return
+    try {
+      await api.delete(`/daily-plan/${id}/`)
+      await load()
+    } catch (err: any) {
+      alert(err?.response?.data?.detail || 'Could not remove plan item.')
+    }
   }
 
   const closeCommentModal = () => {
@@ -938,6 +993,84 @@ export default function MyTime() {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Today's Plan */}
+        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">Today's Plan</h2>
+              <p className="text-xs text-gray-500">
+                {planEditable
+                  ? 'What you plan to complete today, on your assigned tasks.'
+                  : "Viewing the selected user's plan (read-only)."}
+              </p>
+            </div>
+            <span className="text-xs font-medium text-gray-500">{ymd(new Date())}</span>
+          </div>
+
+          {planEditable && (
+            <form onSubmit={addPlanItem} className="flex flex-col sm:flex-row gap-2 mb-4">
+              <select
+                value={planTaskId}
+                onChange={(e) => setPlanTaskId(e.target.value)}
+                className="px-3 py-2 border border-gray-200 rounded-xl bg-white text-sm sm:w-64"
+                required
+              >
+                <option value="">Select an assigned task…</option>
+                {myTasks.map((t: any) => (
+                  <option key={t.id} value={t.id}>
+                    {(t.project_name ? t.project_name + ' — ' : '')}{t.title}
+                  </option>
+                ))}
+              </select>
+              <input
+                value={planDesc}
+                onChange={(e) => setPlanDesc(e.target.value)}
+                placeholder="What will you complete today?"
+                className="flex-1 px-3 py-2 border border-gray-200 rounded-xl bg-white text-sm"
+                required
+              />
+              <button
+                type="submit"
+                disabled={planBusy}
+                className="px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+              >
+                {planBusy ? 'Adding…' : 'Add'}
+              </button>
+            </form>
+          )}
+
+          {planItems.length === 0 ? (
+            <div className="text-center py-6 text-sm text-gray-400">
+              No plan items for today{planEditable ? ' yet — add what you’ll work on.' : '.'}
+            </div>
+          ) : (
+            <ul className="divide-y divide-gray-100">
+              {planItems.map((it: any) => (
+                <li key={it.id} className="py-3 flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium text-gray-900 truncate">{it.description}</div>
+                    <div className="text-xs text-gray-500 truncate">
+                      {it.project_name} · {it.task_title}
+                    </div>
+                    <div className="text-xs text-gray-400 mt-1">
+                      {it.progress?.hours || 0}h logged · {it.progress?.done || 0} done
+                      {it.progress?.not_done ? ` · ${it.progress.not_done} not done` : ''}
+                    </div>
+                  </div>
+                  {planEditable && (
+                    <button
+                      onClick={() => deletePlanItem(it.id)}
+                      className="text-xs text-gray-400 hover:text-red-600 shrink-0"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         {/* Enhanced Calendar Container */}
@@ -1294,6 +1427,44 @@ export default function MyTime() {
                     >
                       <option value="">Select task</option>
                       {tasks.map((t: any) => <option key={t.id} value={t.id}>{t.title}</option>)}
+                    </select>
+                  </div>
+
+                  {planItems.length > 0 && (
+                    <div className="space-y-2">
+                      <label className="block text-sm font-semibold text-gray-700">Plan item (today)</label>
+                      <select
+                        className="w-full px-4 py-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-75 bg-white/50 backdrop-blur-sm"
+                        value={form.plan_item}
+                        onChange={(e) => {
+                          const id = e.target.value
+                          const pi = planItems.find((x: any) => String(x.id) === id)
+                          setForm({
+                            ...form,
+                            plan_item: id,
+                            ...(pi ? { project: String(pi.project), task: String(pi.task) } : {}),
+                          })
+                        }}
+                      >
+                        <option value="">— Not from plan —</option>
+                        {planItems.map((pi: any) => (
+                          <option key={pi.id} value={pi.id}>{pi.description} · {pi.task_title}</option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-gray-500">Linking a plan item auto-fills its project &amp; task.</p>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700">Completion</label>
+                    <select
+                      className="w-full px-4 py-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-75 bg-white/50 backdrop-blur-sm"
+                      value={form.done}
+                      onChange={(e) => setForm({ ...form, done: e.target.value })}
+                    >
+                      <option value="">Unmarked</option>
+                      <option value="true">Done</option>
+                      <option value="false">Not done</option>
                     </select>
                   </div>
 

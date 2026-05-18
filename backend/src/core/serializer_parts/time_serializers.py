@@ -43,11 +43,15 @@ class TimeEntrySerializer(serializers.ModelSerializer):
             "manager_comment_by_name",
             "tags",
             "tag_names",
+            "plan_item",
+            "done",
         ]
         read_only_fields = ["duration", "created_at", "updated_at"]
         extra_kwargs = {
             "user": {"required": False},
-            "project": {"required": True},
+            # Not field-level required: validate() still enforces a project,
+            # but allows it to be backfilled from a supplied plan_item.
+            "project": {"required": False},
         }
 
     def create(self, validated_data):
@@ -133,6 +137,20 @@ class TimeEntrySerializer(serializers.ModelSerializer):
         return qs.exists()
 
     def validate(self, attrs):
+        # A plan item may be supplied to tie this hour to the employee's daily
+        # plan. Backfill project/task from it so the picker only needs the item.
+        plan_item = attrs.get("plan_item") or getattr(self.instance, "plan_item", None)
+        if plan_item:
+            if not attrs.get("project") and not getattr(self.instance, "project", None):
+                attrs["project"] = plan_item.project
+            if attrs.get("task") is None and "task" not in attrs and not getattr(self.instance, "task", None):
+                attrs["task"] = plan_item.task
+            eff_project = attrs.get("project") or getattr(self.instance, "project", None)
+            if eff_project and eff_project.id != plan_item.project_id:
+                raise serializers.ValidationError(
+                    {"plan_item": "Plan item belongs to a different project."}
+                )
+
         start = attrs.get("start_datetime") or getattr(self.instance, "start_datetime", None)
         end = attrs.get("end_datetime") or getattr(self.instance, "end_datetime", None)
         if start and end and end <= start:
@@ -218,3 +236,62 @@ class ClockSessionSerializer(serializers.ModelSerializer):
         if clock_out and clock_in and clock_out <= clock_in:
             raise serializers.ValidationError("clock_out_time must be greater than clock_in_time")
         return attrs
+
+
+from core.models import DailyPlanItem  # noqa: E402
+
+
+class DailyPlanItemSerializer(serializers.ModelSerializer):
+    """An employee's planned item for *today*, tied to an assigned task.
+
+    Progress is derived from the linked TimeEntry rows: how many hours were
+    logged against this item and how many of those were marked done.
+    """
+
+    task_title = serializers.SerializerMethodField(read_only=True)
+    project_name = serializers.SerializerMethodField(read_only=True)
+    user_name = serializers.SerializerMethodField(read_only=True)
+    progress = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = DailyPlanItem
+        fields = [
+            "id",
+            "user",
+            "user_name",
+            "plan_date",
+            "task",
+            "task_title",
+            "project",
+            "project_name",
+            "description",
+            "progress",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "user", "project", "plan_date",
+            "created_at", "updated_at",
+        ]
+
+    def get_task_title(self, obj):
+        return obj.task.title if obj.task_id else None
+
+    def get_project_name(self, obj):
+        return obj.project.name if obj.project_id else None
+
+    def get_user_name(self, obj):
+        u = getattr(obj, "user", None)
+        return (u.first_name or u.username) if u else None
+
+    def get_progress(self, obj):
+        entries = list(obj.time_entries.all())
+        total_seconds = sum(
+            (e.duration.total_seconds() if e.duration else 0) for e in entries
+        )
+        return {
+            "entries": len(entries),
+            "done": sum(1 for e in entries if e.done is True),
+            "not_done": sum(1 for e in entries if e.done is False),
+            "hours": round(total_seconds / 3600.0, 2),
+        }

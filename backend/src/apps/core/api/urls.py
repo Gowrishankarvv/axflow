@@ -25,4 +25,5 @@ urlpatterns = [
     path("", include("apps.core.api.credentials.urls")),
     path("", include("apps.core.api.tickets.urls")),
     path("", include("apps.core.api.salary.urls")),
+    path("", include("apps.core.api.daily_plan.urls")),
 ]

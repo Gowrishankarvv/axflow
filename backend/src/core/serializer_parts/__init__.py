@@ -1,6 +1,6 @@
 from .auth_serializers import OrganizationUnitSerializer, SetPasswordSerializer, UserSerializer
 from .project_serializers import ProjectAssignmentSerializer, ProjectSerializer, TaskAssignmentSerializer, TaskSerializer
-from .time_serializers import ActiveTimeEntrySerializer, ClockSessionSerializer, TagSerializer, TimeEntrySerializer
+from .time_serializers import ActiveTimeEntrySerializer, ClockSessionSerializer, DailyPlanItemSerializer, TagSerializer, TimeEntrySerializer
 from .client_serializers import ClientSerializer
 from .request_serializers import DataRequestSerializer, InvoiceSerializer, RequestFileSerializer
 from .leave_serializers import LeaveRequestSerializer
@@ -22,6 +22,7 @@ from .salary_serializers import EmployeeSalarySerializer
 
 __all__ = [
     "ActiveTimeEntrySerializer",
+    "DailyPlanItemSerializer",
     "ExpenseTypeSerializer",
     "ProjectExpenseSerializer",
     "ClientSerializer",
