@@ -14,16 +14,20 @@ from rest_framework.views import APIView
 
 from core.models import (
     EmployeeSalary,
+    ExpenseType,
     MiscExpense,
     ProjectBudget,
+    ProjectExpense,
     SalaryPayment,
     Transaction,
     User,
 )
 from core.permissions import IsExecutive
 from core.serializers import (
+    ExpenseTypeSerializer,
     MiscExpenseSerializer,
     ProjectBudgetSerializer,
+    ProjectExpenseSerializer,
     SalaryPaymentSerializer,
     TransactionSerializer,
 )
@@ -279,3 +283,85 @@ class ProjectBudgetViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
+
+
+class ExpenseTypeViewSet(viewsets.ModelViewSet):
+    """Global, per-scope catalogue of expense types. Built-ins are seeded and
+    cannot be deleted; execs can add custom ones reusable across all projects."""
+
+    permission_classes = [IsAuthenticated, IsExecutive]
+    serializer_class = ExpenseTypeSerializer
+    queryset = ExpenseType.objects.all()
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        scope = self.request.query_params.get("scope")
+        if scope:
+            qs = qs.filter(scope=scope)
+        return qs
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.is_builtin:
+            return Response(
+                {"detail": "Built-in expense types cannot be deleted."}, status=400,
+            )
+        if instance.expenses.exists():
+            return Response(
+                {"detail": "This type is in use by existing expenses."}, status=400,
+            )
+        return super().destroy(request, *args, **kwargs)
+
+
+class ProjectExpenseViewSet(viewsets.ModelViewSet):
+    """Actual internal/external expenses recorded against a project. Mirrors
+    each entry into the ledger so the Finance balance and the project's
+    actual-spend stay consistent."""
+
+    permission_classes = [IsAuthenticated, IsExecutive]
+    serializer_class = ProjectExpenseSerializer
+    queryset = ProjectExpense.objects.select_related(
+        "project", "expense_type", "created_by", "transaction",
+    ).all()
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        project = self.request.query_params.get("project")
+        scope = self.request.query_params.get("scope")
+        if project:
+            qs = qs.filter(project_id=project)
+        if scope:
+            qs = qs.filter(scope=scope)
+        return qs
+
+    def perform_create(self, serializer):
+        exp = serializer.save(created_by=self.request.user)
+        type_name = exp.expense_type.name if exp.expense_type else "Expense"
+        desc = f"{exp.get_scope_display()} · {type_name}"
+        if exp.person_name:
+            who = exp.person_name
+            if exp.person_role:
+                who += f" ({exp.person_role})"
+            desc += f" — {who}"
+        elif exp.note:
+            desc += f" — {exp.note}"
+        txn = Transaction.objects.create(
+            flow="expense",
+            category="misc",
+            amount=exp.amount,
+            description=desc[:255],
+            note=exp.note,
+            occurred_on=exp.occurred_on,
+            project=exp.project,
+            created_by=self.request.user,
+        )
+        exp.transaction = txn
+        exp.save(update_fields=["transaction"])
+
+    def perform_destroy(self, instance):
+        if instance.transaction_id:
+            instance.transaction.delete()
+        instance.delete()

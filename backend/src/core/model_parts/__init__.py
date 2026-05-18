@@ -13,8 +13,11 @@ from .leave_models import LeaveRequest
 from .offer_letter_models import OfferLetter
 from .notification_models import Notification
 from .finance_models import (
+    EXPENSE_SCOPE_CHOICES,
+    ExpenseType,
     MiscExpense,
     ProjectBudget,
+    ProjectExpense,
     SalaryPayment,
     Transaction,
     TRANSACTION_CATEGORY_CHOICES,
@@ -34,6 +37,8 @@ __all__ = [
     "DailySummary",
     "DataRequest",
     "EmployeeSalary",
+    "EXPENSE_SCOPE_CHOICES",
+    "ExpenseType",
     "Invoice",
     "Lead",
     "LeaveRequest",
@@ -45,6 +50,7 @@ __all__ = [
     "ProjectAssignment",
     "ProjectBudget",
     "ProjectCredential",
+    "ProjectExpense",
     "RequestFile",
     "SalaryPayment",
     "Tag",

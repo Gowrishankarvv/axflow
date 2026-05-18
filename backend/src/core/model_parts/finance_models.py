@@ -185,3 +185,86 @@ class ProjectBudget(models.Model):
 
     def __str__(self) -> str:
         return f"Budget for {self.project_id}: {self.planned_amount} {self.currency}"
+
+
+# ---------------------------------------------------------------------------
+# Internal / External project expenses
+# ---------------------------------------------------------------------------
+# A project's spend is split into two scopes: "internal" (infra/tooling the
+# company pays for) and "external" (food, meetings, externally-hired help).
+# Each scope has a catalogue of expense types. The catalogue ships with a few
+# built-in types and execs can add their own; custom types are global per
+# scope so they're reusable across every project.
+
+EXPENSE_SCOPE_CHOICES = [
+    ("internal", "Internal"),
+    ("external", "External"),
+]
+
+
+class ExpenseType(models.Model):
+    """A reusable expense category, scoped to internal or external. Built-in
+    rows are seeded by migration; everything else is exec-created and shared
+    across all projects within its scope."""
+
+    scope = models.CharField(max_length=10, choices=EXPENSE_SCOPE_CHOICES)
+    name = models.CharField(max_length=80)
+    # Built-ins can't be deleted from the catalogue.
+    is_builtin = models.BooleanField(default=False)
+    # When true the expense entry should also capture the external person's
+    # name and role (used by the "External Employee" type).
+    requires_person = models.BooleanField(default=False)
+
+    created_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="expense_types_created",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("scope", "name")
+        ordering = ["scope", "name"]
+
+    def __str__(self) -> str:
+        return f"{self.scope}:{self.name}"
+
+
+class ProjectExpense(models.Model):
+    """A single actual expense recorded against a project, classified by
+    scope + expense type. Mirrors into Transaction so the Finance balance and
+    the project's actual-spend stay consistent."""
+
+    project = models.ForeignKey(
+        Project, on_delete=models.CASCADE, related_name="budget_expenses",
+    )
+    scope = models.CharField(max_length=10, choices=EXPENSE_SCOPE_CHOICES)
+    expense_type = models.ForeignKey(
+        ExpenseType, on_delete=models.PROTECT, related_name="expenses",
+    )
+    amount = models.DecimalField(max_digits=14, decimal_places=2)
+    note = models.CharField(max_length=255, blank=True)
+
+    # Only populated when expense_type.requires_person (external hire).
+    person_name = models.CharField(max_length=120, blank=True)
+    person_role = models.CharField(max_length=120, blank=True)
+
+    occurred_on = models.DateField(default=timezone.localdate)
+
+    transaction = models.OneToOneField(
+        Transaction, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="project_expense",
+    )
+    created_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="project_expenses_created",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-occurred_on", "-created_at"]
+        indexes = [
+            models.Index(fields=["project", "scope"], name="fin_pexp_proj_scope_idx"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.scope} {self.amount} ({self.project_id})"
