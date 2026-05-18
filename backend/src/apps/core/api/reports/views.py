@@ -5,8 +5,8 @@ from typing import Any, cast
 
 import pytz
 from django.db import models
-from django.db.models import Q, Sum
-from django.db.models.functions import TruncDate
+from django.db.models import Count, Q, Sum
+from django.db.models.functions import TruncDate, TruncMonth
 from django.utils import timezone
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -14,7 +14,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.core.selectors import build_visible_user_ids
-from tables import Project, Tag as TagModel, TimeEntry, User
+from core.models import ClockSession, ProjectBudget, Transaction
+from core.permissions import IsExecutive, IsManager
+from tables import Project, ProjectAssignment, Tag as TagModel, Task, TimeEntry, User
 
 
 def _get_query_str(request: Request, key: str, default: str | None = None) -> str | None:
@@ -263,6 +265,12 @@ class TeamSummaryReportView(APIView):
         qp_billable = request.query_params.get("billable")
         start_date_param = _get_query_str(request, "start_date")
         end_date_param = _get_query_str(request, "end_date")
+        # Day-wise filter: a single `day` collapses the window to that date and
+        # takes precedence over any start/end range.
+        day_param = _get_query_str(request, "day")
+        if day_param:
+            start_date_param = day_param
+            end_date_param = day_param
 
         tz = pytz.timezone("Asia/Kolkata")
         now_ist = timezone.now().astimezone(tz)
@@ -530,3 +538,347 @@ class TeamSummaryReportView(APIView):
                 "task_matrix": task_matrix,
             }
         )
+
+
+def _resolve_date_range(request: Request, default_start: date, default_end: date) -> tuple[date, date] | Response:
+    """Parse start_date/end_date (and a single `day` override) into a date
+    window. Returns a Response on a bad format so callers can early-return."""
+    start_param = _get_query_str(request, "start_date")
+    end_param = _get_query_str(request, "end_date")
+    day_param = _get_query_str(request, "day")
+    if day_param:
+        start_param = end_param = day_param
+
+    start_date, end_date = default_start, default_end
+    if start_param:
+        try:
+            start_date = datetime.fromisoformat(start_param).date()
+        except ValueError:
+            return Response({"detail": "Invalid start_date format"}, status=400)
+    if end_param:
+        try:
+            end_date = datetime.fromisoformat(end_param).date()
+        except ValueError:
+            return Response({"detail": "Invalid end_date format"}, status=400)
+    if start_date > end_date:
+        start_date, end_date = end_date, start_date
+    return start_date, end_date
+
+
+class ProjectReportView(APIView):
+    """Per-project rollup: tracked hours, task status breakdown, team size and
+    budget vs. actual spend. Managers and superusers only."""
+
+    permission_classes = [IsAuthenticated, IsManager]
+
+    def get(self, request: Request):
+        tz = pytz.timezone("Asia/Kolkata")
+        now_ist = timezone.now().astimezone(tz)
+        default_start = now_ist.replace(day=1).date()
+        default_end = (default_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+
+        resolved = _resolve_date_range(request, default_start, default_end)
+        if isinstance(resolved, Response):
+            return resolved
+        start_date, end_date = resolved
+
+        start_dt = tz.localize(datetime.combine(start_date, time.min))
+        end_dt = tz.localize(datetime.combine(end_date, time.max))
+
+        projects = list(
+            Project.objects.select_related("client").all().order_by("name")
+        )
+        project_ids = [p.id for p in projects]
+
+        # Tracked hours within the window, per project.
+        hours_map: dict[int, float] = {}
+        billable_map: dict[int, float] = {}
+        time_rows = (
+            TimeEntry.objects.filter(
+                project_id__in=project_ids,
+                start_datetime__range=(start_dt, end_dt),
+            )
+            .values("project_id", "billable")
+            .annotate(total=Sum("duration"))
+        )
+        for row in time_rows:
+            total = row["total"]
+            if isinstance(total, int):
+                total = timedelta(microseconds=total)
+            seconds = float((total or timedelta(0)).total_seconds())
+            pid = row["project_id"]
+            hours_map[pid] = hours_map.get(pid, 0.0) + seconds
+            if row["billable"]:
+                billable_map[pid] = billable_map.get(pid, 0.0) + seconds
+
+        # Task counts grouped by status.
+        task_map: dict[int, dict[str, int]] = {}
+        for row in (
+            Task.objects.filter(project_id__in=project_ids)
+            .values("project_id", "status")
+            .annotate(c=Count("id"))
+        ):
+            task_map.setdefault(row["project_id"], {})[row["status"]] = row["c"]
+
+        # Distinct assigned team members per project.
+        team_map: dict[int, int] = {
+            row["project_id"]: row["c"]
+            for row in ProjectAssignment.objects.filter(project_id__in=project_ids)
+            .values("project_id")
+            .annotate(c=Count("assignee", distinct=True))
+        }
+
+        # Budget envelope and actual recorded spend (expense ledger).
+        budget_map: dict[int, float] = {
+            b.project_id: float(b.planned_amount)
+            for b in ProjectBudget.objects.filter(project_id__in=project_ids)
+        }
+        spend_map: dict[int, float] = {
+            row["project_id"]: float(row["total"] or 0)
+            for row in Transaction.objects.filter(
+                flow="expense", project_id__in=project_ids,
+            )
+            .values("project_id")
+            .annotate(total=Sum("amount"))
+        }
+
+        report = []
+        for p in projects:
+            tasks = task_map.get(p.id, {})
+            total_tasks = sum(tasks.values())
+            done_tasks = tasks.get("done", 0)
+            total_seconds = hours_map.get(p.id, 0.0)
+            billable_seconds = billable_map.get(p.id, 0.0)
+            report.append(
+                {
+                    "id": p.id,
+                    "name": p.name,
+                    "client": p.client.name if p.client else None,
+                    "billable": p.billable,
+                    "start_date": p.start_date.isoformat() if p.start_date else None,
+                    "end_date": p.end_date.isoformat() if p.end_date else None,
+                    "due_date": p.due_date.isoformat() if p.due_date else None,
+                    "total_hours": round(total_seconds / 3600.0, 2),
+                    "billable_hours": round(billable_seconds / 3600.0, 2),
+                    "monthly_threshold_hours": float(p.monthly_threshold_hours or 0),
+                    "team_size": team_map.get(p.id, 0),
+                    "tasks": {
+                        "total": total_tasks,
+                        "todo": tasks.get("todo", 0),
+                        "pending": tasks.get("pending", 0),
+                        "in_progress": tasks.get("in_progress", 0),
+                        "done": done_tasks,
+                        "completion_pct": round((done_tasks / total_tasks) * 100, 1) if total_tasks else 0.0,
+                    },
+                    "budget": {
+                        "planned": budget_map.get(p.id, 0.0),
+                        "spent": spend_map.get(p.id, 0.0),
+                    },
+                }
+            )
+
+        return Response(
+            {
+                "range": {"start": start_date.isoformat(), "end": end_date.isoformat()},
+                "report": report,
+                "totals": {
+                    "projects": len(report),
+                    "total_hours": round(sum(r["total_hours"] for r in report), 2),
+                    "open_tasks": sum(r["tasks"]["total"] - r["tasks"]["done"] for r in report),
+                },
+            }
+        )
+
+
+class FinanceReportView(APIView):
+    """Income vs. expense over time for the income/expense comparison graph.
+    Executives (and superusers) only."""
+
+    permission_classes = [IsAuthenticated, IsExecutive]
+
+    def get(self, request: Request):
+        today = timezone.localdate()
+        # Default window: the trailing 12 months, anchored to month starts.
+        default_end = today
+        default_start = (today.replace(day=1) - timedelta(days=365)).replace(day=1)
+
+        resolved = _resolve_date_range(request, default_start, default_end)
+        if isinstance(resolved, Response):
+            return resolved
+        start_date, end_date = resolved
+
+        in_range = Transaction.objects.filter(
+            occurred_on__gte=start_date, occurred_on__lte=end_date,
+        )
+
+        # Monthly income/expense buckets, aligned on a shared month axis.
+        monthly: dict[str, dict[str, float]] = {}
+        for row in (
+            in_range.annotate(m=TruncMonth("occurred_on"))
+            .values("m", "flow")
+            .annotate(total=Sum("amount"))
+            .order_by("m")
+        ):
+            label = row["m"].strftime("%Y-%m")
+            bucket = monthly.setdefault(label, {"income": 0.0, "expense": 0.0})
+            bucket[row["flow"]] = float(row["total"] or 0)
+
+        labels = sorted(monthly.keys())
+        income_series = [round(monthly[m]["income"], 2) for m in labels]
+        expense_series = [round(monthly[m]["expense"], 2) for m in labels]
+        net_series = [round(i - e, 2) for i, e in zip(income_series, expense_series)]
+
+        range_income = sum(income_series)
+        range_expense = sum(expense_series)
+
+        category_breakdown = [
+            {"category": row["category"], "total": float(row["total"] or 0)}
+            for row in in_range.filter(flow="expense")
+            .values("category")
+            .annotate(total=Sum("amount"))
+            .order_by("-total")
+        ]
+
+        # All-time balance for the headline figures.
+        all_income = Transaction.objects.filter(flow="income").aggregate(
+            s=Sum("amount"))["s"] or 0
+        all_expense = Transaction.objects.filter(flow="expense").aggregate(
+            s=Sum("amount"))["s"] or 0
+
+        return Response(
+            {
+                "currency": "INR",
+                "range": {"start": start_date.isoformat(), "end": end_date.isoformat()},
+                "series": {
+                    "labels": labels,
+                    "income": income_series,
+                    "expense": expense_series,
+                    "net": net_series,
+                },
+                "totals": {
+                    "range_income": round(range_income, 2),
+                    "range_expense": round(range_expense, 2),
+                    "range_net": round(range_income - range_expense, 2),
+                    "balance": float(all_income) - float(all_expense),
+                    "income_total": float(all_income),
+                    "expense_total": float(all_expense),
+                },
+                "category_breakdown": category_breakdown,
+            }
+        )
+
+
+class ClockTimeReportView(APIView):
+    """Worked-hours time report built from clock-in/out sessions.
+
+    This is the "Time report of all users" — it reports actual attendance
+    (ClockSession.worked_duration, i.e. gross minus lunch), not project
+    timer entries. Supports a day-wise filter via `day`, or a
+    `start_date`/`end_date` range. Visibility mirrors the rest of the app:
+    employees see only themselves, managers their team, superusers everyone.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request: Request):
+        user = cast(User, request.user)
+        tz = pytz.timezone("Asia/Kolkata")
+        now_ist = timezone.now().astimezone(tz)
+        default_start = now_ist.replace(day=1).date()
+        default_end = (default_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+
+        resolved = _resolve_date_range(request, default_start, default_end)
+        if isinstance(resolved, Response):
+            return resolved
+        start_date, end_date = resolved
+
+        qs = ClockSession.objects.select_related("user").filter(
+            date__gte=start_date, date__lte=end_date,
+        )
+
+        # Visibility scoping — identical rules to the project-time report.
+        is_employee_only = (
+            not user.is_superuser
+            and getattr(user, "role", "") not in ("superuser", "manager")
+        )
+        if is_employee_only:
+            qs = qs.filter(user_id=user.id)
+        elif not (user.is_superuser or user.role == "superuser"):
+            qs = qs.filter(user_id__in=build_visible_user_ids(user))
+
+        qp_user_id = request.query_params.get("user_id")
+        if qp_user_id and not is_employee_only:
+            qs = qs.filter(user_id=user.id if qp_user_id == "me" else qp_user_id)
+
+        now = timezone.now()
+        per_user: dict[int, dict[str, Any]] = {}
+        per_day: dict[str, float] = {}
+        rows = []
+
+        for sess in qs.order_by("clock_in_time"):
+            # Open sessions (still clocked in) count up to "now" so today's
+            # in-progress shift is reflected.
+            end = sess.clock_out_time or now
+            gross = (end - sess.clock_in_time).total_seconds() if sess.clock_in_time else 0.0
+            lunch = sess.lunch_duration
+            worked = gross - (lunch.total_seconds() if lunch else 0.0)
+            worked = max(worked, 0.0)
+
+            day_label = sess.date.isoformat()
+            per_day[day_label] = per_day.get(day_label, 0.0) + worked
+
+            uid = sess.user_id
+            if uid not in per_user:
+                per_user[uid] = {
+                    "user_id": uid,
+                    "name": sess.user.first_name or sess.user.username,
+                    "seconds": 0.0,
+                    "sessions": 0,
+                }
+            per_user[uid]["seconds"] += worked
+            per_user[uid]["sessions"] += 1
+
+            rows.append({
+                "date": day_label,
+                "user_id": uid,
+                "user_name": sess.user.first_name or sess.user.username,
+                "clock_in": sess.clock_in_time.astimezone(tz).strftime("%H:%M") if sess.clock_in_time else None,
+                "clock_out": sess.clock_out_time.astimezone(tz).strftime("%H:%M") if sess.clock_out_time else None,
+                "open": sess.clock_out_time is None,
+                "worked_hours": round(worked / 3600.0, 2),
+                "worked_seconds": int(round(worked)),
+            })
+
+        labels = sorted(per_day.keys())
+        report = sorted(
+            (
+                {
+                    "user_id": v["user_id"],
+                    "user_name": v["name"],
+                    "total_hours": round(v["seconds"] / 3600.0, 2),
+                    "total_seconds": int(round(v["seconds"])),
+                    "sessions": v["sessions"],
+                }
+                for v in per_user.values()
+            ),
+            key=lambda r: r["total_seconds"],
+            reverse=True,
+        )
+        total_seconds = sum(v["seconds"] for v in per_user.values())
+
+        return Response({
+            "range": {"start": start_date.isoformat(), "end": end_date.isoformat()},
+            "daily": {
+                "labels": labels,
+                "hours": [round(per_day[d] / 3600.0, 2) for d in labels],
+                "seconds": [int(round(per_day[d])) for d in labels],
+            },
+            "report": report,
+            "rows": rows,
+            "totals": {
+                "total_hours": round(total_seconds / 3600.0, 2),
+                "total_seconds": int(round(total_seconds)),
+                "users": len(per_user),
+                "sessions": len(rows),
+            },
+        })
