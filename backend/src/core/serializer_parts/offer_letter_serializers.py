@@ -17,7 +17,7 @@ class OfferLetterSerializer(serializers.ModelSerializer):
             "id",
             "recipient", "recipient_username",
             "recipient_email_snapshot", "recipient_name_snapshot",
-            "subject", "body",
+            "subject", "body", "content",
             "attachment_url", "attachment_name",
             "sent_by", "sent_by_name",
             "sent_at", "status", "error_message",

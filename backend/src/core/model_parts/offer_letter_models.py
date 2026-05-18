@@ -24,7 +24,11 @@ class OfferLetter(models.Model):
 
     subject = models.CharField(max_length=255)
     body = models.TextField()
-    attachment = models.FileField(upload_to="offer_letters/%Y/%m/%d/")
+    # Structured offer-letter content the PDF was rendered from. Snapshotted so
+    # the history stays meaningful and the letter can be re-rendered.
+    content = models.JSONField(default=dict, blank=True)
+    # The generated 3-page Axinor PDF. System-produced, not user-uploaded.
+    attachment = models.FileField(upload_to="offer_letters/%Y/%m/%d/", blank=True)
 
     sent_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True, related_name="sent_offers"
