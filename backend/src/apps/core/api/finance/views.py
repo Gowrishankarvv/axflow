@@ -107,7 +107,17 @@ class TransactionViewSet(viewsets.ModelViewSet):
         return qs
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+        txn = serializer.save(created_by=self.request.user)
+        _sync_project_expense_for_txn(txn, self.request.user)
+
+    def perform_update(self, serializer):
+        txn = serializer.save()
+        _sync_project_expense_for_txn(txn, self.request.user)
+
+    def perform_destroy(self, instance):
+        # Drop the mirrored Internal/External line, if any.
+        ProjectExpense.objects.filter(transaction=instance).delete()
+        instance.delete()
 
 
 class MiscExpenseViewSet(viewsets.ModelViewSet):
@@ -283,6 +293,59 @@ class ProjectBudgetViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
+
+
+# Maps a Transaction category to an (scope, expense-type name) so a
+# project-tagged expense also lands in the project's Internal/External
+# breakdown. Anything unmapped falls back to Internal · Other.
+_CATEGORY_SCOPE_MAP = {
+    "server": ("internal", "Server Cost"),
+    "api": ("internal", "API Cost"),
+    "tools": ("internal", "Tools Cost"),
+    "rent": ("internal", "Rent"),
+    "salary": ("internal", "Salary"),
+    "food": ("external", "Food"),
+    "client_meeting": ("external", "Meeting"),
+    "ta": ("external", "TA"),
+}
+
+
+def _sync_project_expense_for_txn(txn, user):
+    """Keep a Transaction's mirrored ProjectExpense in sync. Creates/updates a
+    matching Internal/External line when the txn is a project-tagged expense;
+    removes a stale one otherwise. Reuses the same Transaction row so the
+    project's actual-spend is never double-counted."""
+    existing = ProjectExpense.objects.filter(transaction=txn).first()
+
+    if txn.flow != "expense" or not txn.project_id:
+        if existing is not None:
+            existing.delete()
+        return
+
+    scope, type_name = _CATEGORY_SCOPE_MAP.get(txn.category, ("internal", "Other"))
+    etype, _ = ExpenseType.objects.get_or_create(
+        scope=scope, name=type_name, defaults={"is_builtin": False},
+    )
+    note = txn.description or txn.note or ""
+
+    if existing is not None:
+        existing.scope = scope
+        existing.expense_type = etype
+        existing.amount = txn.amount
+        existing.note = note[:255]
+        existing.occurred_on = txn.occurred_on
+        existing.save()
+    else:
+        ProjectExpense.objects.create(
+            project_id=txn.project_id,
+            scope=scope,
+            expense_type=etype,
+            amount=txn.amount,
+            note=note[:255],
+            occurred_on=txn.occurred_on,
+            transaction=txn,
+            created_by=user,
+        )
 
 
 class ExpenseTypeViewSet(viewsets.ModelViewSet):
