@@ -13,6 +13,7 @@ import {
 } from 'chart.js'
 import { Bar } from 'react-chartjs-2'
 import { ChartBarIcon, FolderIcon, BanknotesIcon, FunnelIcon } from '@heroicons/react/24/outline'
+import ProjectOverview from '../components/ProjectOverview'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement)
 
@@ -234,6 +235,9 @@ function TimeReport({ me }: { me?: any }) {
           </div>
         )}
       </div>
+
+      {/* Project Overview — always visible, independent of clock-session data */}
+      <ProjectOverview me={me} />
 
       {loading ? (
         <div className="h-72 bg-gray-100 rounded-2xl animate-pulse" />
