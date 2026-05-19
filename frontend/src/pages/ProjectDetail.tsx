@@ -400,10 +400,10 @@ export default function ProjectDetail({ me }: { me?: any }) {
 
       {/* Project Info Card */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="bg-gradient-to-r from-neutral-900 to-purple-600 px-8 py-6 text-white">
+        <div className="bg-neutral-900 px-8 py-6 text-white">
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="text-3xl font-bold mb-2">{project.name}</h1>
+              <h1 className="text-3xl font-bold mb-2 text-white">{project.name}</h1>
               <p className="text-neutral-100 text-lg">{project.description}</p>
             </div>
             <div className="text-right">
