@@ -104,8 +104,8 @@ const INVOICE_STATUS_OPTIONS = [
 // `row` fills the entire <tr>; `bar` is the left accent strip; `badge` is the inline dropdown pill.
 const STATUS_STYLE: Record<string, { row: string; badge: string; bar: string }> = {
   pending:       { row: 'bg-amber-100   hover:bg-amber-200',   badge: 'bg-amber-200 text-amber-900',     bar: 'bg-amber-500' },
-  in_discussion: { row: 'bg-blue-100    hover:bg-blue-200',    badge: 'bg-blue-200 text-blue-900',       bar: 'bg-blue-500' },
-  ongoing:       { row: 'bg-indigo-100  hover:bg-indigo-200',  badge: 'bg-indigo-200 text-indigo-900',   bar: 'bg-indigo-500' },
+  in_discussion: { row: 'bg-neutral-100    hover:bg-neutral-200',    badge: 'bg-neutral-200 text-neutral-900',       bar: 'bg-neutral-700' },
+  ongoing:       { row: 'bg-neutral-100  hover:bg-neutral-200',  badge: 'bg-neutral-200 text-neutral-900',   bar: 'bg-neutral-700' },
   converted:     { row: 'bg-emerald-100 hover:bg-emerald-200', badge: 'bg-emerald-200 text-emerald-900', bar: 'bg-emerald-600' },
   cancelled:     { row: 'bg-gray-200    hover:bg-gray-300',    badge: 'bg-gray-300 text-gray-800',       bar: 'bg-gray-500' },
   rejected:      { row: 'bg-rose-100    hover:bg-rose-200',    badge: 'bg-rose-200 text-rose-900',       bar: 'bg-rose-500' },
@@ -311,7 +311,7 @@ export default function CRM() {
           </div>
           <button
             onClick={openNew}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#0066FF] text-white font-medium hover:bg-blue-700 transition-colors shadow-sm">
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#171717] text-white font-medium hover:bg-neutral-900 transition-colors shadow-sm">
             <Plus className="w-4 h-4" /> New Lead
           </button>
         </div>
@@ -404,7 +404,7 @@ export default function CRM() {
                         <select
                           value={l.status}
                           onChange={e => quickStatusChange(l, e.target.value)}
-                          className={`text-xs font-medium rounded-full px-2.5 py-1 border-0 cursor-pointer ${sty.badge} focus:ring-2 focus:ring-offset-1 focus:ring-blue-300`}>
+                          className={`text-xs font-medium rounded-full px-2.5 py-1 border-0 cursor-pointer ${sty.badge} focus:ring-2 focus:ring-offset-1 focus:ring-neutral-300`}>
                           {STATUS_OPTIONS.map(s => (
                             <option key={s.v} value={s.v}>{s.l}</option>
                           ))}
@@ -538,7 +538,7 @@ function CredentialModal({
           </button>
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg bg-[#0066FF] text-white font-medium hover:bg-blue-700">
+            className="px-4 py-2 rounded-lg bg-[#171717] text-white font-medium hover:bg-neutral-900">
             Done
           </button>
         </div>
@@ -788,7 +788,7 @@ function LeadDrawer({
           <button
             onClick={onSave}
             disabled={saving}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#0066FF] text-white font-medium hover:bg-blue-700 disabled:opacity-60">
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#171717] text-white font-medium hover:bg-neutral-900 disabled:opacity-60">
             <Save className="w-4 h-4" />
             {saving ? 'Saving…' : isNew ? 'Create lead' : 'Save changes'}
           </button>
@@ -798,7 +798,7 @@ function LeadDrawer({
   )
 }
 
-const inputCls = "w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400"
+const inputCls = "w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-300 focus:border-neutral-400"
 
 function Section({ title, icon, children }: { title: string; icon?: React.ReactNode; children: React.ReactNode }) {
   return (

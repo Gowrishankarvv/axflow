@@ -68,7 +68,7 @@ export default function ClientDashboard() {
                     <select
                         value={selectedMonth}
                         onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                        className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 font-medium focus:ring-2 focus:ring-blue-500 outline-none"
+                        className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 font-medium focus:ring-2 focus:ring-neutral-700 outline-none"
                     >
                         {Array.from({ length: 12 }, (_, i) => (
                             <option key={i} value={i}>
@@ -80,7 +80,7 @@ export default function ClientDashboard() {
                     <select
                         value={selectedYear}
                         onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                        className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 font-medium focus:ring-2 focus:ring-blue-500 outline-none"
+                        className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 font-medium focus:ring-2 focus:ring-neutral-700 outline-none"
                     >
                         {Array.from({ length: 6 }, (_, i) => {
                             const y = new Date().getFullYear() - i
@@ -214,7 +214,7 @@ export default function ClientDashboard() {
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mt-8">
                 <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                     <h2 className="font-semibold text-gray-900">Recent Data Requests</h2>
-                    <Link to="/requests" className="text-blue-600 hover:text-blue-700 text-sm font-medium">View All</Link>
+                    <Link to="/requests" className="text-neutral-900 hover:text-neutral-900 text-sm font-medium">View All</Link>
                 </div>
                 <div className="divide-y divide-gray-100">
                     {(summary?.recent_requests || []).length === 0 ? (
@@ -250,8 +250,8 @@ function getStatusColor(status: string) {
     switch (status) {
         case 'pending_review': return 'text-yellow-600'
         case 'pending_approval': return 'text-orange-600'
-        case 'approved': return 'text-blue-600'
-        case 'in_progress': return 'text-indigo-600'
+        case 'approved': return 'text-neutral-900'
+        case 'in_progress': return 'text-neutral-900'
         case 'completed': return 'text-green-600'
         case 'rejected': return 'text-red-600'
         default: return 'text-gray-600'
@@ -262,8 +262,8 @@ function getStatusBadge(status: string) {
     switch (status) {
         case 'pending_review': return 'bg-yellow-100 text-yellow-800'
         case 'pending_approval': return 'bg-orange-100 text-orange-800'
-        case 'approved': return 'bg-blue-100 text-blue-800'
-        case 'in_progress': return 'bg-indigo-100 text-indigo-800'
+        case 'approved': return 'bg-neutral-100 text-neutral-900'
+        case 'in_progress': return 'bg-neutral-100 text-neutral-900'
         case 'completed': return 'bg-green-100 text-green-800'
         case 'rejected': return 'bg-red-100 text-red-800'
         default: return 'bg-gray-100 text-gray-800'

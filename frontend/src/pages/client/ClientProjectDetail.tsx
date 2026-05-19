@@ -119,8 +119,8 @@ export default function ClientProjectDetail() {
         {/* Header card */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-start gap-3 mb-4">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Folder className="w-6 h-6 text-blue-600" />
+            <div className="p-2 bg-neutral-100 rounded-lg">
+              <Folder className="w-6 h-6 text-neutral-900" />
             </div>
             <div className="flex-1">
               <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
@@ -130,7 +130,7 @@ export default function ClientProjectDetail() {
             </div>
             <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold ${
               projectStatusLabel === 'Completed' ? 'bg-emerald-100 text-emerald-800'
-              : projectStatusLabel === 'In Progress' ? 'bg-blue-100 text-blue-800'
+              : projectStatusLabel === 'In Progress' ? 'bg-neutral-100 text-neutral-900'
               : projectStatusLabel === 'Planned' ? 'bg-amber-100 text-amber-800'
               : 'bg-gray-100 text-gray-700'
             }`}>
@@ -162,7 +162,7 @@ export default function ClientProjectDetail() {
 
           <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-blue-500 to-emerald-500 transition-all duration-500"
+              className="h-full bg-gradient-to-r from-neutral-700 to-emerald-500 transition-all duration-500"
               style={{ width: `${progress.pct}%` }}
             />
           </div>
@@ -171,7 +171,7 @@ export default function ClientProjectDetail() {
         {/* Team card */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-2 mb-4">
-            <Users className="w-5 h-5 text-indigo-600" />
+            <Users className="w-5 h-5 text-neutral-900" />
             <h2 className="text-lg font-semibold text-gray-800">Team Assigned</h2>
             <span className="ml-1 text-sm text-gray-400">{assignees.length}</span>
           </div>
@@ -185,7 +185,7 @@ export default function ClientProjectDetail() {
                 const initial = (u.first_name?.[0] || u.username[0] || '?').toUpperCase()
                 return (
                   <div key={u.id} className="flex items-center gap-3 p-3 border border-gray-100 rounded-lg bg-gray-50">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center text-white font-bold flex-shrink-0">
+                    <div className="w-10 h-10 bg-gradient-to-br from-neutral-700 to-neutral-900 rounded-lg flex items-center justify-center text-white font-bold flex-shrink-0">
                       {initial}
                     </div>
                     <div className="min-w-0">
@@ -206,7 +206,7 @@ export default function ClientProjectDetail() {
 function DateBlock({ label, date, icon }: { label: string; date: string | null; icon: 'start' | 'due' }) {
   return (
     <div className="flex items-center gap-3 p-3 border border-gray-100 rounded-lg bg-gray-50">
-      <Calendar className={`w-5 h-5 ${icon === 'start' ? 'text-blue-600' : 'text-amber-600'}`} />
+      <Calendar className={`w-5 h-5 ${icon === 'start' ? 'text-neutral-900' : 'text-amber-600'}`} />
       <div>
         <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">{label}</div>
         <div className="text-sm font-semibold text-gray-900">

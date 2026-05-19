@@ -182,8 +182,8 @@ export default function TeamTime({ me }: { me?: any }) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <ChartBarIcon className="w-6 h-6 text-blue-600" />
+          <div className="p-2 bg-neutral-100 rounded-lg">
+            <ChartBarIcon className="w-6 h-6 text-neutral-900" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900">
             {me?.role === 'employee' ? 'My Report' : 'Reports'}
@@ -203,7 +203,7 @@ export default function TeamTime({ me }: { me?: any }) {
       {/* Filters */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div className="flex items-center gap-2 mb-4">
-          <FunnelIcon className="w-5 h-5 text-blue-600" />
+          <FunnelIcon className="w-5 h-5 text-neutral-900" />
           <h2 className="font-semibold text-gray-800">Filters & Date Range</h2>
         </div>
 
@@ -212,7 +212,7 @@ export default function TeamTime({ me }: { me?: any }) {
             <div className="space-y-1">
               <label className="block text-xs font-medium text-gray-600 uppercase tracking-wide">Users</label>
               <select
-                className="border border-gray-200 rounded-lg px-4 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                className="border border-gray-200 rounded-lg px-4 py-2 bg-white focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200"
                 value={selectedUser}
                 onChange={(e) => setSelectedUser(e.target.value)}
               >
@@ -229,7 +229,7 @@ export default function TeamTime({ me }: { me?: any }) {
           <div className="space-y-1">
             <label className="block text-xs font-medium text-gray-600 uppercase tracking-wide">Projects</label>
             <select
-              className="border border-gray-200 rounded-lg px-4 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              className="border border-gray-200 rounded-lg px-4 py-2 bg-white focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200"
               value={selectedProject}
               onChange={(e) => setSelectedProject(e.target.value)}
             >
@@ -245,7 +245,7 @@ export default function TeamTime({ me }: { me?: any }) {
           <div className="space-y-1">
             <label className="block text-xs font-medium text-gray-600 uppercase tracking-wide">Billable Status</label>
             <select
-              className="border border-gray-200 rounded-lg px-4 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              className="border border-gray-200 rounded-lg px-4 py-2 bg-white focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200"
               value={billableFilter}
               onChange={(e) => setBillableFilter(e.target.value as any)}
             >
@@ -274,7 +274,7 @@ export default function TeamTime({ me }: { me?: any }) {
                 newDate.setMonth(parseInt(e.target.value))
                 setSelectedDate(newDate)
               }}
-              className="border border-gray-200 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="border border-gray-200 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-neutral-700 focus:border-transparent"
             >
               {Array.from({ length: 12 }, (_, i) => (
                 <option key={i} value={i}>
@@ -290,7 +290,7 @@ export default function TeamTime({ me }: { me?: any }) {
                 newDate.setFullYear(parseInt(e.target.value))
                 setSelectedDate(newDate)
               }}
-              className="border border-gray-200 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="border border-gray-200 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-neutral-700 focus:border-transparent"
             >
               {Array.from({ length: 10 }, (_, i) => {
                 const year = new Date().getFullYear() - 2 + i
@@ -316,7 +316,7 @@ export default function TeamTime({ me }: { me?: any }) {
 
           <div className="flex gap-2">
             <button
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg"
+              className="flex items-center gap-2 px-4 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-900 transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg"
               onClick={() => handleExport('xlsx')}
             >
               <ArrowDownTrayIcon className="w-4 h-4" />
@@ -338,7 +338,7 @@ export default function TeamTime({ me }: { me?: any }) {
         {/* Bar Chart */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow duration-300">
           <div className="flex items-center gap-2 mb-6">
-            <ArrowTrendingUpIcon className="w-5 h-5 text-blue-600" />
+            <ArrowTrendingUpIcon className="w-5 h-5 text-neutral-900" />
             <h2 className="font-semibold text-gray-800">Daily Hours Overview</h2>
           </div>
           <div className="h-80">
@@ -579,7 +579,7 @@ export default function TeamTime({ me }: { me?: any }) {
               </div>
               <div className="w-full bg-gray-200 rounded-full h-3">
                 <div
-                  className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-1000 ease-out"
+                  className="bg-gradient-to-r from-neutral-700 to-purple-500 h-3 rounded-full transition-all duration-1000 ease-out"
                   style={{ width: `${progressPercentage}%` }}
                 ></div>
               </div>
@@ -608,7 +608,7 @@ export default function TeamTime({ me }: { me?: any }) {
         {/* Task Hours Matrix */}
         <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow duration-300">
           <div className="flex items-center gap-2 mb-6">
-            <div className="p-2 bg-indigo-100 rounded-lg">
+            <div className="p-2 bg-neutral-100 rounded-lg">
               <span className="text-2xl">📋</span>
             </div>
             <h2 className="font-semibold text-gray-800">
@@ -652,7 +652,7 @@ export default function TeamTime({ me }: { me?: any }) {
                           <td className="px-6 py-4 text-sm text-gray-500">
                             <div className="flex flex-wrap gap-2">
                               {task.users.map((u: any) => (
-                                <span key={u.id} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                <span key={u.id} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-900">
                                   {u.name}: {formatDecimalHours(u.total_hours)}
                                 </span>
                               ))}
@@ -737,7 +737,7 @@ export default function TeamTime({ me }: { me?: any }) {
                               </div>
                               <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
                                 <div
-                                  className="bg-gradient-to-r from-blue-500 to-cyan-500 h-3 rounded-full transition-all duration-1000 ease-out group-hover:opacity-90"
+                                  className="bg-gradient-to-r from-neutral-700 to-cyan-500 h-3 rounded-full transition-all duration-1000 ease-out group-hover:opacity-90"
                                   style={{ width: `${Math.min(percentage, 100)}%` }}
                                   title={`${tag.emoji} ${tag.name} — ${tag.formatted} this month`}
                                 ></div>

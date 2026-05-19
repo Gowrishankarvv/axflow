@@ -331,7 +331,7 @@ function TabButton({ active, onClick, children }: { active: boolean, onClick: ()
     return (
         <button
             onClick={onClick}
-            className={`px-4 py-2 text-sm font-bold transition-colors border-b-2 -mb-px ${active ? 'border-[#0066FF] text-[#0066FF]' : 'border-transparent text-gray-1 hover:text-[#0E141C]'}`}
+            className={`px-4 py-2 text-sm font-bold transition-colors border-b-2 -mb-px ${active ? 'border-[#171717] text-[#171717]' : 'border-transparent text-gray-1 hover:text-[#0E141C]'}`}
         >
             {children}
         </button>
@@ -351,7 +351,7 @@ function DataRequestsView({
                         key={s}
                         onClick={() => setStatusFilter(s)}
                         className={`px-3 py-1.5 text-sm font-bold transition-colors ${statusFilter === s
-                            ? 'bg-blue-50 text-[#0066FF] border-b-2 border-[#0066FF]'
+                            ? 'bg-neutral-50 text-[#171717] border-b-2 border-[#171717]'
                             : 'text-gray-1 hover:text-[#0E141C] hover:bg-gray-3'
                             }`}
                     >
@@ -407,7 +407,7 @@ function DataRequestsView({
                                             {(r.file_url || (r.files && r.files.length > 0)) ? (
                                                 <button
                                                     onClick={() => downloadAll(r)}
-                                                    className="inline-flex items-center gap-1 text-sm text-[#0066FF] font-bold hover:underline"
+                                                    className="inline-flex items-center gap-1 text-sm text-[#171717] font-bold hover:underline"
                                                 >
                                                     <Download className="w-4 h-4" /> Download All
                                                 </button>
@@ -417,7 +417,7 @@ function DataRequestsView({
                                             {r.status === 'pending_review' && (
                                                 <button
                                                     onClick={() => openReview(r)}
-                                                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#0066FF] text-white rounded-lg text-sm font-bold hover:bg-[#0066FF]/90 transition shadow-sm"
+                                                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#171717] text-white rounded-lg text-sm font-bold hover:bg-[#171717]/90 transition shadow-sm"
                                                 >
                                                     Review & Estimate
                                                 </button>
@@ -573,11 +573,11 @@ function DataRequestModal({ selectedRequest, estimateForm, setEstimateForm, onCl
                     </button>
                 </div>
                 <div className="p-6 space-y-4">
-                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                        <h4 className="font-bold text-[#0066FF] mb-1">{selectedRequest.title}</h4>
-                        <p className="text-sm text-blue-900">{selectedRequest.description}</p>
+                    <div className="bg-neutral-50 p-4 rounded-lg border border-neutral-100">
+                        <h4 className="font-bold text-[#171717] mb-1">{selectedRequest.title}</h4>
+                        <p className="text-sm text-neutral-900">{selectedRequest.description}</p>
                         {selectedRequest.file_url && (
-                            <a href={selectedRequest.file_url} target="_blank" className="inline-block mt-3 text-sm font-bold text-[#0066FF] hover:underline">
+                            <a href={selectedRequest.file_url} target="_blank" className="inline-block mt-3 text-sm font-bold text-[#171717] hover:underline">
                                 Download Attached File
                             </a>
                         )}
@@ -591,9 +591,9 @@ function DataRequestModal({ selectedRequest, estimateForm, setEstimateForm, onCl
                             <div className="text-xs text-gray-500 font-bold uppercase">Images</div>
                             <div className="text-lg font-extrabold text-[#0E141C]">{selectedRequest.analysis_image_count || '-'}</div>
                         </div>
-                        <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 text-center">
-                            <div className="text-xs text-blue-600 font-bold uppercase">Auto Estimate</div>
-                            <div className="text-lg font-extrabold text-[#0066FF]">₹{selectedRequest.auto_estimated_cost_inr || '0.00'}</div>
+                        <div className="bg-neutral-50 p-3 rounded-lg border border-neutral-100 text-center">
+                            <div className="text-xs text-neutral-900 font-bold uppercase">Auto Estimate</div>
+                            <div className="text-lg font-extrabold text-[#171717]">₹{selectedRequest.auto_estimated_cost_inr || '0.00'}</div>
                         </div>
                     </div>
                     <form onSubmit={onSubmit} className="space-y-4">
@@ -604,7 +604,7 @@ function DataRequestModal({ selectedRequest, estimateForm, setEstimateForm, onCl
                                 <input
                                     type="number"
                                     step="0.01"
-                                    className="w-full pl-9 px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#0066FF] focus:border-[#0066FF] font-mono"
+                                    className="w-full pl-9 px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#171717] focus:border-[#171717] font-mono"
                                     placeholder="0.00"
                                     value={estimateForm.cost}
                                     onChange={e => setEstimateForm({ ...estimateForm, cost: e.target.value })}
@@ -615,7 +615,7 @@ function DataRequestModal({ selectedRequest, estimateForm, setEstimateForm, onCl
                         <div>
                             <label className="block text-sm font-bold text-[#0E141C] mb-1">Estimation Notes / Terms</label>
                             <textarea
-                                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#0066FF] focus:border-[#0066FF]"
+                                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#171717] focus:border-[#171717]"
                                 rows={4}
                                 placeholder="Explain the scope and cost breakdown..."
                                 value={estimateForm.notes}
@@ -627,7 +627,7 @@ function DataRequestModal({ selectedRequest, estimateForm, setEstimateForm, onCl
                             <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 bg-gray-3 text-[#0E141C] rounded-lg font-bold hover:bg-gray-200 transition-colors">
                                 Cancel
                             </button>
-                            <button type="submit" className="flex-1 px-4 py-2.5 bg-[#0066FF] text-white rounded-lg font-bold hover:bg-[#0066FF]/90 transition-colors shadow-lg shadow-blue-200/50">
+                            <button type="submit" className="flex-1 px-4 py-2.5 bg-[#171717] text-white rounded-lg font-bold hover:bg-[#171717]/90 transition-colors shadow-lg shadow-neutral-200/50">
                                 Submit Estimate
                             </button>
                         </div>
@@ -654,7 +654,7 @@ function ApproveLeaveModal({ leave, form, setForm, monthUsage, onClose, onSubmit
                     </div>
 
                     {monthUsage && (
-                        <div className="text-xs bg-blue-50 border border-blue-200 text-blue-800 rounded-lg px-3 py-2 flex items-center gap-2">
+                        <div className="text-xs bg-neutral-50 border border-neutral-200 text-neutral-900 rounded-lg px-3 py-2 flex items-center gap-2">
                             <Calendar className="w-4 h-4 flex-shrink-0" />
                             <span>
                                 Approved this month so far: <b>{monthUsage.approved_days_in_month}</b>.
@@ -668,7 +668,7 @@ function ApproveLeaveModal({ leave, form, setForm, monthUsage, onClose, onSubmit
                         <select
                             value={form.leave_type}
                             onChange={e => setForm({ ...form, leave_type: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-neutral-700"
                             required
                         >
                             <option value="casual">Casual</option>
@@ -703,7 +703,7 @@ function ApproveLeaveModal({ leave, form, setForm, monthUsage, onClose, onSubmit
                             value={form.approval_note}
                             onChange={e => setForm({ ...form, approval_note: e.target.value })}
                             rows={2}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-neutral-700"
                             placeholder="e.g. Approved with conditions…"
                         />
                     </div>
@@ -757,8 +757,8 @@ function getStatusColor(status: string) {
     switch (status) {
         case 'pending_review': return 'bg-yellow-100 text-yellow-800'
         case 'pending_approval': return 'bg-orange-100 text-orange-800'
-        case 'approved': return 'bg-blue-100 text-blue-800'
-        case 'in_progress': return 'bg-indigo-100 text-indigo-800'
+        case 'approved': return 'bg-neutral-100 text-neutral-900'
+        case 'in_progress': return 'bg-neutral-100 text-neutral-900'
         case 'completed': return 'bg-green-100 text-green-800'
         case 'rejected': return 'bg-red-100 text-red-800'
         default: return 'bg-gray-100 text-gray-800'

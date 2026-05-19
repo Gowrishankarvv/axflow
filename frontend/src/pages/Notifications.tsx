@@ -65,8 +65,8 @@ export default function NotificationsPage() {
         <div className="p-6 md:p-10 max-w-3xl mx-auto">
             <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
                 <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                        <Bell className="w-6 h-6 text-blue-600" />
+                    <div className="p-2 bg-neutral-100 rounded-lg">
+                        <Bell className="w-6 h-6 text-neutral-900" />
                     </div>
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
@@ -85,7 +85,7 @@ export default function NotificationsPage() {
                     {unreadCount > 0 && (
                         <button
                             onClick={markAllRead}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-neutral-900 text-white rounded-lg text-sm font-medium hover:bg-neutral-900"
                         >
                             <CheckCheck className="w-4 h-4" /> Mark all read
                         </button>
@@ -160,11 +160,11 @@ function NotificationRow({ n, onClick, onActed }: { n: Notification, onClick: ()
         <div
             className={`w-full text-left flex items-start gap-3 p-4 rounded-xl border transition-colors ${n.is_read
                 ? 'bg-white border-gray-100 hover:bg-gray-50'
-                : 'bg-blue-50/50 border-blue-100 hover:bg-blue-50'
+                : 'bg-neutral-50/50 border-neutral-100 hover:bg-neutral-50'
                 }`}
         >
             <button onClick={onClick} className="flex items-start gap-3 flex-1 min-w-0 text-left">
-                <div className={`flex-shrink-0 p-2 rounded-lg ${n.is_read ? 'bg-gray-100' : 'bg-blue-100'}`}>
+                <div className={`flex-shrink-0 p-2 rounded-lg ${n.is_read ? 'bg-gray-100' : 'bg-neutral-100'}`}>
                     {iconForKind(n.kind, n.is_read)}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -172,7 +172,7 @@ function NotificationRow({ n, onClick, onActed }: { n: Notification, onClick: ()
                         <h3 className={`text-sm ${n.is_read ? 'font-medium text-gray-700' : 'font-bold text-gray-900'}`}>
                             {n.title}
                         </h3>
-                        {!n.is_read && <Circle className="w-2 h-2 fill-blue-500 text-blue-500" />}
+                        {!n.is_read && <Circle className="w-2 h-2 fill-neutral-700 text-neutral-700" />}
                     </div>
                     <p className="text-sm text-gray-600 mt-0.5 break-words">{n.message}</p>
                     <div className="text-xs text-gray-400 mt-1">{timeAgo(n.created_at)}</div>
@@ -202,7 +202,7 @@ function NotificationRow({ n, onClick, onActed }: { n: Notification, onClick: ()
 }
 
 function iconForKind(kind: string, isRead: boolean) {
-    const cls = isRead ? 'text-gray-500' : 'text-blue-600'
+    const cls = isRead ? 'text-gray-500' : 'text-neutral-900'
     // Approve / reject get their own colour so the requester sees the outcome at a glance.
     if (kind === 'leave_approved') {
         return <CheckCircle2 className={`w-4 h-4 ${isRead ? 'text-emerald-400' : 'text-emerald-600'}`} />

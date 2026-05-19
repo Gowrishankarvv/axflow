@@ -150,8 +150,8 @@ export default function OfferLetterPage() {
     return (
         <div className="p-6 md:p-10 max-w-6xl mx-auto">
             <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                    <Mail className="w-6 h-6 text-blue-600" />
+                <div className="p-2 bg-neutral-100 rounded-lg">
+                    <Mail className="w-6 h-6 text-neutral-900" />
                 </div>
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Offer Letter</h1>
@@ -174,7 +174,7 @@ export default function OfferLetterPage() {
                                 <select
                                     value={recipientId}
                                     onChange={e => setRecipientId(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-neutral-700"
                                     required
                                 >
                                     <option value="">Pick a user…</option>
@@ -193,7 +193,7 @@ export default function OfferLetterPage() {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Email message</label>
                                 <textarea
                                     value={body} onChange={e => setBody(e.target.value)} rows={5}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-neutral-700 font-mono text-sm"
                                     required
                                 />
                                 <p className="text-xs text-gray-500 mt-1"><code>{'{name}'}</code> auto-fills the recipient's first name.</p>
@@ -211,7 +211,7 @@ export default function OfferLetterPage() {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
                                 <textarea
                                     value={content.address} onChange={e => set('address', e.target.value)} rows={2}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-neutral-700 text-sm"
                                     placeholder="One line per row"
                                 />
                             </div>
@@ -236,7 +236,7 @@ export default function OfferLetterPage() {
                                 <div className="flex items-center justify-between mb-1">
                                     <label className="block text-sm font-medium text-gray-700">General Rules &amp; Expectations</label>
                                     <button type="button" onClick={() => set('general_rules', [...content.general_rules, { label: '', value: '' }])}
-                                        className="text-xs text-blue-600 hover:text-blue-800 inline-flex items-center gap-1">
+                                        className="text-xs text-neutral-900 hover:text-neutral-900 inline-flex items-center gap-1">
                                         <Plus className="w-3 h-3" /> Add row
                                     </button>
                                 </div>
@@ -272,7 +272,7 @@ export default function OfferLetterPage() {
                                 <div className="flex items-center justify-between mb-1">
                                     <label className="block text-sm font-medium text-gray-700">Daily Work Completion and Reporting</label>
                                     <button type="button" onClick={() => set('daily_work', [...content.daily_work, ''])}
-                                        className="text-xs text-blue-600 hover:text-blue-800 inline-flex items-center gap-1">
+                                        className="text-xs text-neutral-900 hover:text-neutral-900 inline-flex items-center gap-1">
                                         <Plus className="w-3 h-3" /> Add point
                                     </button>
                                 </div>
@@ -310,7 +310,7 @@ export default function OfferLetterPage() {
                         )}
                         <button
                             type="submit" disabled={submitting}
-                            className="inline-flex items-center px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60 font-medium"
+                            className="inline-flex items-center px-5 py-2.5 bg-neutral-900 text-white rounded-lg hover:bg-neutral-900 disabled:opacity-60 font-medium"
                         >
                             <Send className="w-4 h-4 mr-2" />
                             {submitting ? 'Generating & sending…' : 'Generate & Send Offer Letter'}
@@ -338,7 +338,7 @@ export default function OfferLetterPage() {
                                         </div>
                                         <div className="text-xs text-gray-700 mt-2 truncate">{rec.subject}</div>
                                         {rec.attachment_url && (
-                                            <a href={rec.attachment_url} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline mt-1 inline-block">
+                                            <a href={rec.attachment_url} target="_blank" rel="noreferrer" className="text-xs text-neutral-900 hover:underline mt-1 inline-block">
                                                 <Paperclip className="w-3 h-3 inline mr-1" /> {rec.attachment_name}
                                             </a>
                                         )}
@@ -370,7 +370,7 @@ function Text({ label, value, onChange, placeholder }: {
             <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
             <input
                 value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-neutral-700 text-sm"
             />
         </div>
     )
@@ -382,7 +382,7 @@ function Area({ label, value, onChange }: { label: string; value: string; onChan
             <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
             <textarea
                 value={value} onChange={e => onChange(e.target.value)} rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-neutral-700 text-sm"
             />
         </div>
     )

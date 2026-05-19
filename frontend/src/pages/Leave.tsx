@@ -108,7 +108,7 @@ export default function LeavePage() {
                 </div>
                 <button
                     onClick={() => setShowApplyModal(true)}
-                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                    className="inline-flex items-center px-4 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-900 transition-colors font-medium"
                 >
                     <Plus className="w-4 h-4 mr-2" /> Apply for Leave
                 </button>
@@ -147,7 +147,7 @@ export default function LeavePage() {
                                     type="date"
                                     value={form.start_date}
                                     onChange={e => setForm(f => ({ ...f, start_date: e.target.value }))}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-neutral-700 focus:border-neutral-700"
                                     required
                                 />
                             </div>
@@ -157,7 +157,7 @@ export default function LeavePage() {
                                     type="date"
                                     value={form.end_date}
                                     onChange={e => setForm(f => ({ ...f, end_date: e.target.value }))}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-neutral-700 focus:border-neutral-700"
                                     required
                                 />
                             </div>
@@ -168,7 +168,7 @@ export default function LeavePage() {
                                     onChange={e => setForm(f => ({ ...f, reason: e.target.value }))}
                                     rows={4}
                                     placeholder="Why are you taking this leave?"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-neutral-700 focus:border-neutral-700"
                                     required
                                 />
                             </div>
@@ -181,7 +181,7 @@ export default function LeavePage() {
                                 <button type="button" onClick={() => setShowApplyModal(false)} className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">
                                     Cancel
                                 </button>
-                                <button type="submit" disabled={submitting} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
+                                <button type="submit" disabled={submitting} className="px-4 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-900 disabled:opacity-50">
                                     {submitting ? 'Submitting…' : 'Submit'}
                                 </button>
                             </div>
@@ -197,7 +197,7 @@ function TabButton({ active, onClick, children }: { active: boolean, onClick: ()
     return (
         <button
             onClick={onClick}
-            className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${active ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-800'}`}
+            className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${active ? 'border-neutral-900 text-neutral-900' : 'border-transparent text-gray-500 hover:text-gray-800'}`}
         >
             {children}
         </button>
@@ -237,7 +237,7 @@ function LeavesTab({ leaves, summary, todayKey, onCancel }: {
                     <h3 className="text-sm font-semibold text-gray-900 mb-3">Approved days by type</h3>
                     <div className="flex flex-wrap gap-3 text-sm">
                         {Object.entries(summary.approved_days_by_type).map(([type, days]) => (
-                            <span key={type} className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 capitalize">
+                            <span key={type} className="px-3 py-1 rounded-full bg-neutral-50 text-neutral-900 capitalize">
                                 {type}: {days}d
                             </span>
                         ))}

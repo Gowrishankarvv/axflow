@@ -162,7 +162,7 @@ export default function Projects({ me }: { me?: any }) {
     return (
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-neutral-900 to-purple-600 bg-clip-text text-transparent">
             Projects
           </h1>
         </div>
@@ -186,8 +186,8 @@ export default function Projects({ me }: { me?: any }) {
     <div className="p-6 space-y-8 bg-gradient-to-br from-gray-50 to-white min-h-screen">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <FolderIcon className="w-6 h-6 text-blue-600" />
+          <div className="p-2 bg-neutral-100 rounded-lg">
+            <FolderIcon className="w-6 h-6 text-neutral-900" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900">Projects</h1>
         </div>
@@ -199,7 +199,7 @@ export default function Projects({ me }: { me?: any }) {
       {(me?.role === 'superuser' || me?.role === 'manager') && (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-300">
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-r from-neutral-700 to-purple-500 rounded-lg flex items-center justify-center">
               <Plus className="w-4 h-4 text-white" />
             </div>
             <h2 className="text-lg font-semibold text-gray-800">Create New Project</h2>
@@ -208,7 +208,7 @@ export default function Projects({ me }: { me?: any }) {
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Project Name</label>
               <input
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder-gray-400"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200 placeholder-gray-400"
                 placeholder="Enter project name"
                 value={pform.name}
                 onChange={e => setPform({ ...pform, name: e.target.value })}
@@ -218,7 +218,7 @@ export default function Projects({ me }: { me?: any }) {
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Description</label>
               <input
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder-gray-400"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200 placeholder-gray-400"
                 placeholder="Project description"
                 value={pform.description}
                 onChange={e => setPform({ ...pform, description: e.target.value })}
@@ -227,7 +227,7 @@ export default function Projects({ me }: { me?: any }) {
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Client</label>
               <select
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200 bg-white"
                 value={(pform as any).client || ''}
                 onChange={e => setPform({ ...pform, client: e.target.value } as any)}
               >
@@ -243,7 +243,7 @@ export default function Projects({ me }: { me?: any }) {
               </label>
               <input
                 type="date"
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200"
                 value={pform.start_date || ''}
                 onChange={e => setPform({ ...pform, start_date: e.target.value || undefined })}
               />
@@ -254,13 +254,13 @@ export default function Projects({ me }: { me?: any }) {
               </label>
               <input
                 type="date"
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200"
                 value={pform.end_date || ''}
                 onChange={e => setPform({ ...pform, end_date: e.target.value || undefined })}
               />
             </div>
             <div className="flex items-end">
-              <button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl px-6 py-3 font-medium hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl">
+              <button className="w-full bg-gradient-to-r from-neutral-900 to-purple-600 text-white rounded-xl px-6 py-3 font-medium hover:from-neutral-900 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl">
                 Create Project
               </button>
             </div>
@@ -276,7 +276,7 @@ export default function Projects({ me }: { me?: any }) {
             <input
               type="text"
               placeholder="Search projects by name or description..."
-              className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder-gray-400"
+              className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200 placeholder-gray-400"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -311,8 +311,8 @@ export default function Projects({ me }: { me?: any }) {
 
         {filteredItems.length === 0 && (
           <div className="col-span-full flex flex-col items-center justify-center py-16 text-center">
-            <div className="w-24 h-24 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full flex items-center justify-center mb-4">
-              <Plus className="w-12 h-12 text-blue-500" />
+            <div className="w-24 h-24 bg-gradient-to-r from-neutral-100 to-purple-100 rounded-full flex items-center justify-center mb-4">
+              <Plus className="w-12 h-12 text-neutral-700" />
             </div>
             <h3 className="text-xl font-semibold text-gray-800 mb-2">No projects yet</h3>
             <p className="text-gray-600 max-w-md">
@@ -382,7 +382,7 @@ function ProjectCard({ p, me, tforms, setTforms, deleteProject, addTask, users }
     switch (status) {
       case 'done': return 'text-green-600 bg-green-50'
       case 'pending': return 'text-yellow-600 bg-yellow-50'
-      case 'in_progress': return 'text-blue-600 bg-blue-50'
+      case 'in_progress': return 'text-neutral-900 bg-neutral-50'
       default: return 'text-gray-600 bg-gray-50'
     }
   }
@@ -404,13 +404,13 @@ function ProjectCard({ p, me, tforms, setTforms, deleteProject, addTask, users }
             {isEditing ? (
               <div className="space-y-2">
                 <input
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
                   placeholder="Project name"
                 />
                 <textarea
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200 resize-none"
                   value={editDescription}
                   onChange={(e) => setEditDescription(e.target.value)}
                   rows={2}
@@ -422,7 +422,7 @@ function ProjectCard({ p, me, tforms, setTforms, deleteProject, addTask, users }
                       await api.patch(`/projects/${p.project_id}/`, { name: editName, description: editDescription })
                       setIsEditing(false)
                     }}
-                    className="bg-blue-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-blue-700 transition-colors duration-200"
+                    className="bg-neutral-900 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-neutral-900 transition-colors duration-200"
                   >
                     Save
                   </button>
@@ -438,19 +438,19 @@ function ProjectCard({ p, me, tforms, setTforms, deleteProject, addTask, users }
               <div>
                 <div className="flex items-center gap-2">
                   <Link to={me?.role === 'client' ? `/project-detail/${p.project_id}` : `/projects/${p.project_id}`} className="group/name block">
-                    <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-blue-600 transition-colors duration-200">
+                    <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-neutral-900 transition-colors duration-200">
                       {editName}
                     </h3>
                   </Link>
                   {p.client_name && (
-                    <div className="absolute top-6 right-6 lg:static lg:ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800">
+                    <div className="absolute top-6 right-6 lg:static lg:ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-neutral-100 text-neutral-900">
                       {p.client_name}
                     </div>
                   )}
                   {(me?.role === 'superuser' || me?.role === 'manager') && (
                     <button
                       onClick={() => setIsEditing(true)}
-                      className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-blue-600 p-1 rounded-md hover:bg-blue-50 transition-all duration-200 -mt-1"
+                      className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-neutral-900 p-1 rounded-md hover:bg-neutral-50 transition-all duration-200 -mt-1"
                       title="Edit project"
                     >
                       <Pencil className="w-4 h-4" />
@@ -481,7 +481,7 @@ function ProjectCard({ p, me, tforms, setTforms, deleteProject, addTask, users }
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
-                className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-500 ease-out"
+                className="bg-gradient-to-r from-neutral-700 to-purple-500 h-2 rounded-full transition-all duration-500 ease-out"
                 style={{ width: `${progressPercentage}%` }}
               ></div>
             </div>
@@ -494,7 +494,7 @@ function ProjectCard({ p, me, tforms, setTforms, deleteProject, addTask, users }
         <div className="px-6 pb-4">
           <button
             onClick={() => setShowAddTask(!showAddTask)}
-            className="w-full text-left text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-2 p-3 hover:bg-blue-50 rounded-xl transition-all duration-200"
+            className="w-full text-left text-sm text-neutral-900 hover:text-neutral-900 font-medium flex items-center gap-2 p-3 hover:bg-neutral-50 rounded-xl transition-all duration-200"
           >
             <Plus className="w-4 h-4" />
             Add new task
@@ -504,7 +504,7 @@ function ProjectCard({ p, me, tforms, setTforms, deleteProject, addTask, users }
             <div className="mt-3 p-4 bg-gray-50 rounded-xl space-y-3 animate-slideDown">
               <form onSubmit={async (e) => { const ok = await addTask(p.project_id || p.id, e, loadTasks); if (ok) setShowAddTask(false) }} className="space-y-3">
                 <input
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200"
                   placeholder="Task title"
                   value={tforms[p.project_id || p.id]?.title || ''}
                   onChange={e =>
@@ -519,7 +519,7 @@ function ProjectCard({ p, me, tforms, setTforms, deleteProject, addTask, users }
                   required
                 />
                 <textarea
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200 resize-none"
                   placeholder="Task description"
                   rows={2}
                   value={tforms[p.project_id || p.id]?.description || ''}
@@ -537,7 +537,7 @@ function ProjectCard({ p, me, tforms, setTforms, deleteProject, addTask, users }
                   <div className="grid grid-cols-[120px_1fr] items-center gap-3">
                     <label className="text-sm font-medium text-gray-700">Assign to</label>
                     <select
-                      className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200"
                       value={tforms[p.project_id || p.id]?.assignees?.[0] || ''}
                       onChange={e =>
                         setTforms({
@@ -561,7 +561,7 @@ function ProjectCard({ p, me, tforms, setTforms, deleteProject, addTask, users }
                     <label className="text-sm font-medium text-gray-700">Start Date</label>
                     <input
                       type="date"
-                      className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200"
                       value={tforms[p.project_id || p.id]?.planned_start_date || ''}
                       onChange={e =>
                         setTforms({
@@ -578,7 +578,7 @@ function ProjectCard({ p, me, tforms, setTforms, deleteProject, addTask, users }
                     <label className="text-sm font-medium text-gray-700">Due Date</label>
                     <input
                       type="date"
-                      className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200"
                       value={tforms[p.project_id || p.id]?.due_date || ''}
                       onChange={e =>
                         setTforms({
@@ -595,7 +595,7 @@ function ProjectCard({ p, me, tforms, setTforms, deleteProject, addTask, users }
                 <div className="flex gap-2">
                   <button
                     type="submit"
-                    className="flex-1 bg-blue-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-blue-700 transition-colors duration-200"
+                    className="flex-1 bg-neutral-900 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-neutral-900 transition-colors duration-200"
                   >
                     Add Task
                   </button>
@@ -617,7 +617,7 @@ function ProjectCard({ p, me, tforms, setTforms, deleteProject, addTask, users }
       <div className="px-6 pb-6">
         <div className="border-t border-gray-100 pt-4">
           <h4 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
-            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+            <div className="w-2 h-2 bg-neutral-700 rounded-full"></div>
             Tasks {totalTasks > 0 && <span className="text-gray-500 font-normal">({totalTasks})</span>}
           </h4>
 

@@ -95,7 +95,7 @@ export default function Login() {
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 bg-white border border-gray-3 rounded-xl text-brand-dark placeholder-gray-400 focus:outline-none focus:border-brand-blue focus:ring-4 focus:ring-blue-50/50 transition-all font-medium"
+                  className="w-full px-4 py-3 bg-white border border-gray-3 rounded-xl text-brand-dark placeholder-gray-400 focus:outline-none focus:border-brand-blue focus:ring-4 focus:ring-neutral-50/50 transition-all font-medium"
                   placeholder="name@company.com"
                   required
                 />
@@ -107,7 +107,7 @@ export default function Login() {
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
-                    className="w-full px-4 py-3 bg-white border border-gray-3 rounded-xl text-brand-dark placeholder-gray-400 focus:outline-none focus:border-brand-blue focus:ring-4 focus:ring-blue-50/50 transition-all font-medium"
+                    className="w-full px-4 py-3 bg-white border border-gray-3 rounded-xl text-brand-dark placeholder-gray-400 focus:outline-none focus:border-brand-blue focus:ring-4 focus:ring-neutral-50/50 transition-all font-medium"
                     placeholder="Enter your password"
                     required
                   />
@@ -129,7 +129,7 @@ export default function Login() {
                   type="password"
                   value={newPassword}
                   onChange={e => setNewPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-white border border-gray-3 rounded-xl text-brand-dark placeholder-gray-400 focus:outline-none focus:border-brand-blue focus:ring-4 focus:ring-blue-50/50 transition-all font-medium"
+                  className="w-full px-4 py-3 bg-white border border-gray-3 rounded-xl text-brand-dark placeholder-gray-400 focus:outline-none focus:border-brand-blue focus:ring-4 focus:ring-neutral-50/50 transition-all font-medium"
                   placeholder="Create new password"
                   required
                 />
@@ -140,7 +140,7 @@ export default function Login() {
                   type="password"
                   value={confirmPassword}
                   onChange={e => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-white border border-gray-3 rounded-xl text-brand-dark placeholder-gray-400 focus:outline-none focus:border-brand-blue focus:ring-4 focus:ring-blue-50/50 transition-all font-medium"
+                  className="w-full px-4 py-3 bg-white border border-gray-3 rounded-xl text-brand-dark placeholder-gray-400 focus:outline-none focus:border-brand-blue focus:ring-4 focus:ring-neutral-50/50 transition-all font-medium"
                   placeholder="Confirm new password"
                   required
                 />
@@ -157,7 +157,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-brand-blue disabled:bg-blue-300 hover:bg-blue-700 text-white font-bold py-3.5 rounded-full shadow-lg shadow-blue-500/20 active:scale-[0.98] transition-all duration-200 mt-6"
+            className="w-full bg-brand-blue disabled:bg-neutral-300 hover:bg-neutral-900 text-white font-bold py-3.5 rounded-full shadow-lg shadow-neutral-700/20 active:scale-[0.98] transition-all duration-200 mt-6"
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">

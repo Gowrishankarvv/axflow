@@ -136,8 +136,8 @@ export default function Admin() {
     <div className="p-6 min-h-screen bg-gray-50 animate-in fade-in duration-300">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center gap-3 mb-8">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <UserPlusIcon className="w-6 h-6 text-blue-600" />
+          <div className="p-2 bg-neutral-100 rounded-lg">
+            <UserPlusIcon className="w-6 h-6 text-neutral-900" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
         </div>
@@ -171,7 +171,7 @@ export default function Admin() {
           <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
             {editingUser ? (
               <>
-                <PencilIcon className="w-5 h-5 text-blue-600" />
+                <PencilIcon className="w-5 h-5 text-neutral-900" />
                 Edit User
               </>
             ) : (
@@ -187,7 +187,7 @@ export default function Admin() {
               <div className="group">
                 <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
                 <input
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 group-hover:border-gray-300"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200 group-hover:border-gray-300"
                   placeholder="Enter first name"
                   value={form.first_name}
                   onChange={e => setForm({ ...form, first_name: e.target.value })}
@@ -197,7 +197,7 @@ export default function Admin() {
               <div className="group">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
                 <input
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 group-hover:border-gray-300"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200 group-hover:border-gray-300"
                   placeholder="Enter last name"
                   value={form.last_name}
                   onChange={e => setForm({ ...form, last_name: e.target.value })}
@@ -208,7 +208,7 @@ export default function Admin() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
                 <input
                   type="email"
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 group-hover:border-gray-300"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200 group-hover:border-gray-300"
                   placeholder="Enter email address"
                   value={form.email}
                   onChange={e => setForm({ ...form, email: e.target.value })}
@@ -218,7 +218,7 @@ export default function Admin() {
               <div className="group">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
                 <input
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 group-hover:border-gray-300"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200 group-hover:border-gray-300"
                   placeholder="Optional username"
                   value={form.username}
                   onChange={e => setForm({ ...form, username: e.target.value })}
@@ -229,7 +229,7 @@ export default function Admin() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
                 <input
                   type="password"
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 group-hover:border-gray-300"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200 group-hover:border-gray-300"
                   placeholder="Set password"
                   value={form.password}
                   onChange={e => setForm({ ...form, password: e.target.value })}
@@ -239,7 +239,7 @@ export default function Admin() {
               <div className="group">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Position</label>
                 <select
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 group-hover:border-gray-300"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200 group-hover:border-gray-300"
                   value={form.position}
                   onChange={e => setForm({ ...form, position: e.target.value })}
                 >
@@ -309,7 +309,7 @@ export default function Admin() {
                   type="number"
                   min={0}
                   step={0.01}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 group-hover:border-gray-300"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200 group-hover:border-gray-300"
                   placeholder="Enter monthly threshold hours"
                   value={form.monthly_threshold_hours}
                   onChange={e => setForm({ ...form, monthly_threshold_hours: parseFloat(e.target.value) || 0 })}
@@ -319,7 +319,7 @@ export default function Admin() {
               <div className="group">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Role</label>
                 <select
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 group-hover:border-gray-300"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200 group-hover:border-gray-300"
                   value={form.role}
                   onChange={e => setForm({ ...form, role: e.target.value })}
                 >
@@ -333,7 +333,7 @@ export default function Admin() {
               <div className="group">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Manager</label>
                 <select
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 group-hover:border-gray-300"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200 group-hover:border-gray-300"
                   value={form.manager}
                   onChange={e => setForm({ ...form, manager: e.target.value })}
                 >
@@ -359,7 +359,7 @@ export default function Admin() {
                         checked={form.is_active}
                         onChange={e => setForm({ ...form, is_active: e.target.checked })}
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-neutral-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-neutral-900"></div>
                       <span className="ml-3 text-sm font-medium text-gray-700">
                         {form.is_active ? 'Active' : 'Disabled'}
                       </span>
@@ -373,7 +373,7 @@ export default function Admin() {
               <button
                 type="submit"
                 disabled={saving}
-                className="inline-flex items-center px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
+                className="inline-flex items-center px-6 py-2.5 bg-neutral-900 text-white font-medium rounded-lg hover:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-700 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
               >
                 {saving ? (
                   <>
@@ -446,7 +446,7 @@ export default function Admin() {
                       </td>
                       <td className="py-4 px-6">
                         <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${u.role === 'superuser' ? 'bg-red-100 text-red-800' :
-                          u.role === 'manager' ? 'bg-blue-100 text-blue-800' :
+                          u.role === 'manager' ? 'bg-neutral-100 text-neutral-900' :
                             'bg-green-100 text-green-800'
                           } transition-all duration-200 hover:scale-105`}>
                           {u.role}
@@ -472,7 +472,7 @@ export default function Admin() {
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-2">
                           <button
-                            className="inline-flex items-center p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 hover:scale-110"
+                            className="inline-flex items-center p-2 text-neutral-900 hover:bg-neutral-50 rounded-lg transition-all duration-200 hover:scale-110"
                             onClick={() => startEdit(u)}
                           >
                             <PencilIcon className="w-4 h-4" />

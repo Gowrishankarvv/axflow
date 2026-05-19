@@ -21,7 +21,7 @@ export default function LoadingClock() {
   return (
     <div className="flex flex-col items-center justify-center gap-8">
       <div className="relative">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full blur-lg opacity-40" />
+        <div className="absolute inset-0 bg-gradient-to-br from-neutral-700 to-cyan-500 rounded-full blur-lg opacity-40" />
 
         <div className="relative bg-white/10 backdrop-blur-md rounded-full p-6 shadow-xl border border-white/20">
           <svg className="w-32 h-32" viewBox="0 0 200 200">
@@ -106,9 +106,9 @@ export default function LoadingClock() {
 
       <div className="space-y-3 text-center">
         <div className="flex items-center gap-2 justify-center">
-          <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" />
-          <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:0.2s]" />
-          <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:0.4s]" />
+          <div className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce" />
+          <div className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce [animation-delay:0.2s]" />
+          <div className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce [animation-delay:0.4s]" />
         </div>
 
         <p className="text-sm text-gray-600 font-medium animate-pulse">

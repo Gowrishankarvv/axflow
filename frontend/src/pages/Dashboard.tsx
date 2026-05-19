@@ -3,7 +3,7 @@ import api, { getCached } from '../lib/api'
 import { useAppData } from '../lib/AppDataContext'
 import { formatDecimalHours } from '../lib/formatUtils'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import { ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon, Clock as ClockIcon, Calendar as CalendarIcon, TrendingUp as TrendingUpIcon, Tag as TaskIcon, Download as DownloadIcon, Play as PlayIcon, Square as SquareIcon, Coffee as CoffeeIcon } from 'lucide-react'
+import { ChevronDown as ChevronDownIcon, Clock as ClockIcon, Calendar as CalendarIcon, TrendingUp as TrendingUpIcon, Tag as TaskIcon, Download as DownloadIcon, Play as PlayIcon, Square as SquareIcon, Coffee as CoffeeIcon } from 'lucide-react'
 
 export default function Dashboard() {
   const { data: appData, ready: appReady } = useAppData()
@@ -23,6 +23,7 @@ export default function Dashboard() {
   const [allSessions, setAllSessions] = useState<any[]>([])
   const [sessionsPage, setSessionsPage] = useState(1)
   const [sessionsTotalPages, setSessionsTotalPages] = useState(1)
+  const [showRecentSessions, setShowRecentSessions] = useState(false)
   const [dateRange, setDateRange] = useState<{ start: string, end: string } | null>(null)
   const [activeView, setActiveView] = useState<'individual' | 'team' | 'aggregated'>('individual')
   const [aggregatedSummary, setAggregatedSummary] = useState<any | null>(null)
@@ -610,31 +611,30 @@ export default function Dashboard() {
 
   return (
     <div className="p-6 min-h-screen bg-gray-50 animate-in fade-in duration-500">
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto space-y-[18px]">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <TrendingUpIcon className="w-6 h-6 text-blue-600" />
+            <div className="p-2 bg-neutral-100 rounded-lg">
+              <TrendingUpIcon className="w-6 h-6 text-neutral-900" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+            <h1 className="text-xl font-bold text-gray-900">Dashboard</h1>
           </div>
 
           {/* Controls */}
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2">
             {(isOwner || isManager) && (
-              <div className="flex bg-white border border-gray-200 rounded-lg overflow-hidden">
+              <div className="inline-flex h-9 items-center bg-gray-100 rounded-lg p-0.5">
                 {[
                   { key: 'individual', label: 'My Dashboard' },
                   { key: 'team', label: 'Team Dashboard' },
-                  // { key: 'aggregated', label: 'Org Insights' },
                 ].map((tab) => (
                   <button
                     key={tab.key}
                     onClick={() => setActiveView(tab.key as 'individual' | 'team' | 'aggregated')}
-                    className={`px-4 py-2 text-sm font-medium transition-all duration-200 ${activeView === tab.key
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-600 hover:bg-gray-100'
+                    className={`px-3 h-8 text-sm font-medium rounded-md transition-colors ${activeView === tab.key
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-500 hover:text-gray-900'
                       }`}
                   >
                     {tab.label}
@@ -645,7 +645,7 @@ export default function Dashboard() {
 
             {(activeView === 'individual') && (isOwner || isManager) && (
               <select
-                className="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                className="h-9 px-3 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-neutral-300 cursor-pointer transition-colors"
                 value={filterUser}
                 onChange={e => { setFilterUser(e.target.value); setActiveView('individual'); load(e.target.value) }}
               >
@@ -654,18 +654,7 @@ export default function Dashboard() {
               </select>
             )}
 
-            <div className="flex items-center gap-2 bg-white rounded-lg p-1 border border-gray-200">
-              <button
-                onClick={() => {
-                  const newDate = new Date(selectedDate)
-                  newDate.setMonth(newDate.getMonth() - 1)
-                  setSelectedDate(newDate)
-                }}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-all duration-200 transform hover:scale-110"
-              >
-                <ChevronLeftIcon className="w-5 h-5 text-gray-600" />
-              </button>
-
+            <div className="inline-flex h-9 items-center bg-white border border-gray-200 rounded-lg px-2">
               <select
                 value={selectedDate.getMonth()}
                 onChange={(e) => {
@@ -673,11 +662,11 @@ export default function Dashboard() {
                   newDate.setMonth(parseInt(e.target.value))
                   setSelectedDate(newDate)
                 }}
-                className="px-3 py-1 border-0 focus:ring-0 text-gray-700 font-medium"
+                className="px-1 bg-transparent border-0 focus:ring-0 text-sm font-medium text-gray-700 cursor-pointer"
               >
                 {Array.from({ length: 12 }, (_, i) => (
                   <option key={i} value={i}>
-                    {new Date(0, i).toLocaleString('default', { month: 'long' })}
+                    {new Date(0, i).toLocaleString('default', { month: 'short' })}
                   </option>
                 ))}
               </select>
@@ -689,7 +678,7 @@ export default function Dashboard() {
                   newDate.setFullYear(parseInt(e.target.value))
                   setSelectedDate(newDate)
                 }}
-                className="px-3 py-1 border-0 focus:ring-0 text-gray-700 font-medium"
+                className="px-1 bg-transparent border-0 focus:ring-0 text-sm font-medium text-gray-700 cursor-pointer"
               >
                 {Array.from({ length: 10 }, (_, i) => {
                   const year = new Date().getFullYear() - 2 + i
@@ -700,17 +689,6 @@ export default function Dashboard() {
                   )
                 })}
               </select>
-
-              <button
-                onClick={() => {
-                  const newDate = new Date(selectedDate)
-                  newDate.setMonth(newDate.getMonth() + 1)
-                  setSelectedDate(newDate)
-                }}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-all duration-200 transform hover:scale-110"
-              >
-                <ChevronRightIcon className="w-5 h-5 text-gray-600" />
-              </button>
             </div>
 
             {/* {(isOwner || isManager) && (
@@ -776,21 +754,21 @@ export default function Dashboard() {
             <SummaryCard
               title="Today"
               value={`${formatHours(currentTotals.today)}`}
-              icon={<ClockIcon className="w-6 h-6" />}
+              icon={<ClockIcon className="w-4 h-4" />}
               color="blue"
               delay="0"
             />
             <SummaryCard
               title="This Week"
               value={`${formatHours(currentTotals.week)}`}
-              icon={<CalendarIcon className="w-6 h-6" />}
+              icon={<CalendarIcon className="w-4 h-4" />}
               color="green"
               delay="100"
             />
             <SummaryCard
               title="This Month"
               value={`${formatHours(currentTotals.month)}`}
-              icon={<TrendingUpIcon className="w-6 h-6" />}
+              icon={<TrendingUpIcon className="w-4 h-4" />}
               color="purple"
               delay="200"
             />
@@ -838,7 +816,7 @@ export default function Dashboard() {
                   <Legend />
                   <Bar
                     dataKey="hours"
-                    fill="#3b82f6"
+                    fill="#171717"
                     name="Hours"
                     radius={[4, 4, 0, 0]}
                     animationDuration={800}
@@ -857,7 +835,7 @@ export default function Dashboard() {
                 {(aggregatedSummary.per_user_hours || []).map((row: any) => (
                   <div key={row.user_id} className="flex items-center justify-between p-3 rounded-lg border border-gray-100">
                     <span className="font-medium text-gray-900">{row.user_name}</span>
-                    <span className="text-blue-600 font-semibold">{formatHours(row.hours)} h</span>
+                    <span className="text-neutral-900 font-semibold">{formatHours(row.hours)} h</span>
                   </div>
                 ))}
                 {(aggregatedSummary.per_user_hours || []).length === 0 && (
@@ -885,9 +863,9 @@ export default function Dashboard() {
         {/* Two Column Section: Tasks & Office Clock */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column: Assigned Tasks */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 animate-in slide-in-from-left duration-500 delay-400">
-            <div className="flex items-center gap-2 mb-6">
-              <TaskIcon className="w-5 h-5 text-blue-600" />
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 animate-in slide-in-from-left duration-500 delay-400">
+            <div className="flex items-center gap-2 mb-4">
+              <TaskIcon className="w-5 h-5 text-neutral-900" />
               <h2 className="text-lg font-semibold text-gray-900">Assigned Tasks ({currentTasks.length})</h2>
             </div>
 
@@ -896,7 +874,7 @@ export default function Dashboard() {
                 Loading data...
               </div>
             ) : currentTasks.length > 0 ? (
-              <div className="space-y-4 max-h-96 overflow-y-auto">
+              <div className="space-y-4 max-h-72 overflow-y-auto">
                 {currentTasks.map((t: any, index) => (
                   <div
                     key={t.id}
@@ -916,7 +894,7 @@ export default function Dashboard() {
                         </div>
                       </div>
                       <div className={`px-2.5 py-1 rounded-full text-xs font-medium shrink-0 ${t.status === 'completed' ? 'bg-green-100 text-green-800' :
-                        t.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                        t.status === 'in_progress' ? 'bg-neutral-100 text-neutral-900' :
                           'bg-yellow-100 text-yellow-800'
                         }`}>
                         {t.status?.replace('_', ' ')}
@@ -934,19 +912,19 @@ export default function Dashboard() {
           </div>
 
           {/* Right Column: Office Clock */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 animate-in slide-in-from-right duration-500 delay-500">
-            <div className="flex items-center gap-2 mb-6">
-              <ClockIcon className="w-5 h-5 text-blue-600" />
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 animate-in slide-in-from-right duration-500 delay-500">
+            <div className="flex items-center gap-2 mb-4">
+              <ClockIcon className="w-5 h-5 text-neutral-900" />
               <h2 className="text-lg font-semibold text-gray-900">Office Clock</h2>
             </div>
 
             {activeSession ? (
-              <div className="space-y-6">
+              <div className="space-y-4">
                 <div className="text-center">
                   <div className="text-sm text-gray-600 mb-2">
                     Clocked in at: {new Date(activeSession.clock_in_time).toLocaleString("en-US", { day: "numeric", month: "long", })}
                   </div>
-                  <div className={`text-4xl font-bold mb-2 font-mono ${activeSession.lunch_start_time && !activeSession.lunch_end_time ? 'text-amber-500' : 'text-blue-600'}`}>
+                  <div className={`text-4xl font-bold mb-2 font-mono ${activeSession.lunch_start_time && !activeSession.lunch_end_time ? 'text-amber-500' : 'text-neutral-900'}`}>
                     {Math.floor(elapsedTime / 3600).toString().padStart(2, '0')}:{Math.floor((elapsedTime % 3600) / 60).toString().padStart(2, '0')}:{(elapsedTime % 60).toString().padStart(2, '0')}
                   </div>
                   {activeSession.lunch_start_time && !activeSession.lunch_end_time && (
@@ -998,7 +976,7 @@ export default function Dashboard() {
                 </div>
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-4">
                 <div className="text-center">
                   <p className="text-gray-600 mb-6">
                     {new Date().toLocaleDateString("en-US",
@@ -1021,8 +999,16 @@ export default function Dashboard() {
 
             {/* Recent Clock Sessions */}
             {allSessions.length > 0 && (
-              <div className="mt-8 pt-6 border-t border-gray-100">
-                <h3 className="text-sm font-medium text-gray-900 mb-4">Recent Sessions</h3>
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <button
+                  onClick={() => setShowRecentSessions(v => !v)}
+                  className="w-full flex items-center justify-between text-sm font-medium text-gray-900 mb-4 hover:text-neutral-700 transition-colors"
+                >
+                  <span>Recent Sessions ({allSessions.length})</span>
+                  <ChevronDownIcon className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${showRecentSessions ? 'rotate-180' : ''}`} />
+                </button>
+                {showRecentSessions && (
+                  <>
                 <div className="space-y-3 max-h-64 overflow-y-auto">
                   {allSessions.map((session: any) => {
                     const seconds = typeof session.duration === 'string' ? parseISODurationSeconds(session.duration) : (session.duration?.seconds || 0)
@@ -1036,7 +1022,7 @@ export default function Dashboard() {
                             month: "long",
                             year: "numeric",
                           })}</span>
-                          <span className="text-blue-600 font-medium">
+                          <span className="text-neutral-900 font-medium">
                             {session.clock_out_time ? `${hours}h ${minutes}m` : 'Ongoing'}
                           </span>
                         </div>
@@ -1067,6 +1053,8 @@ export default function Dashboard() {
                     </button>
                   </div>
                 )}
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -1083,23 +1071,21 @@ function SummaryCard({ title, value, icon, color, delay }: {
   color: string,
   delay: string
 }) {
-  const colorClasses = {
-    blue: 'bg-blue-100 text-blue-600',
-    green: 'bg-green-100 text-green-600',
-    purple: 'bg-purple-100 text-purple-600'
-  }
+  // Neutral, monochrome chips — colour prop kept for API compatibility.
+  void color
+  const chipClass = 'bg-neutral-100 text-neutral-900'
 
   return (
     <div
-      className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-300 transform hover:scale-105 animate-in slide-in-from-bottom"
+      className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow duration-200 animate-in slide-in-from-bottom"
       style={{ animationDelay: `${delay}ms` }}
     >
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-gray-600 text-sm font-medium">{title}</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
+          <p className="text-gray-500 text-sm font-medium">{title}</p>
+          <p className="text-xl font-bold text-gray-900 mt-1">{value}</p>
         </div>
-        <div className={`p-3 rounded-lg ${colorClasses[color as keyof typeof colorClasses]}`}>
+        <div className={`p-3 rounded-lg ${chipClass}`}>
           {icon}
         </div>
       </div>

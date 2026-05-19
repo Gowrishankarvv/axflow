@@ -28,7 +28,7 @@ type Ticket = {
 
 const STATUS_STYLE: Record<string, { badge: string; bar: string; icon: any }> = {
   open:        { badge: 'bg-amber-100 text-amber-800',     bar: 'bg-amber-400',   icon: AlertCircle },
-  in_progress: { badge: 'bg-blue-100 text-blue-800',       bar: 'bg-blue-400',    icon: Clock },
+  in_progress: { badge: 'bg-neutral-100 text-neutral-900',       bar: 'bg-neutral-400',    icon: Clock },
   resolved:    { badge: 'bg-emerald-100 text-emerald-800', bar: 'bg-emerald-500', icon: CheckCircle2 },
   closed:      { badge: 'bg-gray-200 text-gray-700',       bar: 'bg-gray-400',    icon: CheckCircle2 },
 }
@@ -154,7 +154,7 @@ export default function Tickets() {
           </div>
           <button
             onClick={() => setShowForm(true)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#0066FF] text-white font-medium hover:bg-blue-700 transition-colors shadow-sm">
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#171717] text-white font-medium hover:bg-neutral-900 transition-colors shadow-sm">
             <Plus className="w-4 h-4" /> Raise a Ticket
           </button>
         </div>
@@ -164,12 +164,12 @@ export default function Tickets() {
           <div className="flex items-center gap-1 border-b border-gray-200 mb-4">
             <button
               onClick={() => setTab('all')}
-              className={`px-4 py-2 text-sm font-bold transition-colors border-b-2 -mb-px ${tab === 'all' ? 'border-[#0066FF] text-[#0066FF]' : 'border-transparent text-gray-500 hover:text-gray-800'}`}>
+              className={`px-4 py-2 text-sm font-bold transition-colors border-b-2 -mb-px ${tab === 'all' ? 'border-[#171717] text-[#171717]' : 'border-transparent text-gray-500 hover:text-gray-800'}`}>
               All Tickets <span className="ml-1 text-xs text-gray-400">{tickets.length}</span>
             </button>
             <button
               onClick={() => setTab('mine')}
-              className={`px-4 py-2 text-sm font-bold transition-colors border-b-2 -mb-px ${tab === 'mine' ? 'border-[#0066FF] text-[#0066FF]' : 'border-transparent text-gray-500 hover:text-gray-800'}`}>
+              className={`px-4 py-2 text-sm font-bold transition-colors border-b-2 -mb-px ${tab === 'mine' ? 'border-[#171717] text-[#171717]' : 'border-transparent text-gray-500 hover:text-gray-800'}`}>
               My Tickets <span className="ml-1 text-xs text-gray-400">{tickets.filter(t => t.created_by === me?.id).length}</span>
             </button>
           </div>
@@ -215,7 +215,7 @@ export default function Tickets() {
                     <div className="flex items-start justify-between gap-3 flex-wrap">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <Icon className={`w-4 h-4 ${t.kind === 'bug' ? 'text-rose-600' : 'text-indigo-600'}`} />
+                          <Icon className={`w-4 h-4 ${t.kind === 'bug' ? 'text-rose-600' : 'text-neutral-900'}`} />
                           <span className="font-bold text-gray-900">{t.title}</span>
                           <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${sty.badge} inline-flex items-center gap-1`}>
                             <StatusIcon className="w-3 h-3" />
@@ -227,7 +227,7 @@ export default function Tickets() {
                         </div>
                         <p className="text-sm text-gray-700 whitespace-pre-wrap mb-2">{t.description}</p>
                         {t.attachment_url && (
-                          <a href={t.attachment_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 mb-2">
+                          <a href={t.attachment_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-neutral-900 hover:text-neutral-900 mb-2">
                             <Paperclip className="w-3 h-3" /> View attachment
                           </a>
                         )}
@@ -248,7 +248,7 @@ export default function Tickets() {
                         {isManager && (
                           <button
                             onClick={() => openReview(t)}
-                            className="px-3 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200">
+                            className="px-3 py-1 text-xs font-medium bg-neutral-100 text-neutral-900 rounded-lg hover:bg-neutral-200">
                             Update Status
                           </button>
                         )}
@@ -288,7 +288,7 @@ export default function Tickets() {
                       key={k}
                       type="button"
                       onClick={() => setForm({ ...form, kind: k })}
-                      className={`flex-1 px-4 py-3 rounded-lg border text-sm font-medium inline-flex items-center justify-center gap-2 transition-colors ${form.kind === k ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
+                      className={`flex-1 px-4 py-3 rounded-lg border text-sm font-medium inline-flex items-center justify-center gap-2 transition-colors ${form.kind === k ? 'border-neutral-700 bg-neutral-50 text-neutral-900' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
                       {k === 'bug' ? <Bug className="w-4 h-4" /> : <Lightbulb className="w-4 h-4" />}
                       {k === 'bug' ? 'Bug' : 'Feature Request'}
                     </button>
@@ -325,7 +325,7 @@ export default function Tickets() {
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">Cancel</button>
-                <button type="submit" disabled={submitting} className="inline-flex items-center gap-2 px-4 py-2 bg-[#0066FF] text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-60">
+                <button type="submit" disabled={submitting} className="inline-flex items-center gap-2 px-4 py-2 bg-[#171717] text-white rounded-lg font-medium hover:bg-neutral-900 disabled:opacity-60">
                   <Send className="w-4 h-4" /> {submitting ? 'Submitting…' : 'Submit'}
                 </button>
               </div>
@@ -362,7 +362,7 @@ export default function Tickets() {
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm mb-4" />
             <div className="flex justify-end gap-2">
               <button onClick={() => setReviewing(null)} className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">Cancel</button>
-              <button onClick={updateStatus} className="px-4 py-2 bg-[#0066FF] text-white rounded-lg font-medium hover:bg-blue-700">Save</button>
+              <button onClick={updateStatus} className="px-4 py-2 bg-[#171717] text-white rounded-lg font-medium hover:bg-neutral-900">Save</button>
             </div>
           </div>
         </div>

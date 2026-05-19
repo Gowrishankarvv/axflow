@@ -58,8 +58,8 @@ export default function Reports({ me }: { me?: any }) {
   return (
     <div className="p-6 space-y-6 bg-gradient-to-br from-gray-50 to-white min-h-screen">
       <div className="flex items-center gap-3">
-        <div className="p-2 bg-blue-100 rounded-lg">
-          <ChartBarIcon className="w-6 h-6 text-blue-600" />
+        <div className="p-2 bg-neutral-100 rounded-lg">
+          <ChartBarIcon className="w-6 h-6 text-neutral-900" />
         </div>
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Reports</h1>
@@ -83,7 +83,7 @@ export default function Reports({ me }: { me?: any }) {
               onClick={() => setActive(t.key)}
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
                 active === t.key
-                  ? 'border-blue-600 text-blue-600'
+                  ? 'border-neutral-900 text-neutral-900'
                   : 'border-transparent text-gray-500 hover:text-gray-800'
               }`}
             >

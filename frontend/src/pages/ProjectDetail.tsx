@@ -371,7 +371,7 @@ export default function ProjectDetail({ me }: { me?: any }) {
     switch (status) {
       case 'done': return 'bg-green-100 text-green-800 border-green-200'
       case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200'
-      case 'in_progress': return 'bg-blue-100 text-blue-800 border-blue-200'
+      case 'in_progress': return 'bg-neutral-100 text-neutral-900 border-neutral-200'
       default: return 'bg-gray-100 text-gray-800 border-gray-200'
     }
   }
@@ -390,7 +390,7 @@ export default function ProjectDetail({ me }: { me?: any }) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <button
-          className="inline-flex items-center gap-2 text-gray-600 hover:text-blue-600 font-medium transition-colors duration-200 hover:bg-white px-4 py-2 rounded-lg"
+          className="inline-flex items-center gap-2 text-gray-600 hover:text-neutral-900 font-medium transition-colors duration-200 hover:bg-white px-4 py-2 rounded-lg"
           onClick={() => navigate('/projects')}
         >
           <ArrowLeft className="w-4 h-4" />
@@ -400,11 +400,11 @@ export default function ProjectDetail({ me }: { me?: any }) {
 
       {/* Project Info Card */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-6 text-white">
+        <div className="bg-gradient-to-r from-neutral-900 to-purple-600 px-8 py-6 text-white">
           <div className="flex items-start justify-between">
             <div>
               <h1 className="text-3xl font-bold mb-2">{project.name}</h1>
-              <p className="text-blue-100 text-lg">{project.description}</p>
+              <p className="text-neutral-100 text-lg">{project.description}</p>
             </div>
             <div className="text-right">
               <div className="bg-white bg-opacity-20 rounded-lg px-4 py-2">
@@ -432,9 +432,9 @@ export default function ProjectDetail({ me }: { me?: any }) {
                 Completed
               </div>
             </div>
-            <div className="text-center p-4 bg-blue-50 rounded-xl">
-              <div className="text-2xl font-bold text-blue-600">{inProgressTasks}</div>
-              <div className="text-sm text-blue-700 flex items-center justify-center gap-1">
+            <div className="text-center p-4 bg-neutral-50 rounded-xl">
+              <div className="text-2xl font-bold text-neutral-900">{inProgressTasks}</div>
+              <div className="text-sm text-neutral-900 flex items-center justify-center gap-1">
                 <Clock className="w-3 h-3" />
                 In Progress
               </div>
@@ -464,7 +464,7 @@ export default function ProjectDetail({ me }: { me?: any }) {
               </div>
               <div className="w-full bg-gray-200 rounded-full h-3">
                 <div
-                  className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-1000 ease-out"
+                  className="bg-gradient-to-r from-neutral-700 to-purple-500 h-3 rounded-full transition-all duration-1000 ease-out"
                   style={{ width: `${progressPercentage}%` }}
                 ></div>
               </div>
@@ -475,18 +475,18 @@ export default function ProjectDetail({ me }: { me?: any }) {
           <div className="grid md:grid-cols-2 gap-6 text-sm text-gray-600">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-blue-500" />
+                <Calendar className="w-4 h-4 text-neutral-700" />
                 <span>Start: {project.start_date ? new Date(project.start_date).toLocaleDateString() : (project.created_at ? new Date(project.created_at).toLocaleDateString() : 'Not set')}</span>
               </div>
               {project.end_date && (
                 <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-blue-500" />
+                  <Calendar className="w-4 h-4 text-neutral-700" />
                   <span>End: {new Date(project.end_date).toLocaleDateString()}</span>
                 </div>
               )}
               {project.due_date && (
                 <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-blue-500" />
+                  <Calendar className="w-4 h-4 text-neutral-700" />
                   <span>Due: {new Date(project.due_date).toLocaleDateString()}</span>
                 </div>
               )}
@@ -504,7 +504,7 @@ export default function ProjectDetail({ me }: { me?: any }) {
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
                     <div
-                      className="h-2.5 rounded-full bg-gradient-to-r from-emerald-400 via-blue-500 to-purple-600 transition-all duration-700 ease-out"
+                      className="h-2.5 rounded-full bg-gradient-to-r from-emerald-400 via-neutral-700 to-purple-600 transition-all duration-700 ease-out"
                       style={{ width: `${timelinePct}%` }}
                     />
                   </div>
@@ -557,7 +557,7 @@ export default function ProjectDetail({ me }: { me?: any }) {
                           await load()
                         }
                       }}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${project.billable ? 'bg-blue-600' : 'bg-gray-200'}`}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-700 focus:ring-offset-2 ${project.billable ? 'bg-neutral-900' : 'bg-gray-200'}`}
                     >
                       <span
                         className={`${project.billable ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
@@ -606,7 +606,7 @@ export default function ProjectDetail({ me }: { me?: any }) {
           </div>
           <button
             onClick={() => setShowAddTask(!showAddTask)}
-            className="w-full flex items-center justify-center gap-2 text-blue-600 hover:text-blue-700 font-medium p-4 hover:bg-blue-50 rounded-xl transition-all duration-200 border-2 border-dashed border-blue-200 hover:border-blue-300"
+            className="w-full flex items-center justify-center gap-2 text-neutral-900 hover:text-neutral-900 font-medium p-4 hover:bg-neutral-50 rounded-xl transition-all duration-200 border-2 border-dashed border-neutral-200 hover:border-neutral-300"
           >
             <Plus className="w-5 h-5" />
             Add New Task
@@ -619,7 +619,7 @@ export default function ProjectDetail({ me }: { me?: any }) {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Task Title</label>
                     <input
-                      className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200"
                       placeholder="Enter task title"
                       value={tf.title}
                       onChange={e => setTf({ ...tf, title: e.target.value })}
@@ -629,7 +629,7 @@ export default function ProjectDetail({ me }: { me?: any }) {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
                     <select
-                      className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200"
                       value={tf.status}
                       onChange={e => setTf({ ...tf, status: e.target.value as any })}
                     >
@@ -644,7 +644,7 @@ export default function ProjectDetail({ me }: { me?: any }) {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
                   <textarea
-                    className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
+                    className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200 resize-none"
                     placeholder="Task description"
                     rows={3}
                     value={tf.description}
@@ -662,10 +662,10 @@ export default function ProjectDetail({ me }: { me?: any }) {
                             const user = users.find(u => u.id === userId)
                             if (!user) return null
                             return (
-                              <span key={userId} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-sm border border-blue-200">
+                              <span key={userId} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-50 text-neutral-900 text-sm border border-neutral-200">
                                 {user.first_name || user.username}
                                 <button
-                                  className="text-blue-600 hover:text-blue-700"
+                                  className="text-neutral-900 hover:text-neutral-900"
                                   onClick={() => setTf({ ...tf, assignees: tf.assignees.filter(id => id !== userId) })}
                                 >
                                   ×
@@ -675,7 +675,7 @@ export default function ProjectDetail({ me }: { me?: any }) {
                           })}
                         </div>
                         <select
-                          className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                          className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200"
                           value=""
                           onChange={e => {
                             const id = parseInt(e.target.value)
@@ -697,7 +697,7 @@ export default function ProjectDetail({ me }: { me?: any }) {
                       <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
                       <input
                         type="date"
-                        className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                        className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200"
                         value={tf.planned_start_date}
                         onChange={e => setTf({ ...tf, planned_start_date: e.target.value })}
                       />
@@ -706,7 +706,7 @@ export default function ProjectDetail({ me }: { me?: any }) {
                       <label className="block text-sm font-medium text-gray-700 mb-2">Due Date</label>
                       <input
                         type="date"
-                        className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                        className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200"
                         value={tf.due_date}
                         onChange={e => setTf({ ...tf, due_date: e.target.value })}
                       />
@@ -717,7 +717,7 @@ export default function ProjectDetail({ me }: { me?: any }) {
                 <button
                   type="button"
                   onClick={() => setShowMoreTaskOptions(v => !v)}
-                  className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+                  className="text-sm text-neutral-900 hover:text-neutral-900 font-medium flex items-center gap-1"
                 >
                   {showMoreTaskOptions ? 'Hide advanced options' : 'More options'}
                 </button>
@@ -730,7 +730,7 @@ export default function ProjectDetail({ me }: { me?: any }) {
                       </label>
                       <input
                         type="date"
-                        className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                        className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200"
                         value={tf.actual_start_date}
                         onChange={e => setTf({ ...tf, actual_start_date: e.target.value })}
                       />
@@ -741,7 +741,7 @@ export default function ProjectDetail({ me }: { me?: any }) {
                       </label>
                       <input
                         type="date"
-                        className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                        className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200"
                         value={tf.planned_end_date}
                         onChange={e => setTf({ ...tf, planned_end_date: e.target.value })}
                       />
@@ -752,7 +752,7 @@ export default function ProjectDetail({ me }: { me?: any }) {
                 <div className="flex gap-3 pt-4">
                   <button
                     type="submit"
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg px-6 py-3 font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    className="flex-1 bg-gradient-to-r from-neutral-900 to-purple-600 text-white rounded-lg px-6 py-3 font-medium hover:from-neutral-900 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
                   >
                     Create Task
                   </button>
@@ -804,7 +804,7 @@ export default function ProjectDetail({ me }: { me?: any }) {
                       <div className="font-medium text-gray-800">{r.title}</div>
                       {r.description && <div className="text-sm text-gray-500 truncate max-w-xs">{r.description}</div>}
                       {r.file && (
-                        <a href={r.file} className="text-xs text-blue-600 hover:underline flex items-center gap-1 mt-1">
+                        <a href={r.file} className="text-xs text-neutral-900 hover:underline flex items-center gap-1 mt-1">
                           <FileText className="w-3 h-3" /> View File
                         </a>
                       )}
@@ -815,7 +815,7 @@ export default function ProjectDetail({ me }: { me?: any }) {
                     </td>
                     <td className="py-3">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium border ${r.status === 'approved' ? 'bg-green-100 text-green-700 border-green-200' :
-                        r.status === 'estimated' ? 'bg-blue-100 text-blue-700 border-blue-200' :
+                        r.status === 'estimated' ? 'bg-neutral-100 text-neutral-900 border-neutral-200' :
                           r.status === 'rejected' ? 'bg-red-100 text-red-700 border-red-200' :
                             'bg-yellow-100 text-yellow-700 border-yellow-200'
                         }`}>
@@ -829,7 +829,7 @@ export default function ProjectDetail({ me }: { me?: any }) {
                       {r.status === 'pending' && (me?.role === 'manager' || me?.role === 'superuser') && (
                         <button
                           onClick={() => openEstimate(r)}
-                          className="text-sm bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded-lg font-medium transition-colors"
+                          className="text-sm bg-neutral-50 text-neutral-900 hover:bg-neutral-100 px-3 py-1.5 rounded-lg font-medium transition-colors"
                         >
                           Provide Estimate
                         </button>
@@ -855,13 +855,13 @@ export default function ProjectDetail({ me }: { me?: any }) {
       <div className="flex items-center gap-1 border-b border-gray-200">
         <button
           onClick={() => setMainTab('tasks')}
-          className={`px-4 py-2 text-sm font-bold transition-colors border-b-2 -mb-px ${mainTab === 'tasks' ? 'border-[#0066FF] text-[#0066FF]' : 'border-transparent text-gray-500 hover:text-gray-800'}`}>
+          className={`px-4 py-2 text-sm font-bold transition-colors border-b-2 -mb-px ${mainTab === 'tasks' ? 'border-[#171717] text-[#171717]' : 'border-transparent text-gray-500 hover:text-gray-800'}`}>
           Tasks <span className="ml-1 text-xs text-gray-400">{tasks.length}</span>
         </button>
         {(me?.role === 'manager' || me?.role === 'superuser') && (
           <button
             onClick={() => setMainTab('credentials')}
-            className={`px-4 py-2 text-sm font-bold transition-colors border-b-2 -mb-px ${mainTab === 'credentials' ? 'border-[#0066FF] text-[#0066FF]' : 'border-transparent text-gray-500 hover:text-gray-800'}`}>
+            className={`px-4 py-2 text-sm font-bold transition-colors border-b-2 -mb-px ${mainTab === 'credentials' ? 'border-[#171717] text-[#171717]' : 'border-transparent text-gray-500 hover:text-gray-800'}`}>
             Credentials <span className="ml-1 text-xs text-gray-400">{credentials.length}</span>
           </button>
         )}
@@ -872,7 +872,7 @@ export default function ProjectDetail({ me }: { me?: any }) {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-gray-800">Tasks</h2>
-          <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+          <span className="bg-neutral-100 text-neutral-900 px-3 py-1 rounded-full text-sm font-medium">
             {tasks.length} {tasks.length === 1 ? 'task' : 'tasks'}
           </span>
         </div>
@@ -922,7 +922,7 @@ export default function ProjectDetail({ me }: { me?: any }) {
                       </div>
                       {t.planned_start_date && (
                         <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4 text-blue-600" />
+                          <Calendar className="w-4 h-4 text-neutral-900" />
                           <span>Start: {new Date(t.planned_start_date).toLocaleDateString()}</span>
                         </div>
                       )}
@@ -933,7 +933,7 @@ export default function ProjectDetail({ me }: { me?: any }) {
                         </div>
                       )}
                       {t.user_total_hours && (
-                        <div className="flex items-center gap-2 text-blue-600 font-medium">
+                        <div className="flex items-center gap-2 text-neutral-900 font-medium">
                           <Clock className="w-4 h-4" />
                           <span>{t.user_total_hours}</span>
                         </div>
@@ -975,7 +975,7 @@ export default function ProjectDetail({ me }: { me?: any }) {
                         Pending
                       </button>
                       <button
-                        className="px-3 py-1 text-xs font-medium bg-blue-200 text-blue-700 rounded-lg hover:bg-blue-300 transition-colors duration-200"
+                        className="px-3 py-1 text-xs font-medium bg-neutral-200 text-neutral-900 rounded-lg hover:bg-neutral-300 transition-colors duration-200"
                         onClick={() => updateStatus(t.id, 'in_progress')}
                       >
                         In Progress
@@ -1163,7 +1163,7 @@ export default function ProjectDetail({ me }: { me?: any }) {
                     type="number"
                     step="0.01"
                     min="0"
-                    className="w-full border border-gray-200 rounded-lg pl-9 pr-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full border border-gray-200 rounded-lg pl-9 pr-4 py-2.5 focus:ring-2 focus:ring-neutral-700 focus:border-transparent"
                     placeholder="0.00"
                     value={estimateForm.cost}
                     onChange={e => setEstimateForm({ ...estimateForm, cost: e.target.value })}
@@ -1175,7 +1175,7 @@ export default function ProjectDetail({ me }: { me?: any }) {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Notes / Breakdown</label>
                 <textarea
-                  className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-neutral-700 focus:border-transparent resize-none"
                   rows={3}
                   placeholder="Explain the cost estimation..."
                   value={estimateForm.notes}
@@ -1194,7 +1194,7 @@ export default function ProjectDetail({ me }: { me?: any }) {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                  className="flex-1 px-4 py-2.5 bg-neutral-900 hover:bg-neutral-900 text-white rounded-lg font-medium transition-colors"
                 >
                   Submit Estimate
                 </button>
@@ -1240,10 +1240,10 @@ export default function ProjectDetail({ me }: { me?: any }) {
                             const user = users.find(u => u.id === userId)
                             if (!user) return null
                             return (
-                              <span key={userId} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-sm border border-blue-200">
+                              <span key={userId} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-50 text-neutral-900 text-sm border border-neutral-200">
                                 {user.first_name || user.username}
                                 <button
-                                  className="text-blue-600 hover:text-blue-700"
+                                  className="text-neutral-900 hover:text-neutral-900"
                                   onClick={() => setEditForm({ ...editForm, assignees: editForm.assignees.filter(id => id !== userId) })}
                                 >
                                   ×
@@ -1293,7 +1293,7 @@ export default function ProjectDetail({ me }: { me?: any }) {
                   <button
                     type="button"
                     onClick={() => setShowMoreEditOptions(v => !v)}
-                    className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 mt-2"
+                    className="text-sm text-neutral-900 hover:text-neutral-900 font-medium flex items-center gap-1 mt-2"
                   >
                     {showMoreEditOptions ? 'Hide advanced options' : 'More options'}
                   </button>
@@ -1346,7 +1346,7 @@ export default function ProjectDetail({ me }: { me?: any }) {
                 >
                   Cancel
                 </button>
-                <button type="submit" className="flex-1 bg-blue-600 text-white rounded px-4 py-2">
+                <button type="submit" className="flex-1 bg-neutral-900 text-white rounded px-4 py-2">
                   Save
                 </button>
               </div>
@@ -1400,7 +1400,7 @@ function CredentialsSection({
         </div>
         <button
           onClick={onNew}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#0066FF] text-white font-medium hover:bg-blue-700 transition-colors">
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#171717] text-white font-medium hover:bg-neutral-900 transition-colors">
           <Plus className="w-4 h-4" /> New Credential
         </button>
       </div>
@@ -1425,7 +1425,7 @@ function CredentialsSection({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-2">
                       <span className="font-bold text-gray-900">{c.label}</span>
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-medium">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-900 font-medium">
                         {c.kind_display || c.kind}
                       </span>
                     </div>
@@ -1453,7 +1453,7 @@ function CredentialsSection({
                       )}
                       {c.url && (
                         <Field label="URL">
-                          <a href={c.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 truncate block">
+                          <a href={c.url} target="_blank" rel="noopener noreferrer" className="text-neutral-900 hover:text-neutral-900 truncate block">
                             {c.url}
                           </a>
                         </Field>
@@ -1570,7 +1570,7 @@ function CredentialModal({
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <button type="button" onClick={onClose} className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">Cancel</button>
-            <button type="submit" className="px-4 py-2 bg-[#0066FF] text-white rounded-lg font-medium hover:bg-blue-700">
+            <button type="submit" className="px-4 py-2 bg-[#171717] text-white rounded-lg font-medium hover:bg-neutral-900">
               {isNew ? 'Save credential' : 'Save changes'}
             </button>
           </div>

@@ -210,7 +210,7 @@ export default function Clients({ me }: { me?: any }) {
                 </div>
                 <button
                     onClick={openCreate}
-                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm"
+                    className="flex items-center gap-2 bg-neutral-900 hover:bg-neutral-900 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm"
                 >
                     <Plus className="w-5 h-5" />
                     Add Client
@@ -221,7 +221,7 @@ export default function Clients({ me }: { me?: any }) {
                 <div className="mb-6 relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
-                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all"
+                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-neutral-100 focus:border-neutral-400 transition-all"
                         placeholder="Search clients..."
                         value={search}
                         onChange={e => setSearch(e.target.value)}
@@ -243,7 +243,7 @@ export default function Clients({ me }: { me?: any }) {
                                     {c.logo ? (
                                         <img src={c.logo} alt={c.name} className="w-12 h-12 rounded-lg object-contain bg-white border border-gray-100" />
                                     ) : (
-                                        <div className="w-12 h-12 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xl">
+                                        <div className="w-12 h-12 rounded-lg bg-neutral-50 text-neutral-900 flex items-center justify-center font-bold text-xl">
                                             {c.name.substring(0, 2).toUpperCase()}
                                         </div>
                                     )}
@@ -277,7 +277,7 @@ export default function Clients({ me }: { me?: any }) {
                                     >
                                         <Users className="w-4 h-4" />
                                     </button>
-                                    <button onClick={() => openEdit(c)} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                                    <button onClick={() => openEdit(c)} className="p-2 text-gray-500 hover:text-neutral-900 hover:bg-neutral-50 rounded-lg transition-colors">
                                         <Edit2 className="w-4 h-4" />
                                     </button>
                                     <button onClick={() => remove(c.id)} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
@@ -304,7 +304,7 @@ export default function Clients({ me }: { me?: any }) {
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
                                 <input
-                                    className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-neutral-700 focus:border-transparent"
                                     placeholder="Acme Corp"
                                     value={form.name}
                                     onChange={e => setForm({ ...form, name: e.target.value })}
@@ -315,7 +315,7 @@ export default function Clients({ me }: { me?: any }) {
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Domain (for auto-join)</label>
                                 <input
-                                    className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-neutral-700 focus:border-transparent"
                                     placeholder="acme.com"
                                     value={form.domain}
                                     onChange={e => setForm({ ...form, domain: e.target.value })}
@@ -355,7 +355,7 @@ export default function Clients({ me }: { me?: any }) {
                                     <input
                                         type="file"
                                         accept="image/*"
-                                        className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                        className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-neutral-700 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-neutral-50 file:text-neutral-900 hover:file:bg-neutral-100"
                                         onChange={e => {
                                             if (e.target.files && e.target.files[0]) {
                                                 setForm({ ...form, logo: e.target.files[0], delete_logo: false } as any)
@@ -370,7 +370,7 @@ export default function Clients({ me }: { me?: any }) {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Contact Email</label>
                                 <input
                                     type="email"
-                                    className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-neutral-700 focus:border-transparent"
                                     placeholder="bills@acme.com"
                                     value={form.contact_email}
                                     onChange={e => setForm({ ...form, contact_email: e.target.value })}
@@ -384,7 +384,7 @@ export default function Clients({ me }: { me?: any }) {
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Admin Name</label>
                                             <input
-                                                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-neutral-700 focus:border-transparent"
                                                 placeholder="John Doe"
                                                 value={(form as any).admin_name || ''}
                                                 onChange={e => setForm({ ...form, admin_name: e.target.value } as any)}
@@ -393,7 +393,7 @@ export default function Clients({ me }: { me?: any }) {
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Admin Email/Username</label>
                                             <input
-                                                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-neutral-700 focus:border-transparent"
                                                 placeholder="john@acme.com"
                                                 value={(form as any).admin_email || ''}
                                                 onChange={e => setForm({ ...form, admin_email: e.target.value } as any)}
@@ -401,7 +401,7 @@ export default function Clients({ me }: { me?: any }) {
                                             <button
                                                 type="button"
                                                 onClick={() => setForm(f => ({ ...f, admin_email: f.contact_email } as any))}
-                                                className="text-xs text-blue-600 hover:underline mt-1"
+                                                className="text-xs text-neutral-900 hover:underline mt-1"
                                             >
                                                 Copy from Contact Email
                                             </button>
@@ -410,7 +410,7 @@ export default function Clients({ me }: { me?: any }) {
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
                                             <input
                                                 type="password"
-                                                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-neutral-700 focus:border-transparent"
                                                 placeholder="••••••••"
                                                 value={(form as any).admin_password || ''}
                                                 onChange={e => setForm({ ...form, admin_password: e.target.value } as any)}
@@ -430,7 +430,7 @@ export default function Clients({ me }: { me?: any }) {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200"
+                                    className="flex-1 px-4 py-2.5 bg-neutral-900 text-white rounded-lg font-medium hover:bg-neutral-900 transition-colors shadow-lg shadow-neutral-200"
                                 >
                                     Save Client
                                 </button>
@@ -443,7 +443,7 @@ export default function Clients({ me }: { me?: any }) {
             {loginsClient && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-emerald-50 to-blue-50 sticky top-0 z-10">
+                        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-emerald-50 to-neutral-50 sticky top-0 z-10">
                             <div>
                                 <h3 className="font-bold text-gray-900 flex items-center gap-2">
                                     <Users className="w-5 h-5 text-emerald-600" />
