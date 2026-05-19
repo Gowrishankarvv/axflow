@@ -2,7 +2,7 @@ from .auth_serializers import OrganizationUnitSerializer, SetPasswordSerializer,
 from .project_serializers import ProjectAssignmentSerializer, ProjectSerializer, TaskAssignmentSerializer, TaskSerializer
 from .time_serializers import ActiveTimeEntrySerializer, ClockSessionSerializer, DailyPlanItemSerializer, TagSerializer, TimeEntrySerializer
 from .client_serializers import ClientSerializer
-from .request_serializers import DataRequestSerializer, InvoiceSerializer, RequestFileSerializer
+from .request_serializers import DataRequestSerializer, InvoiceSerializer, InvoiceItemSerializer, RequestFileSerializer
 from .leave_serializers import LeaveRequestSerializer
 from .offer_letter_serializers import OfferLetterSerializer
 from .notification_serializers import NotificationSerializer
@@ -30,6 +30,7 @@ __all__ = [
     "DataRequestSerializer",
     "EmployeeSalarySerializer",
     "InvoiceSerializer",
+    "InvoiceItemSerializer",
     "LeadSerializer",
     "LeaveRequestSerializer",
     "MiscExpenseSerializer",
