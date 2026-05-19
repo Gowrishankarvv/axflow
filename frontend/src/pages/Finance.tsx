@@ -731,7 +731,7 @@ function Salaries({
             <div className="flex justify-end">
                 <button
                     onClick={() => setShowForm(true)}
-                    className="flex items-center gap-1 px-3 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    className="flex items-center gap-1 px-3 py-2 text-sm font-medium bg-neutral-900 text-white rounded-lg hover:bg-neutral-900"
                 >
                     <Plus className="w-4 h-4" /> Process Salary
                 </button>
@@ -981,7 +981,7 @@ function SalaryForm({
                 {err && <div className="text-xs text-red-600">{err}</div>}
                 <div className="flex justify-end gap-2 pt-2">
                     <button type="button" onClick={onClose} className="px-4 py-2 text-sm rounded-lg border border-gray-300">Cancel</button>
-                    <button type="submit" disabled={submitting} className="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white disabled:opacity-50">
+                    <button type="submit" disabled={submitting} className="px-4 py-2 text-sm rounded-lg bg-neutral-900 text-white disabled:opacity-50">
                         {submitting ? 'Saving…' : 'Process'}
                     </button>
                 </div>
@@ -1036,7 +1036,7 @@ function Budgets({
                 <button
                     onClick={() => setShowForm(true)}
                     disabled={availableProjects.length === 0}
-                    className="flex items-center gap-1 px-3 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+                    className="flex items-center gap-1 px-3 py-2 text-sm font-medium bg-neutral-900 text-white rounded-lg hover:bg-neutral-900 disabled:opacity-50"
                 >
                     <Plus className="w-4 h-4" /> Add Budget
                 </button>
@@ -1060,7 +1060,7 @@ function Budgets({
                         <div key={p.id} className="bg-white border border-gray-200 rounded-xl p-5">
                             <div className="flex justify-between items-start mb-3">
                                 <div className="flex items-center gap-2">
-                                    <Briefcase className="w-4 h-4 text-indigo-600" />
+                                    <Briefcase className="w-4 h-4 text-neutral-900" />
                                     <div>
                                         <span className="font-semibold text-gray-900">{p.name}</span>
                                         {p.client && <span className="ml-2 text-xs text-gray-400">{p.client}</span>}
@@ -1297,7 +1297,7 @@ function ScopePanel({
 
     return (
         <div className="border border-gray-200 rounded-xl overflow-hidden">
-            <div className={`px-4 py-3 flex items-center justify-between ${scope === 'internal' ? 'bg-indigo-50' : 'bg-amber-50'}`}>
+            <div className={`px-4 py-3 flex items-center justify-between ${scope === 'internal' ? 'bg-neutral-50' : 'bg-amber-50'}`}>
                 <div>
                     <span className="font-semibold text-gray-900 capitalize">{scope}</span>
                     <span className="ml-2 text-sm text-gray-500">{cur(total)}</span>
@@ -1309,7 +1309,7 @@ function ScopePanel({
                     >+ Type</button>
                     <button
                         onClick={() => setShowExpense(true)}
-                        className={`text-xs px-2 py-1 rounded text-white ${scope === 'internal' ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-amber-600 hover:bg-amber-700'}`}
+                        className={`text-xs px-2 py-1 rounded text-white ${scope === 'internal' ? 'bg-neutral-900 hover:bg-neutral-900' : 'bg-amber-600 hover:bg-amber-700'}`}
                     >+ Expense</button>
                 </div>
             </div>
@@ -1482,7 +1482,7 @@ function ExpenseForm({
                 {err && <div className="text-xs text-red-600">{err}</div>}
                 <div className="flex justify-end gap-2 pt-2">
                     <button type="button" onClick={onClose} className="px-4 py-2 text-sm rounded-lg border border-gray-300">Cancel</button>
-                    <button type="submit" disabled={submitting} className="px-4 py-2 text-sm rounded-lg bg-indigo-600 text-white disabled:opacity-50">
+                    <button type="submit" disabled={submitting} className="px-4 py-2 text-sm rounded-lg bg-neutral-900 text-white disabled:opacity-50">
                         {submitting ? 'Saving…' : 'Save'}
                     </button>
                 </div>
@@ -1535,7 +1535,7 @@ function AddTypeForm({
                 {err && <div className="text-xs text-red-600">{err}</div>}
                 <div className="flex justify-end gap-2 pt-2">
                     <button type="button" onClick={onClose} className="px-4 py-2 text-sm rounded-lg border border-gray-300">Cancel</button>
-                    <button type="submit" disabled={submitting} className="px-4 py-2 text-sm rounded-lg bg-indigo-600 text-white disabled:opacity-50">
+                    <button type="submit" disabled={submitting} className="px-4 py-2 text-sm rounded-lg bg-neutral-900 text-white disabled:opacity-50">
                         {submitting ? 'Saving…' : 'Add Type'}
                     </button>
                 </div>
@@ -1613,7 +1613,7 @@ function BudgetForm({
                 {err && <div className="text-xs text-red-600">{err}</div>}
                 <div className="flex justify-end gap-2 pt-2">
                     <button type="button" onClick={onClose} className="px-4 py-2 text-sm rounded-lg border border-gray-300">Cancel</button>
-                    <button type="submit" disabled={submitting} className="px-4 py-2 text-sm rounded-lg bg-indigo-600 text-white disabled:opacity-50">
+                    <button type="submit" disabled={submitting} className="px-4 py-2 text-sm rounded-lg bg-neutral-900 text-white disabled:opacity-50">
                         {submitting ? 'Saving…' : 'Save'}
                     </button>
                 </div>
@@ -1663,7 +1663,7 @@ function KpiCard({ label, value, icon: Icon, accent }: {
     const palette = {
         emerald: { iconBg: 'bg-emerald-100', iconText: 'text-emerald-600' },
         rose: { iconBg: 'bg-rose-100', iconText: 'text-rose-600' },
-        blue: { iconBg: 'bg-blue-100', iconText: 'text-blue-600' },
+        blue: { iconBg: 'bg-neutral-100', iconText: 'text-neutral-900' },
     }[accent]
     return (
         <div className="bg-white border border-gray-200 rounded-xl p-5">

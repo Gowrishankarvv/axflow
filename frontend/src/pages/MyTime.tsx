@@ -108,13 +108,13 @@ const DateTimePicker = ({ label, value, onChange, required, showDate = true }: a
         {showDate && (
           <input
             type="date"
-            className="flex-1 px-4 py-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-75 bg-white/50 backdrop-blur-sm"
+            className="flex-1 px-4 py-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-75 bg-white/50 backdrop-blur-sm"
             value={datePart}
             onChange={handleDateChange}
             required={required}
           />
         )}
-        <div className={`flex items-center bg-white border border-gray-200 rounded-2xl focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all duration-75 overflow-hidden ${!showDate ? 'w-full' : ''}`}>
+        <div className={`flex items-center bg-white border border-gray-200 rounded-2xl focus-within:ring-2 focus-within:ring-neutral-700 focus-within:border-transparent transition-all duration-75 overflow-hidden ${!showDate ? 'w-full' : ''}`}>
           <input
             type="text"
             className="flex-1 px-4 py-4 bg-transparent border-none outline-none ring-0 focus:ring-0 font-medium text-gray-900 placeholder-gray-400 min-w-0"
@@ -915,14 +915,14 @@ export default function MyTime() {
 
   if (loading) {
     return (
-      <div className="p-6 min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-        <div className="max-w-7xl mx-auto">
+      <div className="p-6 min-h-screen bg-gradient-to-br from-slate-50 to-neutral-50">
+        <div className="w-full">
           <div className="space-y-8">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-4">
                 <div className="relative">
-                  <div className="h-12 w-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl animate-pulse shadow-lg"></div>
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl animate-pulse opacity-50 blur-sm"></div>
+                  <div className="h-12 w-12 bg-gradient-to-br from-neutral-700 to-purple-600 rounded-xl animate-pulse shadow-lg"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-neutral-700 to-purple-600 rounded-xl animate-pulse opacity-50 blur-sm"></div>
                 </div>
                 <div className="h-8 bg-gray-200 rounded-xl w-48 animate-pulse"></div>
               </div>
@@ -940,23 +940,20 @@ export default function MyTime() {
   }
 
   return (
-    <div className="p-6 min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="p-6 min-h-screen bg-gradient-to-br from-slate-50 via-neutral-50 to-neutral-50">
+      <div className="w-full space-y-8">
         {/* Enhanced Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
           <div className="flex items-center gap-4">
-            <div className="relative group">
-              <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-lg transition-all duration-75 group-hover:scale-105 group-hover:shadow-xl">
-                <ClockIcon className="w-7 h-7 text-white" />
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl opacity-30 blur-lg group-hover:opacity-50 transition-opacity duration-75"></div>
+            <div className="p-3 bg-neutral-900 rounded-2xl">
+              <ClockIcon className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold text-neutral-900">
                 My Time
               </h1>
               <p className="text-gray-600 text-sm mt-1 flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-blue-500" />
+                <Sparkles className="w-3 h-3 text-neutral-700" />
                 Manage your time like a pro
               </p>
             </div>
@@ -983,7 +980,7 @@ export default function MyTime() {
               <button
                 key={label}
                 className={`group px-6 py-3 rounded-2xl text-sm font-semibold transition-all duration-75 hover:scale-105 border backdrop-blur-sm ${view === viewType
-                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/25 border-blue-500/20'
+                  ? 'bg-neutral-900 text-white border-neutral-900 shadow-sm'
                   : 'bg-white/70 text-gray-700 hover:bg-white/90 border-white/20 shadow-md hover:shadow-lg'
                   }`}
                 onClick={() => setView(viewType)}
@@ -1034,7 +1031,7 @@ export default function MyTime() {
               <button
                 type="submit"
                 disabled={planBusy}
-                className="px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                className="px-4 py-2 rounded-xl bg-neutral-900 text-white text-sm font-medium hover:bg-neutral-900 disabled:opacity-50"
               >
                 {planBusy ? 'Adding…' : 'Add'}
               </button>
@@ -1121,7 +1118,7 @@ export default function MyTime() {
               })}
               components={{
                 toolbar: ({ label, onNavigate }) => (
-                  <div className="flex items-center justify-between mb-8 pb-6 border-b border-gray-100">
+                  <div className="flex items-center justify-between mb-8 pt-6 px-6 pb-6 border-b border-gray-100">
                     <div className="flex items-center gap-4">
                       <button
                         onClick={(e) => {
@@ -1130,9 +1127,9 @@ export default function MyTime() {
                         }}
                         className="group p-3 hover:bg-gray-50 rounded-2xl transition-all duration-75 hover:scale-110 hover:shadow-lg"
                       >
-                        <ChevronLeftIcon className="w-6 h-6 text-gray-600 group-hover:text-blue-600 transition-colors duration-75" />
+                        <ChevronLeftIcon className="w-6 h-6 text-gray-600 group-hover:text-neutral-900 transition-colors duration-75" />
                       </button>
-                      <h2 className="text-2xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                      <h2 className="text-2xl font-bold text-neutral-900">
                         {label}
                       </h2>
                       <button
@@ -1142,7 +1139,7 @@ export default function MyTime() {
                         }}
                         className="group p-3 hover:bg-gray-50 rounded-2xl transition-all duration-75 hover:scale-110 hover:shadow-lg"
                       >
-                        <ChevronRightIcon className="w-6 h-6 text-gray-600 group-hover:text-blue-600 transition-colors duration-75" />
+                        <ChevronRightIcon className="w-6 h-6 text-gray-600 group-hover:text-neutral-900 transition-colors duration-75" />
                       </button>
                     </div>
                     <button
@@ -1150,7 +1147,8 @@ export default function MyTime() {
                         e.preventDefault()
                         onNavigate('TODAY')
                       }}
-                      className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-2xl hover:from-blue-600 hover:to-purple-700 transition-all duration-75 hover:scale-105 shadow-lg hover:shadow-xl font-semibold"
+                      className="px-6 py-3 bg-neutral-900 text-white hover:bg-neutral-800 transition-all duration-75 shadow-sm font-semibold"
+                      style={{ borderRadius: '0.5rem' }}
                     >
                       Today
                     </button>
@@ -1232,10 +1230,10 @@ export default function MyTime() {
                 <div className="space-y-4">
                   <button
                     onClick={handleEditAction}
-                    className="w-full flex items-center gap-4 p-4 bg-blue-50 hover:bg-blue-100 rounded-2xl transition-all duration-75 group"
+                    className="w-full flex items-center gap-4 p-4 bg-neutral-50 hover:bg-neutral-100 rounded-2xl transition-all duration-75 group"
                   >
-                    <div className="p-3 bg-blue-100 group-hover:bg-blue-200 rounded-xl transition-colors duration-75">
-                      <PencilIcon className="w-6 h-6 text-blue-600" />
+                    <div className="p-3 bg-neutral-100 group-hover:bg-neutral-200 rounded-xl transition-colors duration-75">
+                      <PencilIcon className="w-6 h-6 text-neutral-900" />
                     </div>
                     <div className="text-left">
                       <h4 className="font-semibold text-gray-900">Edit Time Entry</h4>
@@ -1356,8 +1354,8 @@ export default function MyTime() {
                 <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
                   {editId ? (
                     <>
-                      <div className="p-2 bg-blue-100 rounded-xl">
-                        <PencilIcon className="w-6 h-6 text-blue-600" />
+                      <div className="p-2 bg-neutral-100 rounded-xl">
+                        <PencilIcon className="w-6 h-6 text-neutral-900" />
                       </div>
                       Edit Time Entry
                     </>
@@ -1384,7 +1382,7 @@ export default function MyTime() {
                     <div className="space-y-2">
                       <label className="block text-sm font-semibold text-gray-700">User *</label>
                       <select
-                        className="w-full px-4 py-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-75 bg-white/50 backdrop-blur-sm"
+                        className="w-full px-4 py-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-75 bg-white/50 backdrop-blur-sm"
                         value={form.user || selectedUserId || 'me'}
                         onChange={(e) => setForm({ ...form, user: e.target.value })}
                         required
@@ -1404,7 +1402,7 @@ export default function MyTime() {
                   <div className="space-y-2">
                     <label className="block text-sm font-semibold text-gray-700">Project *</label>
                     <select
-                      className="w-full px-4 py-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-75 bg-white/50 backdrop-blur-sm"
+                      className="w-full px-4 py-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-75 bg-white/50 backdrop-blur-sm"
                       value={form.project}
                       onChange={(e) => setForm({ ...form, project: e.target.value, task: '' })}
                       required
@@ -1419,7 +1417,7 @@ export default function MyTime() {
                   <div className="space-y-2">
                     <label className="block text-sm font-semibold text-gray-700">Task *</label>
                     <select
-                      className="w-full px-4 py-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-75 disabled:bg-gray-50 disabled:text-gray-500 bg-white/50 backdrop-blur-sm"
+                      className="w-full px-4 py-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-75 disabled:bg-gray-50 disabled:text-gray-500 bg-white/50 backdrop-blur-sm"
                       value={form.task}
                       onChange={(e) => setForm({ ...form, task: e.target.value })}
                       disabled={!form.project}
@@ -1434,7 +1432,7 @@ export default function MyTime() {
                     <div className="space-y-2">
                       <label className="block text-sm font-semibold text-gray-700">Plan item (today)</label>
                       <select
-                        className="w-full px-4 py-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-75 bg-white/50 backdrop-blur-sm"
+                        className="w-full px-4 py-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-75 bg-white/50 backdrop-blur-sm"
                         value={form.plan_item}
                         onChange={(e) => {
                           const id = e.target.value
@@ -1458,7 +1456,7 @@ export default function MyTime() {
                   <div className="space-y-2">
                     <label className="block text-sm font-semibold text-gray-700">Completion</label>
                     <select
-                      className="w-full px-4 py-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-75 bg-white/50 backdrop-blur-sm"
+                      className="w-full px-4 py-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-75 bg-white/50 backdrop-blur-sm"
                       value={form.done}
                       onChange={(e) => setForm({ ...form, done: e.target.value })}
                     >
@@ -1471,7 +1469,7 @@ export default function MyTime() {
                   <div className="space-y-2">
                     <label className="block text-sm font-semibold text-gray-700">Description</label>
                     <input
-                      className="w-full px-4 py-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-75 bg-white/50 backdrop-blur-sm"
+                      className="w-full px-4 py-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-75 bg-white/50 backdrop-blur-sm"
                       placeholder="What did you work on?"
                       value={form.description}
                       onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -1484,7 +1482,7 @@ export default function MyTime() {
                     </label>
 
                     <select
-                      className={`w-full px-4 py-4 border rounded-2xl focus:ring-2 focus:border-transparent transition-all duration-75 bg-white/50 backdrop-blur-sm ${form.tags.length === 0 ? 'border-red-300 focus:ring-red-500' : 'border-gray-200 focus:ring-blue-500'
+                      className={`w-full px-4 py-4 border rounded-2xl focus:ring-2 focus:border-transparent transition-all duration-75 bg-white/50 backdrop-blur-sm ${form.tags.length === 0 ? 'border-red-300 focus:ring-red-500' : 'border-gray-200 focus:ring-neutral-700'
                         }`}
                       value={form.tags.length > 0 ? form.tags[0] : ''}
                       onChange={(e) => {
@@ -1533,7 +1531,7 @@ export default function MyTime() {
                           return (
                             <span
                               key={tagId}
-                              className="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-xl text-sm font-medium"
+                              className="inline-flex items-center gap-2 px-3 py-1 bg-neutral-100 text-neutral-900 rounded-xl text-sm font-medium"
                             >
                               {tag.emoji} {tag.name}
                               <button
@@ -1541,7 +1539,7 @@ export default function MyTime() {
                                 onClick={() => {
                                   setForm({ ...form, tags: form.tags.filter((t: number) => t !== tagId) })
                                 }}
-                                className="hover:text-blue-900 transition-colors"
+                                className="hover:text-neutral-900 transition-colors"
                               >
                                 ×
                               </button>
@@ -1580,7 +1578,7 @@ export default function MyTime() {
                       <label className="flex items-center gap-3 cursor-pointer">
                         <input
                           type="checkbox"
-                          className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                          className="w-5 h-5 text-neutral-900 bg-gray-100 border-gray-300 rounded focus:ring-neutral-700"
                           checked={form.repeatWeekly}
                           onChange={(e) => setForm({ ...form, repeatWeekly: e.target.checked })}
                         />
@@ -1611,7 +1609,7 @@ export default function MyTime() {
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl hover:from-blue-700 hover:to-purple-700 transition-all duration-75 font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[0.98] shadow-lg"
+                    className="flex-1 px-6 py-4 bg-gradient-to-r from-neutral-900 to-purple-600 text-white rounded-2xl hover:from-neutral-900 hover:to-purple-700 transition-all duration-75 font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[0.98] shadow-lg"
                     disabled={saving}
                   >
                     {saving ? (
@@ -1716,7 +1714,7 @@ export default function MyTime() {
       </div>
 
       {/* Comments panel */}
-      <div className="max-w-7xl mx-auto mt-8">
+      <div className="w-full mt-8">
         <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold">Latest Comments</h3>

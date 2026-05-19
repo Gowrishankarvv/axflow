@@ -11,7 +11,7 @@ export default function AuthLayout({ children, title, subtitle }: AuthLayoutProp
     return (
         <div className="min-h-screen w-full flex flex-col md:flex-row bg-white overflow-hidden font-sans">
             {/* Left Panel - Brand Experience */}
-            <div className="w-full md:w-5/6 relative flex flex-col justify-center p-8 md:p-16 overflow-hidden bg-[#0066FF]">
+            <div className="w-full md:w-5/6 relative flex flex-col justify-center p-8 md:p-16 overflow-hidden bg-[#171717]">
                 {/* Background Gradient */}
                 <div className="absolute inset-0 bg-gradient-to-br from-brand-blue to-[#0052cc]/80 z-0"></div>
 

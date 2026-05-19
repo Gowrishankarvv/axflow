@@ -31,7 +31,7 @@ const CustomNode = ({ data }: { data: any }) => {
       case 'superuser':
         return 'bg-red-50 border-red-200 text-red-900'
       case 'manager':
-        return 'bg-blue-50 border-blue-200 text-blue-900'
+        return 'bg-neutral-50 border-neutral-200 text-neutral-900'
       default:
         return 'bg-green-50 border-green-200 text-green-900'
     }
@@ -58,7 +58,7 @@ const CustomNode = ({ data }: { data: any }) => {
             {fullName}
           </h3>
           {position && (
-            <p className="text-xs font-medium text-blue-700 mb-1">
+            <p className="text-xs font-medium text-neutral-900 mb-1">
               {position}
             </p>
           )}
@@ -200,8 +200,8 @@ export default function OrgTree() {
       <div className="p-6 min-h-screen bg-gray-50 animate-in fade-in duration-500">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center gap-3 mb-8">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <BuildingIcon className="w-6 h-6 text-blue-600" />
+            <div className="p-2 bg-neutral-100 rounded-lg">
+              <BuildingIcon className="w-6 h-6 text-neutral-900" />
             </div>
             <h1 className="text-3xl font-bold text-gray-900">Organization Chart</h1>
           </div>
@@ -219,7 +219,7 @@ export default function OrgTree() {
               
               <button 
                 onClick={loadHierarchy}
-                className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105"
+                className="inline-flex items-center px-6 py-3 bg-neutral-900 text-white font-medium rounded-lg hover:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-700 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105"
               >
                 <RefreshCwIcon className="w-5 h-5 mr-2" />
                 Refresh
@@ -237,8 +237,8 @@ export default function OrgTree() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <BuildingIcon className="w-6 h-6 text-blue-600" />
+            <div className="p-2 bg-neutral-100 rounded-lg">
+              <BuildingIcon className="w-6 h-6 text-neutral-900" />
             </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Organization Chart</h1>
@@ -248,7 +248,7 @@ export default function OrgTree() {
           
           <button 
             onClick={loadHierarchy}
-            className="inline-flex items-center px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105"
+            className="inline-flex items-center px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-neutral-700 focus:ring-offset-2 transition-all duration-200 transform hover:scale-105"
           >
             <RefreshCwIcon className="w-4 h-4 mr-2" />
             Refresh
@@ -314,7 +314,7 @@ export default function OrgTree() {
               <span className="text-sm text-gray-700">Superuser</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-blue-500"></div>
+              <div className="w-4 h-4 rounded bg-neutral-700"></div>
               <span className="text-sm text-gray-700">Manager</span>
             </div>
             <div className="flex items-center gap-2">

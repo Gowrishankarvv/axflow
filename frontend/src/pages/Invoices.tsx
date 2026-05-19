@@ -115,7 +115,7 @@ export default function Invoices() {
                 </div>
                 <button
                     onClick={() => setShowModal(true)}
-                    className="flex items-center gap-2 px-6 py-3 bg-[#0066FF] text-white font-bold rounded-lg hover:bg-[#0066FF]/90 transition shadow-sm hover:shadow"
+                    className="flex items-center gap-2 px-6 py-3 bg-[#171717] text-white font-bold rounded-lg hover:bg-[#171717]/90 transition shadow-sm hover:shadow"
                 >
                     <PlusIcon className="w-5 h-5" />
                     Upload Invoice
@@ -162,7 +162,7 @@ export default function Invoices() {
                                                 <a
                                                     href={inv.file_url}
                                                     target="_blank"
-                                                    className="inline-flex items-center gap-1 text-sm text-[#0066FF] font-bold hover:underline"
+                                                    className="inline-flex items-center gap-1 text-sm text-[#171717] font-bold hover:underline"
                                                 >
                                                     <DownloadIcon className="w-4 h-4" /> Download
                                                 </a>
@@ -190,7 +190,7 @@ export default function Invoices() {
                             <div>
                                 <label className="block text-sm font-bold text-[#0E141C] mb-1">Client</label>
                                 <select
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#0066FF] focus:border-[#0066FF]"
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#171717] focus:border-[#171717]"
                                     value={formData.client}
                                     onChange={e => handleClientChange(e.target.value)}
                                     required
@@ -205,7 +205,7 @@ export default function Invoices() {
                             <div>
                                 <label className="block text-sm font-bold text-[#0E141C] mb-1">Project (Optional)</label>
                                 <select
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#0066FF] focus:border-[#0066FF]"
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#171717] focus:border-[#171717]"
                                     value={formData.project}
                                     onChange={e => setFormData({ ...formData, project: e.target.value })}
                                     disabled={!formData.client}
@@ -221,7 +221,7 @@ export default function Invoices() {
                                 <label className="block text-sm font-bold text-[#0E141C] mb-1">Billing Period</label>
                                 <input
                                     type="date"
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#0066FF] focus:border-[#0066FF]"
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#171717] focus:border-[#171717]"
                                     value={formData.billing_period}
                                     onChange={e => setFormData({ ...formData, billing_period: e.target.value })}
                                     required
@@ -242,7 +242,7 @@ export default function Invoices() {
                                     <div className="pointer-events-none">
                                         <FileTextIcon className="w-8 h-8 text-gray-2 mx-auto mb-2" />
                                         {formData.file ? (
-                                            <span className="text-sm font-medium text-[#0066FF] block">{formData.file.name}</span>
+                                            <span className="text-sm font-medium text-[#171717] block">{formData.file.name}</span>
                                         ) : (
                                             <span className="text-sm text-gray-1 block">Click to upload file</span>
                                         )}
@@ -261,7 +261,7 @@ export default function Invoices() {
                                 <button
                                     type="submit"
                                     disabled={submitting}
-                                    className="flex-1 px-4 py-2 bg-[#0066FF] text-white rounded-lg font-bold hover:bg-[#0066FF]/90 transition shadow disabled:opacity-70"
+                                    className="flex-1 px-4 py-2 bg-[#171717] text-white rounded-lg font-bold hover:bg-[#171717]/90 transition shadow disabled:opacity-70"
                                 >
                                     {submitting ? 'Uploading...' : 'Upload'}
                                 </button>

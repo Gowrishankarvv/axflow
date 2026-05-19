@@ -51,8 +51,8 @@ export default function TaskHoursSummary({ me }: { me?: any }) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
       <div className="flex items-center gap-2 mb-5">
-        <div className="p-1.5 bg-indigo-100 rounded-md">
-          <ClipboardList className="w-5 h-5 text-indigo-600" />
+        <div className="p-1.5 bg-neutral-100 rounded-md">
+          <ClipboardList className="w-5 h-5 text-neutral-900" />
         </div>
         <h2 className="text-lg font-semibold text-gray-900">Task Hours Summary</h2>
         <span className="ml-auto text-xs text-gray-500">
@@ -115,7 +115,7 @@ export default function TaskHoursSummary({ me }: { me?: any }) {
                           {task.users.map(u => (
                             <span
                               key={u.id}
-                              className="inline-flex items-center px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium"
+                              className="inline-flex items-center px-2.5 py-1 rounded-full bg-neutral-50 text-neutral-900 text-xs font-medium"
                             >
                               {u.name}: {formatDecimalHours(u.total_hours)}
                             </span>

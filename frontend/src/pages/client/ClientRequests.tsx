@@ -148,7 +148,7 @@ export default function ClientRequests() {
                 </div>
                 <button
                     onClick={() => setShowModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#0066FF] text-white rounded-lg font-bold hover:bg-[#0066FF]/90 transition"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#171717] text-white rounded-lg font-bold hover:bg-[#171717]/90 transition"
                 >
                     <PlusIcon className="w-5 h-5" />
                     New Request
@@ -211,7 +211,7 @@ export default function ClientRequests() {
                                                 {/* Download Action */}
                                                 <button
                                                     onClick={() => downloadAll(req)}
-                                                    className="text-[#0066FF] hover:text-[#0055DD] text-sm font-bold flex items-center gap-1"
+                                                    className="text-[#171717] hover:text-[#0055DD] text-sm font-bold flex items-center gap-1"
                                                     title="Download All Files (Zip)"
                                                 >
                                                     <DownloadIcon className="w-4 h-4" />
@@ -255,7 +255,7 @@ export default function ClientRequests() {
                             <div>
                                 <label className="block text-sm font-bold text-[#0E141C] mb-1">Project</label>
                                 <select
-                                    className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#0066FF] focus:border-[#0066FF] transition"
+                                    className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#171717] focus:border-[#171717] transition"
                                     value={formData.project}
                                     onChange={e => setFormData({ ...formData, project: e.target.value })}
                                     required
@@ -270,7 +270,7 @@ export default function ClientRequests() {
                                 <label className="block text-sm font-bold text-[#0E141C] mb-1">Title</label>
                                 <input
                                     type="text"
-                                    className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#0066FF] focus:border-[#0066FF] transition"
+                                    className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#171717] focus:border-[#171717] transition"
                                     placeholder="e.g. Q3 Sales Data Analysis"
                                     value={formData.title}
                                     onChange={e => setFormData({ ...formData, title: e.target.value })}
@@ -289,7 +289,7 @@ export default function ClientRequests() {
                                                     const newValue = append ? (currentTitle ? currentTitle + ', ' + valueToSet : valueToSet) : valueToSet
                                                     setFormData({ ...formData, title: newValue })
                                                 }}
-                                                className="px-3 py-1 bg-gray-100 hover:bg-[#E6F0FF] hover:text-[#0066FF] text-gray-600 text-xs font-medium rounded-full transition border border-transparent hover:border-[#0066FF]/20"
+                                                className="px-3 py-1 bg-gray-100 hover:bg-[#E6F0FF] hover:text-[#171717] text-gray-600 text-xs font-medium rounded-full transition border border-transparent hover:border-[#171717]/20"
                                             >
                                                 {label}
                                             </button>
@@ -374,7 +374,7 @@ export default function ClientRequests() {
                             <div>
                                 <label className="block text-sm font-bold text-[#0E141C] mb-1">Description</label>
                                 <textarea
-                                    className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#0066FF] focus:border-[#0066FF] transition"
+                                    className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#171717] focus:border-[#171717] transition"
                                     rows={3}
                                     placeholder="Describe what needs to be done..."
                                     value={formData.description}
@@ -383,7 +383,7 @@ export default function ClientRequests() {
                             </div>
                             <div>
                                 <label className="block text-sm font-bold text-[#0E141C] mb-1">Attach Excel Files</label>
-                                <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center hover:border-[#0066FF] hover:bg-gray-3 transition cursor-pointer relative">
+                                <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center hover:border-[#171717] hover:bg-gray-3 transition cursor-pointer relative">
                                     <input
                                         type="file"
                                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -403,7 +403,7 @@ export default function ClientRequests() {
                                         <FileTextIcon className="w-8 h-8 text-gray-2 mb-2" />
                                         <span className="text-sm text-gray-1">Click or drag files to upload</span>
                                         {formData.files.length > 0 && (
-                                            <div className="mt-2 text-xs text-[#0066FF] font-medium">
+                                            <div className="mt-2 text-xs text-[#171717] font-medium">
                                                 {formData.files.length} file(s) selected
                                             </div>
                                         )}
@@ -414,12 +414,12 @@ export default function ClientRequests() {
                                     <div className="mt-3 flex flex-wrap gap-2">
                                         {formData.files.map((file, index) => (
                                             <div key={index}
-                                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#E6F0FF] text-[#0066FF] border border-[#0066FF]/20"
+                                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#E6F0FF] text-[#171717] border border-[#171717]/20"
                                             >
                                                 <span className="truncate max-w-[150px]">{file.name}</span>
                                                 <button
                                                     type="button"
-                                                    className="hover:bg-[#0066FF]/20 rounded-full p-0.5 transition-colors cursor-pointer"
+                                                    className="hover:bg-[#171717]/20 rounded-full p-0.5 transition-colors cursor-pointer"
                                                     onClick={() => {
                                                         const newFiles = formData.files.filter((_, i) => i !== index)
                                                         setFormData({ ...formData, files: newFiles })
@@ -446,7 +446,7 @@ export default function ClientRequests() {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-4 py-2 bg-[#0066FF] text-white rounded-lg hover:bg-[#0066FF]/90 shadow-md hover:shadow-lg transition font-bold"
+                                    className="px-4 py-2 bg-[#171717] text-white rounded-lg hover:bg-[#171717]/90 shadow-md hover:shadow-lg transition font-bold"
                                 >
                                     Submit Request
                                 </button>
@@ -463,8 +463,8 @@ function StatusBadge({ status }: { status: string }) {
     const styles = {
         pending_review: 'bg-yellow-100 text-yellow-800',
         pending_approval: 'bg-orange-100 text-orange-800',
-        approved: 'bg-blue-100 text-blue-800',
-        in_progress: 'bg-indigo-100 text-indigo-800',
+        approved: 'bg-neutral-100 text-neutral-900',
+        in_progress: 'bg-neutral-100 text-neutral-900',
         completed: 'bg-green-100 text-green-800',
         rejected: 'bg-red-100 text-red-800'
     }[status] || 'bg-gray-100 text-gray-800'

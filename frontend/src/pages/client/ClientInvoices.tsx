@@ -64,7 +64,7 @@ export default function ClientInvoices() {
                                             <a
                                                 href={inv.file_url}
                                                 target="_blank"
-                                                className="inline-flex items-center gap-2 px-3 py-1.5 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition font-medium text-sm"
+                                                className="inline-flex items-center gap-2 px-3 py-1.5 text-neutral-900 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition font-medium text-sm"
                                             >
                                                 <DownloadIcon className="w-4 h-4" /> Download PDF
                                             </a>

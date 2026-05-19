@@ -28,6 +28,7 @@ const Tickets = React.lazy(() => import('./pages/Tickets'))
 const EXECUTIVE_POSITIONS = ['CEO', 'CFO', 'COO', 'CMO', 'Executive']
 const isExecutive = (me: any) =>
   !!me && (me.role === 'superuser' || EXECUTIVE_POSITIONS.includes(me?.position))
+import { format } from 'date-fns'
 import api, { fetchMe, logout } from './lib/api'
 import { useAppData } from './lib/AppDataContext'
 import { useLoading } from './lib/LoadingContext'
@@ -170,15 +171,16 @@ export default function App() {
             onClick={() => setSidebarOpen(true)}
             className="md:hidden fixed top-4 left-4 z-30 p-3 bg-white/90 backdrop-blur-lg rounded-xl shadow-lg border border-white/20 hover:bg-white hover:shadow-xl transition-all duration-300 transform hover:scale-110 group"
           >
-            <MenuIcon className="w-6 h-6 text-gray-700 group-hover:text-blue-600 transition-colors duration-200" />
+            <MenuIcon className="w-6 h-6 text-gray-700 group-hover:text-neutral-900 transition-colors duration-200" />
           </button>
         </>
       )}
 
       <main className={`flex-1 overflow-auto transition-all duration-300 ${isAuthed ? (sidebarCollapsed ? 'md:ml-5' : 'md:ml-5') : ''
         }`}>
+        {isAuthed && location.pathname !== '/login' && <Topbar me={me} unreadNotifs={unreadNotifs} />}
         <React.Suspense fallback={
-          <div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
+          <div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neutral-900"></div></div>
         }>
           <Routes>
             <Route path="/login" element={<Login />} />
@@ -230,6 +232,53 @@ export default function App() {
   )
 }
 
+function Topbar({ me, unreadNotifs }: { me: any, unreadNotifs: number }) {
+  const today = format(new Date(), 'EEEE, d MMMM yyyy')
+
+  return (
+    <header className="sticky top-0 z-20 flex items-center justify-between gap-4 h-16 px-4 md:px-6 pl-16 md:pl-6 bg-white border-b border-gray-3">
+      {/* Left: today's date */}
+      <div className="flex items-center gap-2 text-gray-1 min-w-0">
+        <LeaveCalendarIcon className="w-5 h-5 text-neutral-900 flex-shrink-0" />
+        <span className="font-medium text-xs md:text-sm text-[#0E141C] truncate">{today}</span>
+      </div>
+
+      {/* Right: currently logged-in user — same profile card as the sidebar */}
+      <div className="flex items-center gap-3 flex-shrink-0">
+        <Link
+          to="/notifications"
+          aria-label="Notifications"
+          className="relative p-2 rounded-lg text-gray-600 hover:text-neutral-900 hover:bg-neutral-100 transition-colors"
+        >
+          <NotificationsIcon className="w-6 h-6" />
+          {unreadNotifs > 0 && (
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white" />
+          )}
+        </Link>
+        <div className="w-px h-8 bg-gray-200" />
+        <div className="min-w-0 text-right">
+          <div className="font-bold text-[#0E141C] truncate text-xs">
+            {me?.first_name || me?.username}
+          </div>
+          <div className="flex items-center justify-end gap-2 mt-1">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-neutral-100 text-neutral-600 border border-neutral-200 capitalize">
+              {me?.role}
+            </span>
+          </div>
+        </div>
+        <div className="relative flex-shrink-0">
+          <div className="w-12 h-12 bg-neutral-900 rounded-xl flex items-center justify-center shadow-md">
+            <span className="text-white font-bold text-lg">
+              {(me?.first_name?.[0] || me?.username?.[0] || 'U').toUpperCase()}
+            </span>
+          </div>
+          <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
+        </div>
+      </div>
+    </header>
+  )
+}
+
 function Sidebar({
   me,
   onLogout,
@@ -277,7 +326,7 @@ function Sidebar({
 
   return (
     <aside className={`
-      fixed md:relative inset-y-0 left-0 z-50 bg-white border-r border-gray-3 shadow-none
+      fixed md:relative inset-y-0 left-0 z-50 h-screen bg-white border-r border-gray-3 shadow-none
       transform transition-all duration-300 ease-in-out flex flex-col
       ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       ${isCollapsed ? 'md:w-20' : 'md:w-72'}
@@ -288,8 +337,7 @@ function Sidebar({
       <div className={`border-b border-gray-3 bg-white relative overflow-hidden transition-all duration-300 flex-shrink-0 ${isCollapsed ? 'p-4' : 'p-6'
         }`}>
         {/* Background decoration */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/5 to-indigo-600/5"></div>
-        <div className="absolute -top-10 -right-10 w-20 h-20 bg-blue-200/20 rounded-full blur-2xl"></div>
+        <div className="absolute inset-0 bg-neutral-50"></div>
 
         <div className="relative">
           <div className="flex items-center justify-between gap-2">
@@ -304,8 +352,8 @@ function Sidebar({
                       className={`${isCollapsed ? 'w-8 h-6' : 'h-8 max-w-full'} object-contain`}
                     />
                   ) : (
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <span className="text-blue-600 font-bold text-lg">
+                    <div className="w-12 h-12 bg-neutral-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <span className="text-neutral-900 font-bold text-lg">
                         {(me.client_org?.name?.substring(0, 2) || me.username.substring(0, 2)).toUpperCase()}
                       </span>
                     </div>
@@ -324,12 +372,12 @@ function Sidebar({
               ) : (
                 <>
                   {isCollapsed ? (
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
+                    <div className="w-10 h-10 bg-neutral-900 rounded-lg flex items-center justify-center shadow-md">
                       <span className="text-white font-bold text-lg">T</span>
                     </div>
                   ) : (
                     <div className="animate-in slide-in-from-right duration-300">
-                      <span className="text-2xl font-extrabold text-[#0E141C]">AXFLOW</span>
+                      <span className="text-xl font-extrabold text-[#0E141C]">AXFLOW</span>
                     </div>
                   )}
                 </>
@@ -357,48 +405,6 @@ function Sidebar({
             </button>
           </div>
 
-          {/* User info */}
-          {!isCollapsed && (
-            <div className="mt-6 p-4 bg-white/80 backdrop-blur-sm rounded-xl border border-white/40 shadow-sm animate-in slide-in-from-bottom duration-300 delay-100">
-              <div className="flex items-center gap-3">
-                <div className="relative flex-shrink-0">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
-                    <span className="text-white font-bold text-lg">
-                      {(me?.first_name?.[0] || me?.username?.[0] || 'U').toUpperCase()}
-                    </span>
-                  </div>
-                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-bold text-[#0E141C] truncate text-sm">
-                    {me?.first_name || me?.username}
-                  </div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${me?.role === 'superuser' ? 'bg-gradient-to-r from-red-100 to-red-200 text-red-800' :
-                      me?.role === 'manager' ? 'bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800' :
-                        'bg-gradient-to-r from-green-100 to-green-200 text-green-800'
-                      }`}>
-                      {me?.role}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Collapsed user avatar */}
-          {isCollapsed && (
-            <div className="mt-6 flex justify-center animate-in zoom-in duration-300 delay-100">
-              <div className="relative">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
-                  <span className="text-white font-bold text-sm">
-                    {(me?.first_name?.[0] || me?.username?.[0] || 'U').toUpperCase()}
-                  </span>
-                </div>
-                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border border-white rounded-full"></div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
@@ -434,8 +440,8 @@ function Sidebar({
               }`}
             title={isCollapsed ? 'Sign Out' : ''}
           >
-            <LogOutIcon className="w-5 h-5 relative z-10 flex-shrink-0" />
-            {!isCollapsed && <span className="font-medium relative z-10">Sign Out</span>}
+            <LogOutIcon className="w-4 h-4 relative z-10 flex-shrink-0" />
+            {!isCollapsed && <span className="font-medium text-sm relative z-10">Sign Out</span>}
           </button>
 
           {me?.role !== 'client' && (
@@ -446,11 +452,11 @@ function Sidebar({
               title={isCollapsed ? 'Bug / Feature Ticket' : ''}
             >
               <div className="absolute inset-0 bg-gradient-to-r from-gray-50 to-gray-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
-              <BugIcon className="w-5 h-5 relative z-10 flex-shrink-0" />
+              <BugIcon className="w-4 h-4 relative z-10 flex-shrink-0" />
               {!isCollapsed && <span className="font-medium text-sm relative z-10">Bug / Feature Ticket</span>}
             </Link>
           )}
-          {/* Bottom Row: Powered by + Axinortech */}
+          {/* Bottom Row: Powered by + Axinortech 
           <div className="flex flex-col items-start gap-1 mt-8">
             <span className="font-bold text-gray-400 text-xs">
               Powered by
@@ -462,6 +468,7 @@ function Sidebar({
               className={`${isCollapsed ? 'w-8' : 'h-5'} object-contain`}
             />
           </div>
+          */}
         </div>
       </div>
     </aside>
@@ -495,7 +502,7 @@ function NavItem({
         animate-in slide-in-from-left duration-300
         ${isCollapsed ? 'w-12 h-12 justify-center' : 'gap-3 px-4 py-3'}
         ${isActive
-          ? 'bg-[#0066FF] text-white shadow-lg shadow-blue-500/30'
+          ? 'bg-neutral-900 text-white shadow-sm'
           : 'text-gray-1 hover:bg-gray-3 hover:text-[#0E141C]'
         }
       `}
@@ -504,12 +511,12 @@ function NavItem({
     >
       {/* Background animation */}
       {!isActive && (
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-indigo-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+        <div className="absolute inset-0 bg-neutral-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
       )}
 
       <Icon className={`
         transition-all duration-200 group-hover:scale-110 relative z-10
-        ${isCollapsed ? 'w-5 h-5' : 'w-5 h-5'}
+        ${isCollapsed ? 'w-5 h-5' : 'w-4 h-4'}
         ${isActive ? 'text-white' : 'text-gray-2 group-hover:text-[#0E141C]'}
       `} />
 
@@ -522,12 +529,12 @@ function NavItem({
 
       {!isCollapsed && (
         <>
-          <span className="truncate relative z-10">{children}</span>
+          <span className="truncate relative z-10 text-sm">{children}</span>
 
           <div className="ml-auto flex items-center gap-2 relative z-10">
             {/* Unread badge */}
             {hasBadge && (
-              <span className={`min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-bold flex items-center justify-center ${isActive ? 'bg-white text-[#0066FF]' : 'bg-red-500 text-white'}`}>
+              <span className={`min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-bold flex items-center justify-center ${isActive ? 'bg-white text-neutral-900' : 'bg-red-500 text-white'}`}>
                 {badgeText}
               </span>
             )}

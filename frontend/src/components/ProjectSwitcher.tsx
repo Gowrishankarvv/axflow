@@ -19,7 +19,7 @@ export default function ProjectSwitcher({ isCollapsed }: { isCollapsed?: boolean
                     }`}
             >
                 <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Building className="w-6 h-6 text-indigo-600" />
+                    <Building className="w-6 h-6 text-neutral-900" />
                 </div>
 
                 {!isCollapsed && (
@@ -53,11 +53,11 @@ export default function ProjectSwitcher({ isCollapsed }: { isCollapsed?: boolean
                                 }}
                                 className="w-full flex items-center justify-between px-4 py-2 text-left hover:bg-gray-50 transition-colors group"
                             >
-                                <span className={`text-sm font-medium ${p.id === currentProjectId ? 'text-blue-600' : 'text-gray-700'}`}>
+                                <span className={`text-sm font-medium ${p.id === currentProjectId ? 'text-neutral-900' : 'text-gray-700'}`}>
                                     {p.name}
                                 </span>
                                 {p.id === currentProjectId && (
-                                    <Check className="w-4 h-4 text-blue-600" />
+                                    <Check className="w-4 h-4 text-neutral-900" />
                                 )}
                             </button>
                         ))}
