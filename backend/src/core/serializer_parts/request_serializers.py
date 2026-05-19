@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from tables import DataRequest, Invoice, RequestFile
+from tables import DataRequest, Invoice, InvoiceItem, RequestFile
 
 
 class RequestFileSerializer(serializers.ModelSerializer):
@@ -104,18 +104,44 @@ class DataRequestSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
+class InvoiceItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InvoiceItem
+        fields = ["id", "description", "quantity", "rate", "amount"]
+        read_only_fields = ["amount"]
+
+
 class InvoiceSerializer(serializers.ModelSerializer):
     uploaded_by_name = serializers.SerializerMethodField()
+    client_name = serializers.SerializerMethodField()
+    project_name = serializers.SerializerMethodField()
+    status_display = serializers.CharField(source="get_status_display", read_only=True)
     file_url = serializers.SerializerMethodField()
+    items = InvoiceItemSerializer(many=True)
 
     class Meta:
         model = Invoice
-        fields = ["id", "client", "project", "file", "file_url", "billing_period", "uploaded_by", "uploaded_by_name", "created_at"]
-        read_only_fields = ["uploaded_by", "created_at"]
+        fields = [
+            "id", "invoice_number", "client", "client_name", "project", "project_name",
+            "status", "status_display", "currency", "notes", "issue_date", "due_date",
+            "billing_period", "subtotal", "total", "items",
+            "file", "file_url", "uploaded_by", "uploaded_by_name",
+            "paid_marked_at", "completed_at", "created_at",
+        ]
+        read_only_fields = [
+            "invoice_number", "status", "subtotal", "total", "file", "uploaded_by",
+            "paid_marked_at", "completed_at", "created_at",
+        ]
 
     def get_uploaded_by_name(self, obj):
         u = obj.uploaded_by
         return (u.first_name or u.username) if u else None
+
+    def get_client_name(self, obj):
+        return obj.client.name if obj.client_id else None
+
+    def get_project_name(self, obj):
+        return obj.project.name if obj.project_id else None
 
     def get_file_url(self, obj):
         if obj.file:
@@ -125,7 +151,18 @@ class InvoiceSerializer(serializers.ModelSerializer):
             return obj.file.url
         return None
 
+    def validate_items(self, value):
+        if not value:
+            raise serializers.ValidationError("At least one line item is required.")
+        return value
+
     def create(self, validated_data):
+        items = validated_data.pop("items", [])
         user = self.context["request"].user
         validated_data["uploaded_by"] = user
-        return super().create(validated_data)
+        invoice = Invoice.objects.create(**validated_data)
+        for item in items:
+            InvoiceItem.objects.create(invoice=invoice, **item)
+        invoice.recalc_totals()
+        invoice.save(update_fields=["subtotal", "total"])
+        return invoice

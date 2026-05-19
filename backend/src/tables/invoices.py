@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from django.db.models import QuerySet
 
-from core.models import Invoice
+from core.models import Invoice, InvoiceItem  # noqa: F401
 
 
 def invoice_qs() -> QuerySet[Invoice]:

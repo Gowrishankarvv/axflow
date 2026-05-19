@@ -9,7 +9,7 @@ from .time_models import (
     TimeEntry,
 )
 from .daily_plan_models import DailyPlanItem
-from .request_models import DataRequest, Invoice, RequestFile
+from .request_models import DataRequest, Invoice, InvoiceItem, RequestFile
 from .leave_models import LeaveRequest
 from .offer_letter_models import OfferLetter
 from .notification_models import Notification
@@ -42,6 +42,7 @@ __all__ = [
     "EXPENSE_SCOPE_CHOICES",
     "ExpenseType",
     "Invoice",
+    "InvoiceItem",
     "Lead",
     "LeaveRequest",
     "MiscExpense",

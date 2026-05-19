@@ -29,6 +29,9 @@ class Notification(models.Model):
         ("extension_submitted", "Extension Request Submitted"),
         ("extension_approved", "Extension Request Approved"),
         ("extension_rejected", "Extension Request Rejected"),
+        ("invoice_issued", "Invoice Issued — Payment Requested"),
+        ("invoice_paid", "Invoice Marked Paid by Client"),
+        ("invoice_completed", "Invoice Payment Completed"),
     ]
 
     user = models.ForeignKey(
