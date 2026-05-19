@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import api, { getCached } from '../lib/api'
-import { Plus, Trash2, Calendar, User, CheckCircle, Clock, AlertCircle, FolderIcon, Pencil } from 'lucide-react'
+import { Plus, Trash2, Calendar, User, CheckCircle, Clock, AlertCircle, FolderIcon, Pencil, X, Search } from 'lucide-react'
 
 export default function Projects({ me }: { me?: any }) {
   const [items, setItems] = useState<any[]>([])
@@ -15,6 +15,7 @@ export default function Projects({ me }: { me?: any }) {
   const [users, setUsers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [clients, setClients] = useState<any[]>([])
+  const [showCreateProject, setShowCreateProject] = useState(false)
 
   async function load() {
     try {
@@ -111,6 +112,7 @@ export default function Projects({ me }: { me?: any }) {
     e.preventDefault()
     await api.post('/projects/', pform)
     setPform({ name: '', description: '' })
+    setShowCreateProject(false)
     await load()
   }
 
@@ -191,20 +193,48 @@ export default function Projects({ me }: { me?: any }) {
           </div>
           <h1 className="text-3xl font-bold text-gray-900">Projects</h1>
         </div>
-        <div className="text-sm text-gray-500 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100">
-          {filteredItems.length} {filteredItems.length === 1 ? 'project' : 'projects'}
+        <div className="flex items-center gap-3">
+          <div className="text-sm text-gray-500 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100">
+            {filteredItems.length} {filteredItems.length === 1 ? 'project' : 'projects'}
+          </div>
+          {(me?.role === 'superuser' || me?.role === 'manager') && (
+            <button
+              onClick={() => setShowCreateProject(true)}
+              className="inline-flex items-center gap-2 bg-neutral-900 text-white rounded-xl px-4 py-2 text-sm font-medium hover:bg-neutral-800 transition-colors duration-200 shadow-sm"
+            >
+              <Plus className="w-4 h-4" />
+              Create New Project
+            </button>
+          )}
         </div>
       </div>
 
-      {(me?.role === 'superuser' || me?.role === 'manager') && (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-300">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 bg-gradient-to-r from-neutral-700 to-purple-500 rounded-lg flex items-center justify-center">
-              <Plus className="w-4 h-4 text-white" />
+      {showCreateProject && (me?.role === 'superuser' || me?.role === 'manager') && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={() => setShowCreateProject(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl border border-gray-100 w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 animate-in zoom-in-95 duration-200"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-neutral-900 rounded-lg flex items-center justify-center">
+                  <Plus className="w-4 h-4 text-white" />
+                </div>
+                <h2 className="text-lg font-semibold text-gray-800">Create New Project</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCreateProject(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-gray-700 transition-colors"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
-            <h2 className="text-lg font-semibold text-gray-800">Create New Project</h2>
-          </div>
-          <form onSubmit={addProject} className="grid md:grid-cols-4 gap-4">
+          <form onSubmit={addProject} className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Project Name</label>
               <input
@@ -259,27 +289,28 @@ export default function Projects({ me }: { me?: any }) {
                 onChange={e => setPform({ ...pform, end_date: e.target.value || undefined })}
               />
             </div>
-            <div className="flex items-end">
-              <button className="w-full bg-gradient-to-r from-neutral-900 to-purple-600 text-white rounded-xl px-6 py-3 font-medium hover:from-neutral-900 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl">
+            <div className="flex items-end md:col-span-2">
+              <button className="w-full bg-neutral-900 text-white rounded-xl px-6 py-3 font-medium hover:bg-neutral-800 transition-colors duration-200 shadow-sm">
                 Create Project
               </button>
             </div>
           </form>
-        </div >
-      )
-      }
+          </div>
+        </div>
+      )}
 
       {/* Search Bar */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <div className="flex items-center gap-3">
-          <div className="flex-1">
+          <div className="flex-1 relative">
             <input
               type="text"
               placeholder="Search projects by name or description..."
-              className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200 placeholder-gray-400"
+              className="w-full border border-gray-200 rounded-xl pl-4 pr-11 py-3 focus:ring-2 focus:ring-neutral-700 focus:border-transparent transition-all duration-200 placeholder-gray-400"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
+            <Search className="w-5 h-5 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
           <div className="text-sm text-gray-500 bg-gray-50 px-3 py-2 rounded-lg">
             {filteredItems.length} of {items.length} projects
