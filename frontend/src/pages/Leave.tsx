@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import api, { getCached } from '../lib/api'
-import { Calendar, Plus, X, CheckCircle, XCircle, Clock, AlertTriangle, IndianRupee } from 'lucide-react'
+import { Calendar, Plus, X, CheckCircle, XCircle, Clock, AlertTriangle, IndianRupee, ChevronLeft, ChevronRight } from 'lucide-react'
 
 type Leave = {
     id: number
@@ -48,7 +48,7 @@ export default function LeavePage() {
         setLoading(true)
         try {
             const [leavesRes, summaryRes] = await Promise.all([
-                getCached('/leaves/', { params: { user_id: 'me' } }),
+                getCached('/leaves/', { params: { user_id: 'me', page_size: 1000 } }),
                 getCached('/leaves/summary/', { params: { user_id: 'me' } }),
             ])
             const leavesPayload: any = leavesRes.data
@@ -100,7 +100,7 @@ export default function LeavePage() {
     const todayKey = new Date().toISOString().slice(0, 10)
 
     return (
-        <div className="p-6 md:p-10 max-w-6xl mx-auto">
+        <div className="p-6 md:p-10 w-full">
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Leave</h1>
@@ -221,6 +221,17 @@ function LeavesTab({ leaves, summary, todayKey, onCancel }: {
         }
     })
 
+    const PAGE_SIZE = 15
+    const [page, setPage] = useState(1)
+    const totalPages = Math.max(1, Math.ceil(leaves.length / PAGE_SIZE))
+    useEffect(() => {
+        if (page > totalPages) setPage(totalPages)
+    }, [totalPages, page])
+    const pagedLeaves = useMemo(
+        () => leaves.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+        [leaves, page]
+    )
+
     return (
         <div className="space-y-6">
             {/* Report cards */}
@@ -247,18 +258,50 @@ function LeavesTab({ leaves, summary, todayKey, onCancel }: {
 
             {/* History list */}
             <div>
-                <h3 className="text-sm font-semibold text-gray-900 mb-3">Your leave history</h3>
+                <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-gray-900">Your leave history</h3>
+                    {leaves.length > 0 && (
+                        <span className="text-xs text-gray-500">
+                            Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, leaves.length)} of {leaves.length}
+                        </span>
+                    )}
+                </div>
                 {leaves.length === 0 ? (
                     <div className="text-center py-12 text-gray-500 border border-dashed border-gray-200 rounded-xl">
                         <Calendar className="w-10 h-10 mx-auto mb-3 text-gray-300" />
                         <p>No leave requests yet.</p>
                     </div>
                 ) : (
-                    <div className="space-y-3">
-                        {leaves.map(leave => (
-                            <LeaveCard key={leave.id} leave={leave} todayKey={todayKey} onCancel={() => onCancel(leave.id)} />
-                        ))}
-                    </div>
+                    <>
+                        <div className="space-y-3">
+                            {pagedLeaves.map(leave => (
+                                <LeaveCard key={leave.id} leave={leave} todayKey={todayKey} onCancel={() => onCancel(leave.id)} />
+                            ))}
+                        </div>
+                        {totalPages > 1 && (
+                            <div className="flex items-center justify-center gap-2 mt-6">
+                                <button
+                                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                                    disabled={page === 1}
+                                    className="inline-flex items-center gap-1 px-3 py-2 text-sm rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    <ChevronLeft className="w-4 h-4" />
+                                    Prev
+                                </button>
+                                <span className="text-sm text-gray-600 px-2">
+                                    Page <span className="font-semibold text-gray-900">{page}</span> of {totalPages}
+                                </span>
+                                <button
+                                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={page === totalPages}
+                                    className="inline-flex items-center gap-1 px-3 py-2 text-sm rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    Next
+                                    <ChevronRight className="w-4 h-4" />
+                                </button>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </div>
