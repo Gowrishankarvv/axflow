@@ -574,7 +574,7 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="p-6 min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto">
+        <div className="w-full">
           <div className="animate-pulse space-y-6">
             <div className="h-8 bg-gray-200 rounded w-48"></div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -611,7 +611,7 @@ export default function Dashboard() {
 
   return (
     <div className="p-6 min-h-screen bg-gray-50 animate-in fade-in duration-500">
-      <div className="max-w-7xl mx-auto space-y-[18px]">
+      <div className="w-full space-y-[18px]">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3">
