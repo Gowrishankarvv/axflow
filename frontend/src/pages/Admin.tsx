@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import api from '../lib/api'
-import { UserPlusIcon, PencilIcon, TrashIcon, BookmarkIcon as XMarkIcon } from 'lucide-react'
+import { UserPlusIcon, PencilIcon, TrashIcon, BookmarkIcon as XMarkIcon, Plus, X } from 'lucide-react'
 
 export default function Admin() {
   const [users, setUsers] = useState<any[]>([])
@@ -8,6 +8,7 @@ export default function Admin() {
   const [editingUser, setEditingUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [showUserModal, setShowUserModal] = useState(false)
   const [form, setForm] = useState({
     first_name: '',
     last_name: '',
@@ -64,6 +65,7 @@ export default function Admin() {
       }
 
       setForm({ first_name: '', last_name: '', email: '', username: '', password: '', position: '', monthly_threshold_hours: 0, role: 'employee', manager: '', is_active: true })
+      setShowUserModal(false)
       await load()
     } catch (err: any) {
       const detail = err?.response?.data
@@ -93,10 +95,20 @@ export default function Admin() {
       manager: user.manager || '',
       is_active: user.is_active ?? true
     })
+    setError('')
+    setShowUserModal(true)
+  }
+
+  function openCreate() {
+    setEditingUser(null)
+    setForm({ first_name: '', last_name: '', email: '', username: '', password: '', position: '', monthly_threshold_hours: 0, role: 'employee', manager: '', is_active: true })
+    setError('')
+    setShowUserModal(true)
   }
 
   function cancelEdit() {
     setEditingUser(null)
+    setShowUserModal(false)
     setForm({ first_name: '', last_name: '', email: '', username: '', password: '', position: '', monthly_threshold_hours: 0, role: 'employee', manager: '', is_active: true })
   }
 
@@ -134,12 +146,23 @@ export default function Admin() {
 
   return (
     <div className="p-6 min-h-screen bg-gray-50 animate-in fade-in duration-300">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="p-2 bg-neutral-100 rounded-lg">
-            <UserPlusIcon className="w-6 h-6 text-neutral-900" />
+      <div className="w-full">
+        <div className="flex items-center justify-between gap-3 mb-8">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-neutral-100 rounded-lg">
+              <UserPlusIcon className="w-6 h-6 text-neutral-900" />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
+          {(me?.role === 'superuser' || me?.role === 'manager') && (
+            <button
+              onClick={openCreate}
+              className="inline-flex items-center gap-2 bg-neutral-900 text-white rounded-xl px-4 py-2 text-sm font-medium hover:bg-neutral-800 transition-colors duration-200 shadow-sm"
+            >
+              <Plus className="w-4 h-4" />
+              Create New User
+            </button>
+          )}
         </div>
 
         {(me?.role === 'superuser' || me?.role === 'manager') && (
@@ -166,21 +189,39 @@ export default function Admin() {
           </div>
         )}
 
-        {/* User Form */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8 transform transition-all duration-200 hover:shadow-md">
-          <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-            {editingUser ? (
-              <>
-                <PencilIcon className="w-5 h-5 text-neutral-900" />
-                Edit User
-              </>
-            ) : (
-              <>
-                <UserPlusIcon className="w-5 h-5 text-green-600" />
-                Create New User
-              </>
-            )}
-          </h2>
+        {/* User Form Modal */}
+        {showUserModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={cancelEdit}
+        >
+        <div
+          className="bg-white rounded-2xl shadow-xl border border-gray-100 w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 animate-in zoom-in-95 duration-200"
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              {editingUser ? (
+                <>
+                  <PencilIcon className="w-5 h-5 text-neutral-900" />
+                  Edit User
+                </>
+              ) : (
+                <>
+                  <UserPlusIcon className="w-5 h-5 text-green-600" />
+                  Create New User
+                </>
+              )}
+            </h2>
+            <button
+              type="button"
+              onClick={cancelEdit}
+              className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-gray-700 transition-colors"
+              aria-label="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
 
           <form onSubmit={submit} className="space-y-6">
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -406,6 +447,8 @@ export default function Admin() {
             )}
           </form>
         </div>
+        </div>
+        )}
 
         {/* Users Table */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
