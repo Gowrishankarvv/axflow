@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import api from '../lib/api'
 import {
-    Wallet, Plus, X, Lock, History, Edit3, AlertTriangle,
+    Wallet, Plus, X, Lock, History, Edit3, AlertTriangle, Search,
 } from 'lucide-react'
 
 type Revision = {
@@ -91,10 +91,10 @@ export default function Salary() {
     const configuredCount = roster.filter(r => r.current_salary).length
 
     return (
-        <div className="p-6 md:p-10 max-w-6xl mx-auto space-y-6">
+        <div className="p-6 md:p-10 w-full space-y-6">
             <div className="flex items-center gap-3">
-                <div className="p-2 bg-violet-100 rounded-lg">
-                    <Wallet className="w-6 h-6 text-violet-600" />
+                <div className="p-2 bg-neutral-100 rounded-lg">
+                    <Wallet className="w-6 h-6 text-neutral-900" />
                 </div>
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Salary</h1>
@@ -110,13 +110,16 @@ export default function Salary() {
                 <KpiCard label="Pending setup" value={String(roster.length - configuredCount)} accent="rose" />
             </div>
 
-            <div className="flex justify-between items-center gap-3 flex-wrap">
-                <input
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                    placeholder="Search by name, email, position…"
-                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full max-w-sm"
-                />
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-neutral-100 focus:border-neutral-400 transition-all"
+                        placeholder="Search by name, email, position…"
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                    />
+                </div>
             </div>
 
             <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
