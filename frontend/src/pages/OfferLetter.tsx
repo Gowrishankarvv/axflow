@@ -148,7 +148,7 @@ export default function OfferLetterPage() {
     }
 
     return (
-        <div className="p-6 md:p-10 max-w-6xl mx-auto">
+        <div className="p-6 md:p-10 w-full">
             <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 bg-neutral-100 rounded-lg">
                     <Mail className="w-6 h-6 text-neutral-900" />
@@ -162,8 +162,8 @@ export default function OfferLetterPage() {
             {loading ? (
                 <div className="text-center py-12 text-gray-500">Loading…</div>
             ) : (
-                <div className="grid lg:grid-cols-5 gap-6">
-                    <form onSubmit={handleSubmit} className="lg:col-span-3 space-y-5">
+                <div className="space-y-6">
+                    <form onSubmit={handleSubmit} className="space-y-5">
                         {/* Recipient + email */}
                         <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
                             <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Recipient &amp; Email</h2>
@@ -318,7 +318,7 @@ export default function OfferLetterPage() {
                     </form>
 
                     {/* History */}
-                    <div className="lg:col-span-2 bg-white border border-gray-200 rounded-xl p-5 h-fit">
+                    <div className="bg-white border border-gray-200 rounded-xl p-5">
                         <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">History</h2>
                         {history.length === 0 ? (
                             <div className="text-center py-10 text-gray-500 text-sm">
@@ -326,7 +326,7 @@ export default function OfferLetterPage() {
                                 Nothing sent yet.
                             </div>
                         ) : (
-                            <div className="space-y-3 max-h-[700px] overflow-y-auto pr-1">
+                            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                                 {history.map(rec => (
                                     <div key={rec.id} className="border border-gray-200 rounded-lg p-3 text-sm">
                                         <div className="flex items-start justify-between gap-2">
